@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String?  // Hashed password
+  role      Role     @default(STAFF)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  events    Event[]
+  checkIns  CheckIn[]
+}
+
+enum Role {
+  ADMIN
+  STAFF
+  USER
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  slug        String   @unique // For URL access
+  startDate   DateTime
+  endDate     DateTime
+  location    String?
+  themeColor  String?  @default("#000000")
+  imageUrl    String?
+  bannerUrl   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  organizerId String
+  organizer   User     @relation(fields: [organizerId], references: [id])
+  
+  formFields    FormField[]
+  registrations Registration[]
+}
+
+model FormField {
+  id          String   @id @default(cuid())
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  label       String
+  type        FieldType
+  options     String[] // JSON array relevant for SELECT/RADIO
+  required    Boolean  @default(false)
+  order       Int      @default(0)
+
+  @@index([eventId])
+}
+
+enum FieldType {
+  TEXT
+  EMAIL
+  PHONE
+  NUMBER
+  SELECT
+  CHECKBOX
+  DATE
+}
+
+model Registration {
+  id            String   @id @default(cuid())
+  eventId       String
+  event         Event    @relation(fields: [eventId], references: [id])
+  formData      Json     // Stores dynamic form answers: { "fieldId": "answer" }
+  referenceCode String   @unique // Generated unique code for check-in
+  status        RegStatus @default(PENDING) // Default to PENDING for verification
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  checkIn       CheckIn?
+
+  @@index([eventId])
+}
+
+enum RegStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model CheckIn {
+  id             String       @id @default(cuid())
+  registrationId String       @unique
+  registration   Registration @relation(fields: [registrationId], references: [id])
+  staffId        String
+  staff          User         @relation(fields: [staffId], references: [id])
+  scannedAt      DateTime     @default(now())
+
+  @@index([staffId])
+}
