@@ -5,10 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { ScanLine, Search, UserCheck, AlertCircle, CheckCircle, Zap } from "lucide-react"
+import { ScanLine, Search, UserCheck, AlertCircle, CheckCircle, Zap, ArrowLeft } from "lucide-react"
+import Link from "next/link"
 import { verifyAndCheckIn, CheckInResult } from "@/app/actions/check-in"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { QRScanner } from "@/components/admin/qr-scanner"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 /**
  * Extract reference code from a value that might be:
@@ -85,13 +87,28 @@ export default function CheckInPage() {
   }, [result])
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4 flex items-center justify-center">
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="min-h-screen bg-background text-foreground p-4 flex items-center justify-center transition-colors">
+      {/* Floating Back Button */}
+      <div className="absolute top-4 left-4 z-50">
+        <Button asChild variant="ghost" className="hidden sm:flex gap-2 text-muted-foreground hover:bg-muted">
+          <Link href="/dashboard"><ArrowLeft className="w-4 h-4" /> กลับสู่หน้าหลัก</Link>
+        </Button>
+        <Button asChild variant="ghost" size="icon" className="sm:hidden text-muted-foreground hover:bg-muted">
+          <Link href="/dashboard"><ArrowLeft className="w-5 h-5" /></Link>
+        </Button>
+      </div>
+
+      {/* Floating Theme Toggle */}
+      <div className="absolute top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
+
+      <Card className="w-full max-w-md shadow-xl bg-card text-card-foreground border-border">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Event Check-In</CardTitle>
           <CardDescription>Scan QR Code, Enter Code, or use QR Machine</CardDescription>
           {scanCount > 0 && (
-            <div className="mt-2 inline-flex items-center gap-1.5 bg-green-50 text-green-700 border border-green-200 rounded-full px-3 py-1 text-xs font-medium mx-auto">
+            <div className="mt-2 inline-flex items-center gap-1.5 bg-primary/10 text-primary border border-primary/20 rounded-full px-3 py-1 text-xs font-medium mx-auto">
               <UserCheck className="w-3.5 h-3.5" />
               {scanCount} checked in this session
             </div>
@@ -102,8 +119,8 @@ export default function CheckInPage() {
           {result && (
              <div className="mb-6 animate-in fade-in slide-in-from-top-2">
                 {result.success ? (
-                    <Alert className="bg-green-50 border-green-200 text-green-800">
-                        <CheckCircle className="h-4 w-4" />
+                    <Alert className="bg-primary/5 border-primary/20 text-foreground">
+                        <CheckCircle className="h-4 w-4 text-primary" />
                         <AlertTitle>Success!</AlertTitle>
                         <AlertDescription>
                             <strong>{result.attendee?.name}</strong> checked in to {result.attendee?.eventTitle}.
@@ -111,7 +128,7 @@ export default function CheckInPage() {
                     </Alert>
                 ) : (
                     <Alert variant={result.message?.includes("Already") ? "default" : "destructive"} 
-                           className={result.message?.includes("Already") ? "bg-yellow-50 border-yellow-200 text-yellow-800" : ""}>
+                           className={result.message?.includes("Already") ? "bg-muted border-border text-foreground" : ""}>
                          <AlertCircle className="h-4 w-4" />
                         <AlertTitle>{result.message?.includes("Already") ? "Warning" : "Error"}</AlertTitle>
                         <AlertDescription>
@@ -174,10 +191,10 @@ export default function CheckInPage() {
             </TabsContent>
 
             <TabsContent value="machine" className="space-y-4">
-              <div className="rounded-lg border-2 border-dashed border-blue-200 bg-blue-50/50 p-6 text-center">
-                <Zap className="w-10 h-10 text-blue-400 mx-auto mb-3" />
-                <h3 className="font-semibold text-gray-900 mb-1">USB QR Scanner Mode</h3>
-                <p className="text-xs text-gray-500 mb-4">
+              <div className="rounded-lg border-2 border-dashed border-border bg-muted/50 p-6 text-center">
+                <Zap className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                <h3 className="font-semibold text-foreground mb-1">USB QR Scanner Mode</h3>
+                <p className="text-xs text-muted-foreground mb-4">
                   Point your USB QR scanner at the attendee&apos;s QR code. The scanner will automatically read and check in.
                 </p>
 
@@ -187,15 +204,15 @@ export default function CheckInPage() {
                     value={machineInput}
                     onChange={(e) => setMachineInput(e.target.value)}
                     placeholder="Waiting for QR scan..."
-                    className="text-center font-mono text-sm bg-white"
+                    className="text-center font-mono text-sm bg-background"
                     autoFocus
                     autoComplete="off"
                   />
                 </form>
 
                 <div className="mt-3 flex items-center justify-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`} />
-                  <span className="text-xs text-gray-500">
+                  <div className={`w-2 h-2 rounded-full ${loading ? 'bg-primary/60 animate-pulse' : 'bg-primary'}`} />
+                  <span className="text-xs text-muted-foreground">
                     {loading ? 'Processing...' : 'Ready to scan'}
                   </span>
                 </div>

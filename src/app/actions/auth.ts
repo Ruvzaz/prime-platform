@@ -8,7 +8,8 @@ export async function authenticate(
   formData: FormData,
 ) {
   try {
-    await signIn('credentials', formData);
+    const callbackUrl = formData.get('callbackUrl') as string || '/';
+    await signIn('credentials', { ...Object.fromEntries(formData), redirectTo: callbackUrl });
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {

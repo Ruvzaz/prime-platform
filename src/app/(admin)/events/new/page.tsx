@@ -54,7 +54,7 @@ export default function NewEventPage() {
         <input type="hidden" name="formFields" value={JSON.stringify(formFields)} />
         
         {state?.message && (
-            <div className="p-3 text-sm text-red-500 bg-red-50 rounded-md">
+            <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md border border-destructive/20">
             {state.message}
             </div>
         )}
@@ -73,18 +73,18 @@ export default function NewEventPage() {
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="title">Event Title</Label>
-                            <Input id="title" name="title" placeholder="e.g. Annual Tech Summit 2026" required />
+                            <Input id="title" name="title" placeholder="e.g. Prime Digital New Year Party 2026" required />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="slug">URL Slug</Label>
-                            <Input id="slug" name="slug" placeholder="tech-summit-2026" required />
+                            <Label htmlFor="slug">URL Link</Label>
+                            <Input id="slug" name="slug" placeholder="prime-digital-new-year-party-2026" required />
                             <p className="text-xs text-muted-foreground">prime-platform.com/events/<strong>slug</strong></p>
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="description">Description</Label>
-                            <Textarea id="description" name="description" placeholder="Brief description of the event..." />
+                            <Textarea id="description" name="description" placeholder="Description of the event..." />
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -136,7 +136,29 @@ export default function NewEventPage() {
                         <div className="space-y-2">
                             <Label htmlFor="image">Event Banner</Label>
                             <Input id="image" name="image" type="file" accept="image/*" />
-                            <p className="text-xs text-muted-foreground">Recommended: 1200x630px.<br/>Max 5MB.</p>
+                            <p className="text-xs text-muted-foreground">Recommended: 1920x1080px.<br/>Max 5MB.</p>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Email Customization (Optional)</CardTitle>
+                        <CardDescription>Custom details for the confirmation email.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="emailSubject">Custom Subject</Label>
+                            <Input id="emailSubject" name="emailSubject" placeholder="e.g. Your ticket to Prime Party!" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="emailBody">Custom Body Message</Label>
+                            <Textarea id="emailBody" name="emailBody" placeholder="Add extra details, instructions, or welcome notes here..." className="min-h-[100px]" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="emailAttachment">Email Attachment</Label>
+                            <Input id="emailAttachment" name="emailAttachment" type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" />
+                            <p className="text-xs text-muted-foreground">Attach a PDF, Image, or Document.<br/>Max 5MB.</p>
                         </div>
                     </CardContent>
                 </Card>

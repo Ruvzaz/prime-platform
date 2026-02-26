@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Calendar, MapPin, Users, Trash2, MoreHorizontal, BarChart3 } from "lucide-react"
+import { Calendar, MapPin, Users, Trash2, MoreHorizontal, BarChart3, Radio, Pencil, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -147,7 +147,7 @@ export function EventsTable({ initialEvents }: EventsTableProps) {
                 </TableCell>
                 <TableCell>
                   {event.isActive ? (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Active</Badge>
+                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">Active</Badge>
                   ) : (
                     <Badge variant="outline" className="text-muted-foreground">Draft</Badge>
                   )}
@@ -187,10 +187,22 @@ export function EventsTable({ initialEvents }: EventsTableProps) {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                            <Link href={`/events/${event.id}/edit`}>Edit Event</Link>
+                            <Link href={`/live/${event.slug}`} target="_blank">
+                                <Radio className="mr-2 h-4 w-4" />
+                                Live View
+                            </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                             <Link href={`/events/${event.slug}`}>View Public Page</Link>
+                            <Link href={`/events/${event.id}/edit`}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit Event
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                             <Link href={`/events/${event.slug}`}>
+                                <Globe className="mr-2 h-4 w-4" />
+                                View Public Page
+                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 

@@ -8,12 +8,14 @@ export const prisma = {
     create: vi.fn(),
     update: vi.fn(),
     deleteMany: vi.fn(),
+    count: vi.fn(),
   },
   event: {
     findMany: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
     deleteMany: vi.fn(),
+    updateMany: vi.fn(),
   },
   checkIn: {
     create: vi.fn(),

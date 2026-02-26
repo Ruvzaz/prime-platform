@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { uploadToR2 } from "@/lib/storage";
+import { FieldType } from "@prisma/client";
 
 const eventSchema = z.object({
   title: z.string().min(3),
@@ -16,7 +17,21 @@ const eventSchema = z.object({
   location: z.string().optional(),
   themeColor: z.string().optional(),
   imageUrl: z.string().optional().nullable(),
+  emailSubject: z.string().optional(),
+  emailBody: z.string().optional(),
+  emailAttachmentUrl: z.string().optional().nullable(),
 });
+
+const formFieldSchema = z.array(z.object({
+  id: z.string().optional(),
+  label: z.string().min(1),
+  type: z.nativeEnum(FieldType),
+  required: z.boolean().default(false),
+  options: z.array(z.string()).default([]),
+  order: z.number().optional(),
+}));
+
+export type FormFieldData = z.infer<typeof formFieldSchema>[number];
 
 export async function createEvent(prevState: any, formData: FormData) {
   const session = await auth();
@@ -40,6 +55,21 @@ export async function createEvent(prevState: any, formData: FormData) {
       }
   }
 
+  let emailAttachmentUrl = null;
+  const attachmentFile = formData.get("emailAttachment") as File;
+  
+  if (attachmentFile && attachmentFile.size > 0) {
+      if (attachmentFile.size > 5 * 1024 * 1024) {
+          return { message: "Attachment size too large (Max 5MB)" };
+      }
+      try {
+        emailAttachmentUrl = await uploadToR2(attachmentFile, "attachments");
+      } catch (e) {
+        console.error("Upload failed", e);
+        return { message: "Failed to upload attachment" };
+      }
+  }
+
   const rawData = {
     title: formData.get("title"),
     description: formData.get("description"),
@@ -49,18 +79,23 @@ export async function createEvent(prevState: any, formData: FormData) {
     location: formData.get("location"),
     themeColor: formData.get("themeColor"),
     imageUrl: imageUrl,
+    emailSubject: formData.get("emailSubject"),
+    emailBody: formData.get("emailBody"),
+    emailAttachmentUrl: emailAttachmentUrl,
   };
 
   try {
     const data = eventSchema.parse(rawData);
 
     const formFieldsRaw = formData.get("formFields");
-    let formFields: any[] = [];
+    let formFields: FormFieldData[] = [];
     if (formFieldsRaw) {
         try {
-            formFields = JSON.parse(formFieldsRaw as string);
+            const parsedArray = JSON.parse(formFieldsRaw as string);
+            formFields = formFieldSchema.parse(parsedArray);
         } catch (e) {
             console.error("Failed to parse form fields", e);
+            return { message: "Invalid form fields data" };
         }
     }
 
@@ -74,11 +109,14 @@ export async function createEvent(prevState: any, formData: FormData) {
         location: data.location,
         themeColor: data.themeColor || "#000000",
         imageUrl: imageUrl,
+        emailSubject: data.emailSubject,
+        emailBody: data.emailBody,
+        emailAttachmentUrl: emailAttachmentUrl,
         organizer: {
             connect: { id: session.user.id }
         },
         formFields: {
-            create: formFields.map((field: any, index: number) => ({
+            create: formFields.map((field, index) => ({
                 label: field.label,
                 type: field.type,
                 required: field.required,
@@ -121,6 +159,21 @@ export async function updateEvent(prevState: any, formData: FormData) {
       }
   }
 
+  let emailAttachmentUrl = formData.get("currentAttachmentUrl") as string | null;
+  const attachmentFile = formData.get("emailAttachment") as File;
+  
+  if (attachmentFile && attachmentFile.size > 0) {
+      if (attachmentFile.size > 5 * 1024 * 1024) {
+          return { message: "Attachment size too large (Max 5MB)" };
+      }
+      try {
+        emailAttachmentUrl = await uploadToR2(attachmentFile, "attachments");
+      } catch (e) {
+        console.error("Upload failed", e);
+        return { message: "Failed to upload attachment" };
+      }
+  }
+
   const rawData = {
     title: formData.get("title"),
     description: formData.get("description"),
@@ -130,18 +183,23 @@ export async function updateEvent(prevState: any, formData: FormData) {
     location: formData.get("location"),
     themeColor: formData.get("themeColor"),
     imageUrl: imageUrl,
+    emailSubject: formData.get("emailSubject"),
+    emailBody: formData.get("emailBody"),
+    emailAttachmentUrl: emailAttachmentUrl,
   };
 
   try {
      const data = eventSchema.parse(rawData);
      
      const formFieldsRaw = formData.get("formFields");
-     let formFields: any[] = [];
+     let formFields: FormFieldData[] = [];
      if (formFieldsRaw) {
          try {
-             formFields = JSON.parse(formFieldsRaw as string);
+             const parsedArray = JSON.parse(formFieldsRaw as string);
+             formFields = formFieldSchema.parse(parsedArray);
          } catch (e) {
              console.error("Failed to parse form fields", e);
+             return { message: "Invalid form fields data" };
          }
      }
 
@@ -159,18 +217,15 @@ export async function updateEvent(prevState: any, formData: FormData) {
                 location: data.location,
                 themeColor: data.themeColor || "#000000",
                 imageUrl: imageUrl,
+                emailSubject: data.emailSubject,
+                emailBody: data.emailBody,
+                emailAttachmentUrl: emailAttachmentUrl,
             }
         });
 
         // 2. Smart Update for FormFields to preserve IDs (and thus data associations)
-        // Get existing IDs to know what to delete
-        const submittedIds = formFields.map(f => f.id).filter(id => !id.startsWith("temp_")); // Assuming generic ID check, but UUIDs are cleaner. 
-        // Actually, FormBuilder uses crypto.randomUUID(), so they look like valid IDs.
-        // We'll trust the client IDs. If they exist in DB, update. If not, create.
-        
-        // However, we need to know valid DB IDs to avoid "Record not found" on update if client sends a fake ID.
-        // Easier approach: Delete fields NOT in the submitted list.
-        const currentFieldIds = formFields.map(f => f.id);
+        // Delete fields NOT in the submitted list.
+        const currentFieldIds = formFields.map(f => f.id).filter(Boolean) as string[];
         
         await tx.formField.deleteMany({
             where: {
@@ -181,26 +236,38 @@ export async function updateEvent(prevState: any, formData: FormData) {
 
         // Upsert each field
         for (const [index, field] of formFields.entries()) {
-            await tx.formField.upsert({
-                where: { id: field.id },
-                update: {
-                    label: field.label,
-                    type: field.type,
-                    required: field.required,
-                    options: field.options || [],
-                    order: index
-                },
-                create: {
-                    id: field.id, // Use the ID generated by client if possible, or let DB generate if we omit. 
-                    // Prisma allows creating with specific ID.
-                    eventId: eventId,
-                    label: field.label,
-                    type: field.type,
-                    required: field.required,
-                    options: field.options || [],
-                    order: index
-                }
-            });
+            if (field.id && !field.id.startsWith("temp_")) {
+                await tx.formField.upsert({
+                    where: { id: field.id },
+                    update: {
+                        label: field.label,
+                        type: field.type,
+                        required: field.required,
+                        options: field.options || [],
+                        order: index
+                    },
+                    create: {
+                        id: field.id, // Use the ID generated by client if possible
+                        eventId: eventId,
+                        label: field.label,
+                        type: field.type,
+                        required: field.required,
+                        options: field.options || [],
+                        order: index
+                    }
+                });
+            } else {
+                await tx.formField.create({
+                    data: {
+                        eventId: eventId,
+                        label: field.label,
+                        type: field.type,
+                        required: field.required,
+                        options: field.options || [],
+                        order: index
+                    }
+                });
+            }
         }
      });
 
@@ -215,6 +282,9 @@ export async function updateEvent(prevState: any, formData: FormData) {
 }
 
 export async function getEvents() {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== 'ADMIN') return [];
+
   try {
     const events = await prisma.event.findMany({
       where: { isActive: true },
@@ -254,5 +324,25 @@ export async function deleteEvents(eventIds: string[]) {
   } catch (error) {
     console.error("Failed to archive events:", error);
     return { message: "Failed to archive events" };
+  }
+}
+
+export async function getEventBySlug(slug: string) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== 'ADMIN') return null;
+
+  try {
+    const event = await prisma.event.findUnique({
+      where: { slug },
+      include: {
+        formFields: {
+            orderBy: { order: 'asc' }
+        }
+      }
+    });
+    return event;
+  } catch (error) {
+    console.error("Failed to fetch event by slug:", error);
+    return null;
   }
 }

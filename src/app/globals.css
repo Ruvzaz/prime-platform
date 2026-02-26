@@ -52,34 +52,36 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  /* 3. REFINED COLOR PALETTE (Premium Slate/Zinc) */
-  --background: oklch(0.985 0.005 240);
-  --foreground: oklch(0.13 0.02 240);
+  --radius: 0.5rem; /* Sharper, more premium corners */
+  
+  /* PREMIUM LIGHT MODE */
+  --background: oklch(1 0 0); /* Pure White */
+  --foreground: oklch(0.145 0 0); /* Near Black (Zinc 900) */
   
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.13 0.02 240);
+  --card-foreground: oklch(0.145 0 0);
   
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.13 0.02 240);
+  --popover-foreground: oklch(0.145 0 0);
   
-  /* Primary: Deep Indigo/Violet */
-  --primary: oklch(0.35 0.15 270); 
-  --primary-foreground: oklch(0.98 0 0);
+  /* Primary: Jet Black */
+  --primary: oklch(0.145 0 0); 
+  --primary-foreground: oklch(1 0 0);
   
-  --secondary: oklch(0.96 0.01 240);
-  --secondary-foreground: oklch(0.35 0.15 270);
+  --secondary: oklch(0.97 0 0); /* Zinc 50 */
+  --secondary-foreground: oklch(0.145 0 0);
   
-  --muted: oklch(0.96 0.01 240);
-  --muted-foreground: oklch(0.55 0.02 240);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0); /* Zinc 500 */
   
-  --accent: oklch(0.96 0.01 240);
-  --accent-foreground: oklch(0.35 0.15 270);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.145 0 0);
   
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.01 240);
-  --input: oklch(0.92 0.01 240);
-  --ring: oklch(0.35 0.15 270);
+  --destructive: oklch(0.577 0.245 27.325); /* Restrained standard red */
+  
+  --border: oklch(0.92 0 0); /* Zinc 200 */
+  --input: oklch(0.92 0 0);
+  --ring: oklch(0.145 0 0); /* Black focus ring */
   
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -87,43 +89,47 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   
-  --sidebar: oklch(0.985 0.005 240);
-  --sidebar-foreground: oklch(0.13 0.02 240);
-  --sidebar-primary: oklch(0.35 0.15 270);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.96 0.01 240);
-  --sidebar-accent-foreground: oklch(0.35 0.15 270);
-  --sidebar-border: oklch(0.92 0.01 240);
-  --sidebar-ring: oklch(0.35 0.15 270);
+  /* Sidebar */
+  --sidebar: oklch(0.985 0 0); /* Zinc 50ish */
+  --sidebar-foreground: oklch(0.278 0 0); /* Zinc 700 */
+  --sidebar-primary: oklch(0.145 0 0);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.92 0 0); /* Zinc 200 */
+  --sidebar-accent-foreground: oklch(0.145 0 0);
+  --sidebar-border: oklch(0.92 0 0);
+  --sidebar-ring: oklch(0.145 0 0);
 }
 
 .dark {
-  /* Dark Mode: Deep Void/Slate */
-  --background: oklch(0.10 0.01 240); 
-  --foreground: oklch(0.98 0.01 240);
+  /* PREMIUM DARK MODE */
+  --background: oklch(0.145 0 0); /* Zinc 900 */
+  --foreground: oklch(0.985 0 0); /* Zinc 50 */
   
-  --card: oklch(0.12 0.01 240);
-  --card-foreground: oklch(0.98 0.01 240);
+  --card: oklch(0.145 0 0); /* Flat to background, rely on borders */
+  --card-foreground: oklch(0.985 0 0);
   
-  --popover: oklch(0.12 0.01 240);
-  --popover-foreground: oklch(0.98 0.01 240);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
   
-  --primary: oklch(0.65 0.2 270); /* Vibrant Violet in Dark */
-  --primary-foreground: oklch(0.10 0.01 240);
+  /* Primary: Pure White */
+  --primary: oklch(0.985 0 0); 
+  --primary-foreground: oklch(0.145 0 0);
   
-  --secondary: oklch(0.15 0.01 240);
-  --secondary-foreground: oklch(0.98 0.01 240);
+  /* Secondary: Very Dark Gray (Zinc 800) */
+  --secondary: oklch(0.278 0 0); 
+  --secondary-foreground: oklch(0.985 0 0);
   
-  --muted: oklch(0.15 0.01 240);
-  --muted-foreground: oklch(0.65 0.02 240);
+  --muted: oklch(0.205 0 0); /* Zinc 800 */
+  --muted-foreground: oklch(0.705 0 0); /* Zinc 400 */
   
-  --accent: oklch(0.15 0.01 240);
-  --accent-foreground: oklch(0.98 0.01 240);
+  --accent: oklch(0.278 0 0);
+  --accent-foreground: oklch(0.985 0 0);
   
-  --destructive: oklch(0.7 0.2 20);
-  --border: oklch(0.2 0.01 240);
-  --input: oklch(0.2 0.01 240);
-  --ring: oklch(0.65 0.2 270);
+  --destructive: oklch(0.396 0.141 25.723);
+  
+  --border: oklch(0.278 0 0); /* Zinc 700 */
+  --input: oklch(0.278 0 0);
+  --ring: oklch(0.985 0 0); /* White focus ring */
   
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
@@ -131,14 +137,15 @@
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
   
-  --sidebar: oklch(0.10 0.01 240);
-  --sidebar-foreground: oklch(0.98 0.01 240);
-  --sidebar-primary: oklch(0.65 0.2 270);
-  --sidebar-primary-foreground: oklch(0.98 0.01 240);
-  --sidebar-accent: oklch(0.15 0.01 240);
-  --sidebar-accent-foreground: oklch(0.98 0.01 240);
-  --sidebar-border: oklch(0.2 0.01 240);
-  --sidebar-ring: oklch(0.65 0.2 270);
+  /* Sidebar */
+  --sidebar: oklch(0.145 0 0);
+  --sidebar-foreground: oklch(0.705 0 0); /* Zinc 400 */
+  --sidebar-primary: oklch(0.985 0 0);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.278 0 0); /* Zinc 700 */
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.278 0 0);
+  --sidebar-ring: oklch(0.985 0 0);
 }
 
 @layer base {

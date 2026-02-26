@@ -12,6 +12,7 @@ export type CheckInResult = {
     name: string;
     email: string;
     eventTitle: string;
+    eventImageUrl?: string | null;
     checkedInAt?: Date | null;
   };
 };
@@ -46,6 +47,7 @@ export async function verifyAndCheckIn(referenceCode: string): Promise<CheckInRe
             name,
             email,
             eventTitle: registration.event.title,
+            eventImageUrl: registration.event.imageUrl,
             checkedInAt: registration.checkIn.scannedAt
         }
       };
@@ -90,6 +92,7 @@ export async function verifyAndCheckIn(referenceCode: string): Promise<CheckInRe
         name,
         email,
         eventTitle: registration.event.title,
+        eventImageUrl: registration.event.imageUrl,
       },
     };
 

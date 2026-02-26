@@ -12,6 +12,20 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/tests
+/e2e
+# Ignore all test code files
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+# Ignore test configurations (optional, if you don't want them uploaded)
+playwright.config.ts
+vitest.config.ts
 
 # next.js
 /.next/
@@ -39,3 +53,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+DEPLOYMENT_GUIDE.md

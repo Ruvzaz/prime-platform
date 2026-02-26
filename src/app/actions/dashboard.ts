@@ -16,8 +16,14 @@ export type EventDashboardStats = {
   checkInRate: number
   fieldStats: FieldStat[]
 }
+import { auth } from "@/auth"
 
 export async function getEventDashboardStats(slug: string): Promise<EventDashboardStats | null> {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    return null;
+  }
+
   try {
     const event = await prisma.event.findUnique({
       where: { slug }, // Lookup by slug

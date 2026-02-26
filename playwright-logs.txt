@@ -1,0 +1,11 @@
+
+Running 4 tests using 1 worker
+
+[1A[2K[1/4] [setup] › tests\e2e\global.setup.ts:4:6 › authenticate admin
+[1A[2K[2/4] [chromium] › tests\e2e\workflow.spec.ts:14:7 › Full End-to-End User Journey › Step 1: Admin Creates a New Event
+[1A[2K[3/4] [chromium] › tests\e2e\workflow.spec.ts:45:7 › Full End-to-End User Journey › Step 2: User Registers on Public Page
+[1A[2K[chromium] › tests\e2e\workflow.spec.ts:45:7 › Full End-to-End User Journey › Step 2: User Registers on Public Page
+Extracted Reference Code: REF-F69A57D6
+
+[1A[2K[4/4] [chromium] › tests\e2e\workflow.spec.ts:95:7 › Full End-to-End User Journey › Step 3: Admin Manually Checks In the User
+[1A[2K  4 passed (18.6s)

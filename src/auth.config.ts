@@ -10,9 +10,10 @@ export const authConfig = {
       const userRole = auth?.user?.role;
       
       const isAdminRoute = nextUrl.pathname.startsWith('/dashboard') || 
-                           nextUrl.pathname.startsWith('/events') || 
                            nextUrl.pathname.startsWith('/registrations') ||
-                           nextUrl.pathname.startsWith('/settings');
+                           nextUrl.pathname.startsWith('/responses') ||
+                           nextUrl.pathname.startsWith('/settings') ||
+                           (nextUrl.pathname.startsWith('/events') && nextUrl.pathname === '/events' || nextUrl.pathname.startsWith('/events/new') || nextUrl.pathname.endsWith('/edit') || nextUrl.pathname.endsWith('/dashboard'));
       const isStaffRoute = nextUrl.pathname.startsWith('/check-in');
 
       if (isAdminRoute) {

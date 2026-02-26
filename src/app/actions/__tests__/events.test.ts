@@ -22,17 +22,20 @@ describe('getEvents', () => {
       { id: '1', title: 'Event 1', slug: 'event-1', startDate: new Date(), _count: { registrations: 10 } },
       { id: '2', title: 'Event 2', slug: 'event-2', startDate: new Date(), _count: { registrations: 5 } },
     ];
+    setMockSession({ user: { id: 'admin-1', role: 'ADMIN' } });
     prisma.event.findMany.mockResolvedValue(mockEvents);
 
     const result = await getEvents();
     expect(result).toEqual(mockEvents);
     expect(prisma.event.findMany).toHaveBeenCalledWith({
+      where: { isActive: true },
       orderBy: { startDate: 'desc' },
       include: { _count: { select: { registrations: true } } },
     });
   });
 
   it('should return empty array on error', async () => {
+    setMockSession({ user: { id: 'admin-1', role: 'ADMIN' } });
     prisma.event.findMany.mockRejectedValue(new Error('DB Error'));
 
     const result = await getEvents();
@@ -60,20 +63,22 @@ describe('deleteEvents', () => {
 
   it('should delete events for ADMIN users', async () => {
     setMockSession({ user: { id: 'admin-1', role: 'ADMIN' } });
-    prisma.event.deleteMany.mockResolvedValue({ count: 2 });
+    // Mock updateMany for soft delete
+    prisma.event.updateMany = vi.fn().mockResolvedValue({ count: 2 });
 
     const result = await deleteEvents(['event-1', 'event-2']);
-    expect(result.message).toBe('Events deleted successfully');
-    expect(prisma.event.deleteMany).toHaveBeenCalledWith({
+    expect(result.message).toBe('Events archived successfully');
+    expect(prisma.event.updateMany).toHaveBeenCalledWith({
       where: { id: { in: ['event-1', 'event-2'] } },
+      data: { isActive: false },
     });
   });
 
   it('should handle delete failure gracefully', async () => {
     setMockSession({ user: { id: 'admin-1', role: 'ADMIN' } });
-    prisma.event.deleteMany.mockRejectedValue(new Error('FK constraint'));
+    prisma.event.updateMany = vi.fn().mockRejectedValue(new Error('DB Error'));
 
     const result = await deleteEvents(['event-1']);
-    expect(result.message).toBe('Failed to delete events');
+    expect(result.message).toBe('Failed to archive events');
   });
 });

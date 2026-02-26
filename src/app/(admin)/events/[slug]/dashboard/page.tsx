@@ -73,7 +73,7 @@ export default async function EventDashboardPage({
                         <div className="text-2xl font-bold">{stats.checkInRate.toFixed(1)}%</div>
                         <div className="h-2 w-full bg-secondary mt-2 rounded-full overflow-hidden">
                             <div 
-                                className="h-full bg-green-500 transition-all duration-500" 
+                                className="h-full bg-primary transition-all duration-500" 
                                 style={{ width: `${stats.checkInRate}%` }}
                             />
                         </div>

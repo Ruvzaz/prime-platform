@@ -56,19 +56,34 @@ export async function registerAttendee(formData: FormData) {
   // Extract email and name
   const { name, email } = extractAttendeeInfo(rawData);
 
-  // Fetch event title for email
+  // Fetch event title and custom email settings
   const event = await prisma.event.findUnique({
     where: { id: eventId },
-    select: { title: true, startDate: true },
+    select: { 
+        title: true, 
+        startDate: true,
+        emailSubject: true,
+        emailBody: true,
+        emailAttachmentUrl: true
+    },
   });
 
   // Send Confirmation Email immediately
   if (email && process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD && event) {
     try {
       const { sendRegistrationEmail } = await import("@/lib/email");
-      await sendRegistrationEmail(email, name, event.title, referenceCode, event.startDate);
+      await sendRegistrationEmail(
+          email, 
+          name, 
+          event.title, 
+          referenceCode, 
+          event.startDate, 
+          event.emailSubject, 
+          event.emailBody, 
+          event.emailAttachmentUrl
+      );
     } catch (e) {
-      console.error("Failed to send confirmation email:", e);
+      console.error("Failed to send confirmation email. Proceeding with registration anyway:", e);
     }
   }
   
@@ -81,6 +96,11 @@ export async function getRegistrations(
   pageSize: number = 10,
   query: string = ""
 ) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    return { data: [], metadata: { total: 0, page: 1, pageSize: 10, totalPages: 0 } };
+  }
+
   try {
     const where: any = {
       event: { isActive: true }, // Exclude soft-deleted events
@@ -152,8 +172,13 @@ export async function getRegistrations(
 export async function updateRegistration(
   id: string,
   status: RegStatus,
-  formData: Record<string, string>
+  formData: Record<string, any>
 ) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    return { success: false, error: "Unauthorized" };
+  }
+
   try {
     await prisma.registration.update({
       where: { id },
@@ -171,6 +196,11 @@ export async function updateRegistration(
 }
 
 export async function deleteCheckIn(registrationId: string) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    return { success: false, error: "Unauthorized" };
+  }
+
   try {
     await prisma.checkIn.delete({
       where: { registrationId },
@@ -183,10 +213,91 @@ export async function deleteCheckIn(registrationId: string) {
   }
 }
 
+import { auth } from "@/auth";
+
+export async function createCheckIn(registrationId: string) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    return { success: false, error: "Unauthorized" };
+  }
+
+  try {
+    const staffId = session.user.id;
+    // Check if already checked in
+    const existing = await prisma.checkIn.findUnique({
+      where: { registrationId }
+    });
+
+    if (existing) {
+        return { success: true, message: "Already checked in" };
+    }
+
+    await prisma.checkIn.create({
+      data: {
+        registrationId,
+        scannedAt: new Date(),
+        staffId: session.user.id
+      },
+    });
+    revalidatePath("/dashboard/registrations");
+    revalidatePath("/events/[slug]/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to create check-in:", error);
+    return { success: false, error: "Failed to create check-in" };
+  }
+}
+
+export async function getRecentCheckIns(eventId: string, limit = 10) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    return [];
+  }
+
+  try {
+    const checkIns = await prisma.checkIn.findMany({
+      where: {
+        registration: {
+            eventId: eventId
+        }
+      },
+      take: limit,
+      orderBy: {
+        scannedAt: 'desc'
+      },
+      include: {
+        registration: {
+            include: {
+                event: {
+                    include: { formFields: true }
+                }
+            }
+        }
+      }
+    });
+
+    // Transform for client
+    // We want registration details + scan time
+    return checkIns.map(ci => ({
+        id: ci.id,
+        scannedAt: ci.scannedAt,
+        registration: ci.registration
+    }));
+  } catch (error) {
+    console.error("Failed to fetch recent check-ins:", error);
+    return [];
+  }
+}
+
 export async function getRegistrationsForExport(
   eventId?: string, 
   query: string = ""
 ) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    return [];
+  }
+
   try {
     const where: any = {
       event: { isActive: true }, 

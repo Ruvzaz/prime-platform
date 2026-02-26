@@ -1,9 +1,10 @@
 import Link from "next/link"
 import { logout } from "@/app/actions/auth"
 import { auth } from "@/auth"
-import { LayoutDashboard, Calendar, Users, Settings, LogOut, QrCode } from "lucide-react"
+import { LayoutDashboard, Calendar, Users, Settings, LogOut, QrCode, Table } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/theme-toggle"
 import {
   Sidebar,
   SidebarContent,
@@ -31,10 +32,13 @@ export default async function AdminLayout({
     <SidebarProvider defaultOpen={defaultOpen}>
       <div className="flex min-h-screen w-full">
         <AppSidebar userName={session?.user?.name} userRole={session?.user?.role} />
-        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-          <div className="flex h-16 items-center border-b bg-white px-6 shadow-sm dark:bg-gray-950 dark:border-gray-800">
+        <main className="flex-1 overflow-y-auto bg-background">
+          <div className="flex h-16 items-center border-b border-border bg-card px-6 shadow-sm">
             <SidebarTrigger />
             <h1 className="ml-4 text-lg font-semibold">Prime Digital Admin</h1>
+            <div className="ml-auto">
+              <ThemeToggle />
+            </div>
           </div>
           <div className="p-6">{children}</div>
         </main>
@@ -82,6 +86,15 @@ function AppSidebar({ userName, userRole }: { userName?: string | null; userRole
 
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
+              <Link href="/responses">
+                <Table className="mr-2 h-4 w-4" />
+                <span>Responses</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
               <Link href="/check-in" target="_blank">
                 <QrCode className="mr-2 h-4 w-4" />
                 <span>Scan QR (Check-in)</span>
@@ -102,7 +115,7 @@ function AppSidebar({ userName, userRole }: { userName?: string | null; userRole
                 </div>
             </div>
             <form action={logout}>
-                <Button variant="outline" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50" size="sm">
+                <Button variant="outline" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" size="sm">
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out
                 </Button>

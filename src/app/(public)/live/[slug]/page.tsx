@@ -88,16 +88,22 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
     )
   }
 
-  const themeColor = event.themeColor || "#6366f1"
+  const accentColor = "#ffffff" // Monochrome white accent
 
   return (
     <div className="min-h-screen bg-gray-950 text-white overflow-hidden">
       {/* Header */}
       <header
-        className="relative px-6 py-6 border-b border-white/10"
-        style={{ background: `linear-gradient(135deg, ${themeColor}22, transparent)` }}
+        className="relative px-6 py-6 border-b border-white/10 bg-zinc-900/50 overflow-hidden"
       >
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+        {event.imageUrl && (
+          <div className="absolute inset-0 opacity-20 pointer-events-none">
+            <img src={event.imageUrl} alt="Background" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-gray-950 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-950 to-transparent" />
+          </div>
+        )}
+        <div className="max-w-5xl mx-auto flex items-center justify-between relative z-10">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">{event.title}</h1>
             <p className="text-sm text-gray-400 mt-1">Live Check-in Board</p>
@@ -122,16 +128,11 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
           className="max-w-5xl mx-auto px-6 py-8"
         >
           <div
-            className="relative p-8 rounded-2xl border border-white/10 text-center overflow-hidden"
-            style={{
-              background: `linear-gradient(135deg, ${themeColor}15, ${themeColor}05)`,
-              borderColor: `${themeColor}40`,
-            }}
+            className="relative p-8 rounded-2xl border border-white/10 text-center overflow-hidden bg-white/[0.03]"
           >
             <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">Latest Check-in</p>
             <div
-              className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center text-2xl font-bold"
-              style={{ background: `${themeColor}30`, color: themeColor }}
+              className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center text-2xl font-bold bg-white/10 text-white"
             >
               {checkIns[0].name.substring(0, 2).toUpperCase()}
             </div>
@@ -147,8 +148,7 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
 
             {/* Decorative glow */}
             <div
-              className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-20"
-              style={{ background: themeColor }}
+              className="absolute -top-20 -right-20 w-40 h-40 rounded-full blur-3xl opacity-10 bg-white"
             />
           </div>
         </div>
@@ -184,11 +184,7 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
                       #{index + 1}
                     </div>
                     <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-                      style={{
-                        background: `${themeColor}20`,
-                        color: themeColor,
-                      }}
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-white/10 text-white"
                     >
                       {ci.name.substring(0, 2).toUpperCase()}
                     </div>

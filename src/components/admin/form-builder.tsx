@@ -161,10 +161,10 @@ function SortableFieldItem({
                   </div>
                 )}
 
-                {/* OPTIONS EDITOR FOR SELECT */}
-                {field.type === "SELECT" && (
+                {/* OPTIONS EDITOR FOR SELECT & CHECKBOX */}
+                {(field.type === "SELECT" || field.type === "CHECKBOX") && (
                     <div className="pl-4 border-l-2 border-muted mt-2 space-y-2">
-                        <Label className="text-xs text-muted-foreground">ตัวเลือก Dropdown</Label>
+                        <Label className="text-xs text-muted-foreground">ตัวเลือก {field.type === "SELECT" ? "Dropdown" : "Checkbox"}</Label>
                         {field.options?.map((opt, optIndex) => (
                             <div key={optIndex} className="flex items-center gap-2">
                                 <Input 
@@ -176,15 +176,15 @@ function SortableFieldItem({
                                     type="button" 
                                     variant="ghost" 
                                     size="icon" 
-                                    className="h-8 w-8"
+                                    className="h-8 w-8 text-red-400 hover:text-red-500 hover:bg-red-50"
                                     onClick={() => removeOption(field.id, optIndex)}
                                     disabled={field.options?.length === 1}
                                 >
-                                    <Trash2 className="h-3 w-3" />
+                                    <Trash2 className="h-4 w-4" />
                                 </Button>
                             </div>
                         ))}
-                        <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => addOption(field.id)}>
+                        <Button type="button" variant="outline" size="sm" className="h-7 text-xs bg-background hover:bg-muted" onClick={() => addOption(field.id)}>
                             <Plus className="mr-2 h-3 w-3" /> เพิ่มตัวเลือก
                         </Button>
                     </div>
@@ -222,12 +222,12 @@ export function FormBuilder({ onChange, initialFields = [] }: FormBuilderProps) 
 
   const addField = (type: FieldType) => {
     const newField: FormFieldConfig = {
-      id: crypto.randomUUID(),
+      id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `field-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       label: "",
       type,
       required: false,
       order: fields.length,
-      options: type === "SELECT" ? ["Option 1", "Option 2"] : undefined,
+      options: (type === "SELECT" || type === "CHECKBOX") ? ["Option 1", "Option 2"] : undefined,
     }
     setFields([...fields, newField])
   }
@@ -239,7 +239,17 @@ export function FormBuilder({ onChange, initialFields = [] }: FormBuilderProps) 
   }
 
   const updateField = (id: string, updates: Partial<FormFieldConfig>) => {
-    setFields(fields.map((f) => (f.id === id ? { ...f, ...updates } : f)))
+    setFields(fields.map((f) => {
+        if (f.id !== id) return f;
+        
+        // If switching TO "SELECT" or "CHECKBOX" and it doesn't have options yet, initialize them
+        if ((updates.type === "SELECT" || updates.type === "CHECKBOX") && (!f.options || f.options.length === 0)) {
+            return { ...f, ...updates, options: ["Option 1", "Option 2"] };
+        }
+        
+        // If switching AWAY from "SELECT" or "CHECKBOX", we might want to clean up options, but leaving them is safe too.
+        return { ...f, ...updates };
+    }))
   }
 
   const updateOption = (fieldId: string, index: number, value: string) => {
@@ -287,6 +297,12 @@ export function FormBuilder({ onChange, initialFields = [] }: FormBuilderProps) 
       <div className="flex flex-wrap gap-2 mb-4">
         <Button type="button" variant="outline" size="sm" onClick={() => addField("TEXT")}>
             <Type className="mr-2 h-4 w-4" /> Text
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => addField("PHONE")}>
+            <Type className="mr-2 h-4 w-4" /> Phone
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => addField("CHECKBOX")}>
+            <List className="mr-2 h-4 w-4" /> Checkbox
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={() => addField("SELECT")}>
             <List className="mr-2 h-4 w-4" /> Dropdown

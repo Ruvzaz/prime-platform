@@ -22,6 +22,9 @@ interface EventFormProps {
     location?: string | null
     themeColor?: string | null
     imageUrl?: string | null
+    emailSubject?: string | null
+    emailBody?: string | null
+    emailAttachmentUrl?: string | null
     formFields: FormFieldConfig[]
   }
 }
@@ -129,6 +132,34 @@ export function EventForm({ action, initialData }: EventFormProps) {
                       Current image: <a href={initialData.imageUrl} target="_blank" className="underline">View</a>
                   </div>
               )}
+            </div>
+
+            <hr className="my-6 border-muted" />
+            
+            <div className="space-y-4">
+              <div className="mb-2">
+                  <h3 className="text-sm font-semibold">Email Customization (Optional)</h3>
+                  <p className="text-xs text-muted-foreground">Custom details for the confirmation email.</p>
+              </div>
+              <div className="space-y-2">
+                  <Label htmlFor="emailSubject">Custom Subject</Label>
+                  <Input id="emailSubject" name="emailSubject" defaultValue={initialData?.emailSubject || ""} placeholder="e.g. Your ticket to Prime Party!" />
+              </div>
+              <div className="space-y-2">
+                  <Label htmlFor="emailBody">Custom Body Message</Label>
+                  <Textarea id="emailBody" name="emailBody" defaultValue={initialData?.emailBody || ""} placeholder="Add extra details, instructions, or welcome notes here..." className="min-h-[100px]" />
+              </div>
+              <div className="space-y-2">
+                  <Label htmlFor="emailAttachment">Email Attachment</Label>
+                  <Input id="emailAttachment" name="emailAttachment" type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" />
+                  {initialData?.emailAttachmentUrl && (
+                      <div className="mt-2 text-xs text-muted-foreground">
+                          Current attachment: <a href={initialData.emailAttachmentUrl} target="_blank" className="underline">View File</a>
+                          <input type="hidden" name="currentAttachmentUrl" value={initialData.emailAttachmentUrl} />
+                      </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">Attach a PDF, Image, or Document. Max 5MB.</p>
+              </div>
             </div>
           </CardContent>
         </Card>

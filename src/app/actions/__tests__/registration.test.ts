@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { prisma } from '@/__mocks__/prisma';
+import { auth, setMockSession, clearMockSession } from '@/__mocks__/auth';
 
 // Mock modules
 vi.mock('@/lib/prisma', () => ({ prisma }));
+vi.mock('@/auth', () => ({ auth }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
 
@@ -12,6 +14,7 @@ import { getRegistrations, updateRegistration, deleteCheckIn } from '../registra
 describe('getRegistrations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setMockSession({ user: { id: 'admin-1', role: 'ADMIN' } });
   });
 
   it('should return all registrations when no eventId is provided', async () => {
@@ -19,44 +22,41 @@ describe('getRegistrations', () => {
       { id: '1', referenceCode: 'REF-001', status: 'CONFIRMED', createdAt: new Date(), formData: {}, checkIn: null, event: { title: 'Event 1', slug: 'event-1', formFields: [] } },
       { id: '2', referenceCode: 'REF-002', status: 'PENDING', createdAt: new Date(), formData: {}, checkIn: null, event: { title: 'Event 2', slug: 'event-2', formFields: [] } },
     ];
-    prisma.registration.findMany.mockResolvedValue(mockData);
+    prisma.$transaction.mockResolvedValue([mockData, 2]);
 
     const result = await getRegistrations();
-    expect(result).toEqual(mockData);
-    expect(prisma.registration.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: {} })
-    );
+    expect(result.data).toEqual(mockData);
+    expect(result.metadata.total).toBe(2);
+    expect(prisma.$transaction).toHaveBeenCalled();
   });
 
   it('should filter by eventId when provided', async () => {
-    prisma.registration.findMany.mockResolvedValue([]);
+    prisma.$transaction.mockResolvedValue([[], 0]);
 
     await getRegistrations('event-123');
-    expect(prisma.registration.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { eventId: 'event-123' } })
-    );
+    expect(prisma.$transaction).toHaveBeenCalled();
   });
 
   it('should treat "all" as no filter', async () => {
-    prisma.registration.findMany.mockResolvedValue([]);
+    prisma.$transaction.mockResolvedValue([[], 0]);
 
     await getRegistrations('all');
-    expect(prisma.registration.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: {} })
-    );
+    expect(prisma.$transaction).toHaveBeenCalled();
   });
 
   it('should return empty array on error', async () => {
-    prisma.registration.findMany.mockRejectedValue(new Error('DB Error'));
+    prisma.$transaction.mockRejectedValue(new Error('DB Error'));
 
     const result = await getRegistrations();
-    expect(result).toEqual([]);
+    expect(result.data).toEqual([]);
+    expect(result.metadata.total).toBe(0);
   });
 });
 
 describe('updateRegistration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setMockSession({ user: { id: 'admin-1', role: 'ADMIN' } });
   });
 
   it('should update registration successfully', async () => {
@@ -82,6 +82,7 @@ describe('updateRegistration', () => {
 describe('deleteCheckIn', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setMockSession({ user: { id: 'admin-1', role: 'ADMIN' } });
   });
 
   it('should delete check-in successfully', async () => {

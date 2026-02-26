@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import { Download, Filter, Search, MoreHorizontal, ChevronLeft, ChevronRight } from "lucide-react"
+import { Download, Filter, Search, MoreHorizontal, ChevronLeft, ChevronRight, Copy, Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -29,7 +29,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { EditRegistrationDialog } from "@/components/admin/edit-registration-dialog"
+import { RegistrationEditSheet } from "@/components/admin/registration-edit-sheet"
 import { extractAttendeeInfo } from "@/lib/attendee-utils"
 
 // Simple debounce hook if not exists, for now implementing inline logic or using timeout
@@ -312,12 +312,14 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                                               navigator.clipboard.writeText(reg.referenceCode)
                                             }}
                                           >
+                                            <Copy className="mr-2 h-4 w-4" />
                                             Copy Ref Code
                                           </DropdownMenuItem>
                                           <DropdownMenuItem onClick={() => {
                                               setEditingRegistration(reg)
                                               setIsEditOpen(true)
                                           }}>
+                                            <Pencil className="mr-2 h-4 w-4" />
                                             Edit Registration
                                           </DropdownMenuItem>
                                         </DropdownMenuContent>
@@ -356,7 +358,9 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
             </div>
         </div>
 
-        <EditRegistrationDialog 
+
+
+        <RegistrationEditSheet 
             registration={editingRegistration} 
             open={isEditOpen} 
             onOpenChange={setIsEditOpen} 

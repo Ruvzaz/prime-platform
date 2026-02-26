@@ -1,13 +1,15 @@
 import { notFound } from "next/navigation"
 import { Calendar, MapPin, Clock, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { SubmitButton } from "@/components/submit-button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { prisma } from "@/lib/prisma"
 import { registerAttendee } from "@/app/actions/registration"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 async function getEvent(slug: string) {
-  const event = await prisma.event.findUnique({
+  const event = await prisma.event.findFirst({
     where: { slug, isActive: true },
     include: {
       formFields: {
@@ -30,147 +32,150 @@ export default async function EventRegistrationPage({
     notFound()
   }
 
-  const themeColor = event.themeColor || '#6366f1'
-
   return (
-    <div className="min-h-screen relative overflow-hidden bg-black text-white">
-
-      {/* === BACKGROUND EFFECTS === */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full blur-[160px] animate-pulse" style={{ background: themeColor, opacity: 0.25 }} />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full blur-[140px] animate-pulse" style={{ background: themeColor, opacity: 0.15, animationDelay: '2s' }} />
-        <div className="absolute top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[200px]" style={{ background: themeColor, opacity: 0.05 }} />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
-      </div>
-
-      {/* === CONTENT === */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4 md:p-8">
-
-        {/* Banner Image */}
-        {event.imageUrl && (
-          <div className="w-full max-w-2xl mb-0 rounded-t-2xl overflow-hidden shadow-2xl">
+    <div className="min-h-screen relative flex items-center justify-center p-4 md:p-8 font-sans transition-colors duration-500 overflow-x-hidden">
+      
+      {/* FULL-SCREEN BACKGROUND IMAGE (BLURRED) */}
+      <div className="fixed inset-0 z-0">
+        {event.imageUrl ? (
+          <>
             <img
               src={event.imageUrl}
-              alt={event.title}
-              className="w-full h-auto block"
+              alt="Background"
+              className="w-full h-full object-cover blur-xl scale-110 opacity-60 dark:opacity-30 transition-opacity duration-500"
             />
+            {/* Overlay to ensure text readability */}
+            <div className="absolute inset-0 bg-background/40 dark:bg-zinc-950/60 mix-blend-multiply" />
+          </>
+        ) : (
+          <div className="absolute inset-0 bg-zinc-100 dark:bg-zinc-950">
+            <div className="absolute top-[10%] left-[20%] w-[600px] h-[600px] rounded-full blur-[120px] bg-black/5 dark:bg-white/5" />
+            <div className="absolute bottom-[20%] right-[10%] w-[500px] h-[500px] rounded-full blur-[140px] bg-black/5 dark:bg-white/5" />
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] dark:opacity-[0.06] mix-blend-overlay"></div>
           </div>
         )}
+      </div>
 
-        {/* Main Card - White Theme */}
-        <div className={`w-full max-w-2xl bg-white shadow-2xl overflow-hidden ${event.imageUrl ? 'rounded-b-2xl' : 'rounded-2xl'}`}>
+      {/* FLOATING THEME TOGGLE */}
+      <div className="fixed top-4 right-4 md:top-8 md:right-8 z-50">
+        <ThemeToggle />
+      </div>
 
-          {/* Top accent bar (only when no image) */}
-          {!event.imageUrl && (
-            <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${themeColor}, ${themeColor}88)` }} />
-          )}
+      {/* CENTERED REGISTRATION CARD */}
+      <div className="relative z-10 w-full max-w-2xl bg-card dark:bg-zinc-900 border border-border/40 shadow-2xl rounded-2xl overflow-hidden backdrop-blur-md">
+        
+        {/* Header Block */}
+        <div className="p-6 md:p-10 pb-6 border-b border-border/40">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-6 bg-foreground text-background">
+            <Sparkles className="w-3.5 h-3.5 text-yellow-500" />
+            เปิดรับลงทะเบียน
+          </div>
 
-          {/* Header */}
-          <div className="p-6 md:p-8 pb-0">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-5" style={{ color: themeColor, background: `${themeColor}12` }}>
-              <Sparkles className="w-3 h-3" />
-              เปิดรับลงทะเบียน
+          <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1] mb-6 text-foreground">
+            {event.title}
+          </h1>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/50 text-xs font-medium bg-muted/50 text-foreground">
+              <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+              <span>{new Date(event.startDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
             </div>
-
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900 mb-3">
-              {event.title}
-            </h1>
-
-            {event.description && (
-              <p className="text-gray-500 text-sm md:text-base leading-relaxed">
-                {event.description}
-              </p>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/50 text-xs font-medium bg-muted/50 text-foreground">
+              <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+              <span>{new Date(event.startDate).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+            {event.location && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/50 text-xs font-medium bg-muted/50 text-foreground">
+                <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+                <span>{event.location}</span>
+              </div>
             )}
-
-            {/* Event Info Pills */}
-            <div className="flex flex-wrap gap-3 mt-5">
-              <div className="flex items-center gap-1.5 text-xs bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100" style={{ color: themeColor }}>
-                <Calendar className="w-3.5 h-3.5" />
-                <span className="text-gray-600">{new Date(event.startDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100" style={{ color: themeColor }}>
-                <Clock className="w-3.5 h-3.5" />
-                <span className="text-gray-600">{new Date(event.startDate).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>
-              </div>
-              {event.location && (
-                <div className="flex items-center gap-1.5 text-xs bg-gray-50 px-3 py-1.5 rounded-full border border-gray-100" style={{ color: themeColor }}>
-                  <MapPin className="w-3.5 h-3.5" />
-                  <span className="text-gray-600">{event.location}</span>
-                </div>
-              )}
-            </div>
           </div>
 
-          {/* Divider */}
-          <div className="mx-6 md:mx-8 my-6 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent" />
-
-          {/* Form Section */}
-          <div className="px-6 md:px-8 pb-8">
-            <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-6 md:p-7 relative overflow-hidden">
-              {/* Subtle theme glow at top */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-0.5 rounded-full" style={{ background: `linear-gradient(90deg, transparent, ${themeColor}50, transparent)` }} />
-
-              <h2 className="text-sm font-semibold uppercase tracking-wider mb-5" style={{ color: themeColor }}>ลงทะเบียน</h2>
-
-              <form action={registerAttendee} className="space-y-5">
-                <input type="hidden" name="eventId" value={event.id} />
-                <input type="hidden" name="eventSlug" value={event.slug} />
-
-                {event.formFields.map((q) => (
-                  <div key={q.id} className="space-y-2">
-                    <Label htmlFor={q.id} className="text-sm text-gray-600 font-medium">
-                      {q.label} {q.required && <span style={{ color: themeColor }}>*</span>}
-                    </Label>
-
-                    {q.type === "TEXT" || q.type === "EMAIL" || q.type === "PHONE" ? (
-                      <Input
-                        id={q.id}
-                        name={`field_${q.id}`}
-                        type={q.type === "EMAIL" ? "email" : "text"}
-                        placeholder={`กรอก${q.label}`}
-                        required={q.required}
-                        className="bg-white border-gray-200 text-gray-900 placeholder:text-gray-300 h-12 rounded-lg transition-all focus:ring-2 focus:ring-offset-0"
-                        style={{ '--tw-ring-color': `${themeColor}30`, borderColor: undefined } as React.CSSProperties}
-                      />
-                    ) : q.type === "SELECT" ? (
-                      <select
-                        id={q.id}
-                        name={`field_${q.id}`}
-                        className="flex h-12 w-full items-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-offset-0"
-                        style={{ '--tw-ring-color': `${themeColor}30` } as React.CSSProperties}
-                        required={q.required}
-                      >
-                        <option value="">เลือกตัวเลือก</option>
-                        {q.options.map((opt) => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    ) : null}
-                  </div>
-                ))}
-
-
-                <div className="pt-2">
-                  <Button
-                    type="submit"
-                    className="w-full text-base py-6 font-semibold rounded-xl text-white transition-all duration-300 hover:scale-[1.02] hover:brightness-110 active:scale-[0.98]"
-                    style={{
-                      background: `linear-gradient(135deg, ${themeColor}, ${themeColor}cc)`,
-                      boxShadow: `0 8px 32px ${themeColor}25`,
-                    }}
-                  >
-                    ลงทะเบียน
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
+          {event.description && (
+            <p className="mt-6 text-muted-foreground text-sm leading-relaxed border-l-2 border-primary/30 pl-4 py-1">
+              {event.description}
+            </p>
+          )}
         </div>
 
-        {/* Footer */}
-        <p className="text-xs text-white/40 mt-6">
-          Powered by Prime Digital Consultant
-        </p>
+        {/* Form Block */}
+        <div className="p-6 md:p-10 bg-muted/30 dark:bg-zinc-950/50">
+          <div className="flex items-center gap-2 mb-6">
+            <h2 className="text-base font-bold text-foreground">
+              ลงทะเบียนเข้าร่วมงาน
+            </h2>
+            <div className="flex-1 h-px bg-border/40" />
+          </div>
+          
+          <form action={registerAttendee} className="space-y-6">
+            <input type="hidden" name="eventId" value={event.id} />
+            <input type="hidden" name="eventSlug" value={event.slug} />
+
+            <div className="space-y-5">
+              {event.formFields.map((q) => (
+                <div key={q.id} className="space-y-2">
+                  <Label htmlFor={q.id} className="text-sm font-bold tracking-tight text-foreground">
+                    {q.label} {q.required && <span className="text-destructive">*</span>}
+                  </Label>
+                  {q.type === "TEXT" || q.type === "EMAIL" || q.type === "PHONE" ? (
+                    <Input
+                      id={q.id}
+                      name={`field_${q.id}`}
+                      type={q.type === "EMAIL" ? "email" : "text"}
+                      placeholder={`กรอก${q.label}`}
+                      required={q.required}
+                      className="bg-background dark:bg-zinc-900 border-border/50 h-12 rounded-xl px-4 transition-all focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground placeholder:text-muted-foreground/50"
+                    />
+                  ) : q.type === "SELECT" ? (
+                    <select
+                      id={q.id}
+                      name={`field_${q.id}`}
+                      className="flex h-12 w-full items-center rounded-xl border border-border/50 bg-background dark:bg-zinc-900 px-4 py-2 text-sm text-foreground transition-all focus:outline-none focus:ring-1 focus:ring-foreground focus:border-foreground appearance-none cursor-pointer"
+                      required={q.required}
+                    >
+                      <option value="">เลือกตัวเลือก</option>
+                      {q.options.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  ) : q.type === "CHECKBOX" ? (
+                    <div className="space-y-3 pt-2">
+                        {q.options.map((opt) => (
+                          <label key={opt} className="flex items-start gap-3 cursor-pointer group">
+                            <input
+                              type="checkbox"
+                              name={`field_${q.id}`}
+                              value={opt}
+                              className="mt-0.5 mt-0.5 peer h-5 w-5 shrink-0 rounded-[4px] border border-border/50 text-foreground bg-background dark:bg-zinc-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground disabled:cursor-not-allowed disabled:opacity-50 checked:bg-foreground checked:border-foreground checked:text-background appearance-none flex items-center justify-center transition-all before:content-[''] before:block before:w-full before:h-full before:rounded-[2px] before:scale-0 checked:before:scale-100 before:transition-transform before:bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwb2x5bGluZSBwb2ludHM9IjIwIDYgOSAxNyA0 12Ij48L3BvbHlsaW5lPjwvc3ZnPg==')] before:bg-no-repeat before:bg-center before:bg-[length:12px_12px]"
+                            />
+                            <span className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors leading-tight pt-0.5 content-center">
+                              {opt}
+                            </span>
+                          </label>
+                        ))}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-6">
+              <SubmitButton
+                type="submit"
+                loadingText="กำลังดำเนินการ..."
+                className="w-full text-base py-6 font-bold rounded-xl bg-foreground text-background hover:bg-foreground/90 transition-all active:scale-[0.98] shadow-lg shadow-black/5"
+              >
+                ลงทะเบียน
+              </SubmitButton>
+            </div>
+          </form>
+
+          <p className="mt-8 text-[11px] text-muted-foreground/60 text-center font-medium uppercase tracking-widest flex items-center justify-center gap-2">
+            <span>Powered by Prime Digital</span>
+          </p>
+        </div>
+
       </div>
     </div>
   )

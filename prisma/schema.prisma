@@ -37,6 +37,12 @@ model Event {
   themeColor  String?  @default("#000000")
   imageUrl    String?
   bannerUrl   String?
+  
+  // Custom Email configurations
+  emailSubject       String?
+  emailBody          String?
+  emailAttachmentUrl String?
+  
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

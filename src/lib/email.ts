@@ -10,43 +10,16 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const sendVerificationEmail = async (email: string, verifyUrl: string) => {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    console.warn("GMAIL_USER or GMAIL_APP_PASSWORD not found. Skipping verification email.");
-    return { success: false, error: "Missing Gmail credentials" };
-  }
-
-  try {
-    const info = await transporter.sendMail({
-      from: `"Prime Platform" <${process.env.GMAIL_USER}>`,
-      to: email,
-      subject: "Verify your email address",
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333;">Verify your email</h1>
-          <p>Click the button below to verify your email address and complete your registration.</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${verifyUrl}" style="background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Verify Email</a>
-          </div>
-          <p style="color: #666; font-size: 14px;">If you didn't request this, you can ignore this email.</p>
-          <p style="color: #999; font-size: 12px; margin-top: 20px;">Link: <a href="${verifyUrl}">${verifyUrl}</a></p>
-        </div>
-      `,
-    });
-    console.log("Verification email sent: %s", info.messageId);
-    return { success: true, messageId: info.messageId };
-  } catch (error) {
-    console.error("Failed to send verification email:", error);
-    return { success: false, error };
-  }
-};
 
 export const sendRegistrationEmail = async (
   email: string,
   name: string,
   eventTitle: string,
   refCode: string,
-  eventDate: Date
+  eventDate: Date,
+  customSubject?: string | null,
+  customBody?: string | null,
+  attachmentUrl?: string | null
 ) => {
   if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
     console.warn("GMAIL_USER or GMAIL_APP_PASSWORD not found. Skipping confirmation email.");
@@ -56,15 +29,40 @@ export const sendRegistrationEmail = async (
   try {
     const qrImageUrl = `https://quickchart.io/qr?text=${encodeURIComponent(refCode)}&size=200&margin=2`;
     
+    let emailAttachments: any[] = [];
+    if (attachmentUrl) {
+        // Extract original filename after the UUID prefix: folder/uuid-filename.ext
+        const rawFilename = attachmentUrl.split('/').pop() || 'attachment.file';
+        // Assuming format is UUID-realfilename.ext
+        const dashIndex = rawFilename.indexOf('-');
+        const filename = dashIndex !== -1 ? rawFilename.substring(dashIndex + 1) : rawFilename;
+        
+        emailAttachments.push({
+            filename: filename,
+            path: attachmentUrl // Nodemailer supports streaming directly from a URL path
+        });
+    }
+
+    const emailSubject = customSubject && customSubject.trim() !== '' 
+        ? customSubject 
+        : `Registration Confirmed: ${eventTitle}`;
+
+    const optionalCustomBodyHtml = customBody && customBody.trim() !== ''
+        ? `<div style="margin: 20px 0; padding: 15px; background-color: #f9fafb; border-left: 4px solid #333; color: #444; white-space: pre-wrap; font-size: 14px;">${customBody}</div>`
+        : '';
+
     const info = await transporter.sendMail({
-      from: `"Prime Platform" <${process.env.GMAIL_USER}>`,
+      from: `"ระบบลงทะเบียน" <${process.env.GMAIL_USER}>`,
       to: email,
-      subject: `Registration Confirmed: ${eventTitle}`,
+      subject: emailSubject,
+      attachments: emailAttachments.length > 0 ? emailAttachments : undefined,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #333;">Registration Confirmed</h1>
           <p>Hi ${name},</p>
           <p>You are successfully registered for <strong>${eventTitle}</strong>.</p>
+          
+          ${optionalCustomBodyHtml}
           
           <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
             <p style="margin: 0; font-size: 14px; color: #666;">Your Reference Code:</p>
