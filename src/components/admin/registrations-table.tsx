@@ -30,7 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { RegistrationEditSheet } from "@/components/admin/registration-edit-sheet"
-import { extractAttendeeInfo } from "@/lib/attendee-utils"
+import { extractAttendeeInfo, getStandardFieldIds } from "@/lib/attendee-utils"
 
 // Simple debounce hook if not exists, for now implementing inline logic or using timeout
 function useDebounceValue<T>(value: T, delay: number): T {
@@ -150,9 +150,17 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
           
           // Strategy: Collect unique labels from all events in the dataset to handle "All Events" export too
           const uniqueLabels = new Set<string>()
+          const allStandardIds = new Set<string>()
+          
           allData.forEach(reg => {
               if (reg.event.formFields) {
-                  reg.event.formFields.forEach((f: any) => uniqueLabels.add(f.label))
+                  const stdIds = getStandardFieldIds(reg.event.formFields)
+                  stdIds.forEach(id => allStandardIds.add(id))
+                  reg.event.formFields.forEach((f: any) => {
+                      if (!stdIds.includes(f.id)) {
+                          uniqueLabels.add(f.label)
+                      }
+                  })
               }
           })
           customHeaders = Array.from(uniqueLabels).sort()
@@ -256,6 +264,17 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                         <TableHead>Date</TableHead>
                         <TableHead>Reg. Status</TableHead>
                         <TableHead>Check-in</TableHead>
+                        {/* Dynamic Headers for Display (if filtering to single event, otherwise might be empty) */}
+                        {initialData[0]?.event.formFields && (
+                            getStandardFieldIds(initialData[0].event.formFields).length > 0 && 
+                            currentEventId !== "all" 
+                            ? initialData[0].event.formFields
+                                .filter(f => !getStandardFieldIds(initialData[0].event.formFields).includes(f.id))
+                                .map(field => (
+                                    <TableHead key={field.id}>{field.label}</TableHead>
+                                ))
+                            : null
+                        )}
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -303,6 +322,21 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                                             <span className="text-muted-foreground text-sm">-</span>
                                         )}
                                     </TableCell>
+                                    
+                                    {/* Dynamic Cells (matched with above headers) */}
+                                    {currentEventId !== "all" && reg.event.formFields && (
+                                        reg.event.formFields
+                                            .filter(f => !getStandardFieldIds(reg.event.formFields).includes(f.id))
+                                            .map(field => {
+                                                const val = (reg.formData as any)?.[field.label] || (reg.formData as any)?.[field.id]
+                                                const displayVal = Array.isArray(val) ? val.join(", ") : val
+                                                return (
+                                                    <TableCell key={field.id} className="text-sm">
+                                                        {displayVal || <span className="text-muted-foreground/30">-</span>}
+                                                    </TableCell>
+                                                )
+                                            })
+                                    )}
                                     <TableCell className="text-right">
                                       <DropdownMenu>
                                         <DropdownMenuTrigger asChild>

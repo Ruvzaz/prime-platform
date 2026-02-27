@@ -113,3 +113,25 @@ function getFirstStringValue(data: Record<string, unknown>): string | null {
   }
   return null
 }
+
+/**
+ * Get the IDs of the fields that map to standard Registration fields (Name, Email, Phone)
+ * so we can exclude them from dynamic custom column lists avoid duplicates.
+ */
+export function getStandardFieldIds(formFields?: { id: string; label: string; type?: string }[]): string[] {
+    if (!formFields || formFields.length === 0) return [];
+    
+    const ids: string[] = [];
+    
+    // Exact same rules as extractAttendeeInfo
+    const nameField = formFields.find(f => f.label.includes("ชื่อ") || f.id === "__name__");
+    if (nameField) ids.push(nameField.id);
+
+    const emailField = formFields.find(f => f.label.includes("อีเมล") || f.label.toLowerCase().includes("email") || f.id === "__email__" || f.type === "EMAIL");
+    if (emailField) ids.push(emailField.id);
+    
+    const phoneField = formFields.find(f => f.label.includes("เบอร์โทร") || f.label.toLowerCase().includes("phone") || f.id === "__phone__" || f.type === "PHONE");
+    if (phoneField) ids.push(phoneField.id);
+
+    return ids;
+}
