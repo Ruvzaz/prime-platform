@@ -28,6 +28,7 @@ const formFieldSchema = z.array(z.object({
   type: z.nativeEnum(FieldType),
   required: z.boolean().default(false),
   options: z.array(z.string()).default([]),
+  allowOther: z.boolean().optional(),
   order: z.number().optional(),
 }));
 
@@ -139,6 +140,7 @@ export async function createEvent(prevState: any, formData: FormData) {
                 type: field.type,
                 required: field.required,
                 options: field.options || [],
+                ...( { allowOther: field.allowOther || false } as any ),
                 order: index
             }))
         }
@@ -280,6 +282,7 @@ export async function updateEvent(prevState: any, formData: FormData) {
                         type: field.type,
                         required: field.required,
                         options: field.options || [],
+                        ...( { allowOther: field.allowOther || false } as any ),
                         order: index
                     },
                     create: {
@@ -289,6 +292,7 @@ export async function updateEvent(prevState: any, formData: FormData) {
                         type: field.type,
                         required: field.required,
                         options: field.options || [],
+                        ...( { allowOther: field.allowOther || false } as any ),
                         order: index
                     }
                 });
@@ -300,6 +304,7 @@ export async function updateEvent(prevState: any, formData: FormData) {
                         type: field.type,
                         required: field.required,
                         options: field.options || [],
+                        ...( { allowOther: field.allowOther || false } as any ),
                         order: index
                     }
                 });
