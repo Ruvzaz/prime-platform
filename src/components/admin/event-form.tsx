@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useActionState } from "react"
+import { useState, useActionState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FormBuilder, FormFieldConfig } from "@/components/admin/form-builder"
 import { CalendarIcon, Loader2 } from "lucide-react"
 import { useFormStatus } from "react-dom"
+import { useRouter } from "next/navigation"
 
 interface EventFormProps {
   action: (prevState: any, payload: FormData) => Promise<any> 
@@ -49,6 +50,16 @@ export function EventForm({ action, initialData }: EventFormProps) {
   const initialState = { message: "", errors: {} };
   // @ts-ignore
   const [state, dispatch] = useActionState(action, initialState);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state?.success) {
+      const timer = setTimeout(() => {
+        router.push("/events");
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [state, router]);
 
   // Date formatting helpers
   const formatDate = (date?: Date) => {
@@ -59,8 +70,10 @@ export function EventForm({ action, initialData }: EventFormProps) {
   return (
     <form action={dispatch} className="space-y-6">
       {state?.message && (
-          <div className={`p-4 rounded-md ${state.message.includes("success") ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
-              {state.message}
+          <div className={`p-4 rounded-md ${state?.success ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+              <div className="flex items-center gap-2 font-medium">
+                  {state.success ? "✅ ": "🚨 "} {state.message}
+              </div>
           </div>
       )}
       <input type="hidden" name="formFields" value={JSON.stringify(formFields)} />

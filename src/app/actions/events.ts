@@ -36,22 +36,33 @@ export type FormFieldData = z.infer<typeof formFieldSchema>[number];
 export async function createEvent(prevState: any, formData: FormData) {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return { message: "Unauthorized" };
+      return { success: false, message: "Unauthorized" };
   }
 
   let imageUrl = null;
   const imageFile = formData.get("image") as File;
   
+  const rawDataFallback = {
+    title: formData.get("title"),
+    slug: formData.get("slug"),
+    description: formData.get("description"),
+    startDate: formData.get("startDate"),
+    endDate: formData.get("endDate"),
+    location: formData.get("location"),
+    themeColor: formData.get("themeColor"),
+    emailSubject: formData.get("emailSubject"),
+    emailBody: formData.get("emailBody"),
+  };
+
   // checkbox for image size > 0
   if (imageFile && imageFile.size > 0) {
       if (imageFile.size > 5 * 1024 * 1024) {
-          return { message: "Image size too large (Max 5MB)" };
+          return { success: false, message: "Image size too large (Max 5MB)", data: rawDataFallback };
       }
       try {
         imageUrl = await uploadToR2(imageFile, "events");
       } catch (e) {
-        console.error("Upload failed", e);
-        return { message: "Failed to upload image" };
+        return { success: false, message: "Failed to upload image", data: rawDataFallback };
       }
   }
 
@@ -60,13 +71,12 @@ export async function createEvent(prevState: any, formData: FormData) {
   
   if (attachmentFile && attachmentFile.size > 0) {
       if (attachmentFile.size > 5 * 1024 * 1024) {
-          return { message: "Attachment size too large (Max 5MB)" };
+          return { success: false, message: "Attachment size too large (Max 5MB)", data: rawDataFallback };
       }
       try {
         emailAttachmentUrl = await uploadToR2(attachmentFile, "attachments");
       } catch (e) {
-        console.error("Upload failed", e);
-        return { message: "Failed to upload attachment" };
+        return { success: false, message: "Failed to upload attachment", data: rawDataFallback };
       }
   }
 
@@ -87,6 +97,7 @@ export async function createEvent(prevState: any, formData: FormData) {
   const parsedData = eventSchema.safeParse(rawData);
   if (!parsedData.success) {
     return {
+      success: false,
       message: "Validation failed, please check the highlighted fields.",
       errors: parsedData.error.flatten().fieldErrors,
       data: rawData
@@ -102,8 +113,7 @@ export async function createEvent(prevState: any, formData: FormData) {
             const parsedArray = JSON.parse(formFieldsRaw as string);
             formFields = formFieldSchema.parse(parsedArray);
         } catch (e) {
-            console.error("Failed to parse form fields", e);
-            return { message: "Invalid form fields data" };
+            return { success: false, message: "Invalid form fields data", data: rawData };
         }
     }
 
@@ -136,34 +146,45 @@ export async function createEvent(prevState: any, formData: FormData) {
     });
   } catch (e) {
     console.error(e);
-    return { message: "Failed to create event: " + (e instanceof Error ? e.message : "Unknown error") };
+    return { success: false, message: "Failed to create event: " + (e instanceof Error ? e.message : "Unknown error"), data: rawData };
   }
 
   revalidatePath("/events");
-  redirect("/events");
+  return { success: true, message: "Event created successfully!" };
 }
 
 export async function updateEvent(prevState: any, formData: FormData) {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return { message: "Unauthorized" };
+      return { success: false, message: "Unauthorized" };
   }
 
   const eventId = formData.get("id") as string;
-  if (!eventId) return { message: "Event ID missing" };
+  if (!eventId) return { success: false, message: "Event ID missing" };
+
+  const rawDataFallback = {
+    title: formData.get("title"),
+    slug: formData.get("slug"),
+    description: formData.get("description"),
+    startDate: formData.get("startDate"),
+    endDate: formData.get("endDate"),
+    location: formData.get("location"),
+    themeColor: formData.get("themeColor"),
+    emailSubject: formData.get("emailSubject"),
+    emailBody: formData.get("emailBody"),
+  };
 
   let imageUrl = formData.get("currentImageUrl") as string | null;
   const imageFile = formData.get("image") as File;
   
   if (imageFile && imageFile.size > 0) {
       if (imageFile.size > 5 * 1024 * 1024) {
-          return { message: "Image size too large (Max 5MB)" };
+          return { success: false, message: "Image size too large (Max 5MB)", data: rawDataFallback };
       }
       try {
         imageUrl = await uploadToR2(imageFile, "events");
       } catch (e) {
-        console.error("Upload failed", e);
-        return { message: "Failed to upload image" };
+        return { success: false, message: "Failed to upload image", data: rawDataFallback };
       }
   }
 
@@ -172,13 +193,12 @@ export async function updateEvent(prevState: any, formData: FormData) {
   
   if (attachmentFile && attachmentFile.size > 0) {
       if (attachmentFile.size > 5 * 1024 * 1024) {
-          return { message: "Attachment size too large (Max 5MB)" };
+          return { success: false, message: "Attachment size too large (Max 5MB)", data: rawDataFallback };
       }
       try {
         emailAttachmentUrl = await uploadToR2(attachmentFile, "attachments");
       } catch (e) {
-        console.error("Upload failed", e);
-        return { message: "Failed to upload attachment" };
+        return { success: false, message: "Failed to upload attachment", data: rawDataFallback };
       }
   }
 
@@ -199,6 +219,7 @@ export async function updateEvent(prevState: any, formData: FormData) {
   const parsedData = eventSchema.safeParse(rawData);
   if (!parsedData.success) {
     return {
+      success: false,
       message: "Validation failed, please check the highlighted fields.",
       errors: parsedData.error.flatten().fieldErrors,
       data: rawData
@@ -214,8 +235,7 @@ export async function updateEvent(prevState: any, formData: FormData) {
              const parsedArray = JSON.parse(formFieldsRaw as string);
              formFields = formFieldSchema.parse(parsedArray);
          } catch (e) {
-             console.error("Failed to parse form fields", e);
-             return { message: "Invalid form fields data" };
+             return { success: false, message: "Invalid form fields data", data: rawData };
          }
      }
 
@@ -289,12 +309,12 @@ export async function updateEvent(prevState: any, formData: FormData) {
 
   } catch (e) {
     console.error(e);
-    return { message: "Failed to update event: " + (e instanceof Error ? e.message : "Unknown error") };
+    return { success: false, message: "Failed to update event: " + (e instanceof Error ? e.message : "Unknown error"), data: rawData };
   }
 
   revalidatePath("/events");
   revalidatePath(`/events/${rawData.slug}`); // Public page
-  redirect("/events");
+  return { success: true, message: "Event updated successfully!" };
 }
 
 export async function getEvents() {
