@@ -171,7 +171,7 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
         { id: "email", label: "Email", type: "EMAIL", required: false, options: [], order: 1 }
       ]
 
-  const { name, email } = extractAttendeeInfo(registration.formData)
+  const { name, email } = extractAttendeeInfo(registration.formData, event?.formFields)
   const initials = name.substring(0, 2).toUpperCase()
 
   return (

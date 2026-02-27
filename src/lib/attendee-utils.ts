@@ -6,15 +6,34 @@
  * - Thai format: ชื่อ-นามสกุล, อีเมล, etc.
  * - Fallback: first TEXT-like value for name, first email-like value for email
  */
-export function extractAttendeeInfo(formData: Record<string, unknown>): {
+export function extractAttendeeInfo(
+  formData: Record<string, unknown>,
+  formFields?: { id: string; label: string; type?: string }[]
+): {
   name: string
   email: string
   phone: string
 } {
   const data = formData || {}
 
+  let exactName = null;
+  let exactEmail = null;
+  let exactPhone = null;
+
+  if (formFields && formFields.length > 0) {
+      const nameField = formFields.find(f => f.label.includes("ชื่อ") || f.id === "__name__");
+      if (nameField && data[nameField.id]) exactName = data[nameField.id];
+
+      const emailField = formFields.find(f => f.label.includes("อีเมล") || f.label.toLowerCase().includes("email") || f.id === "__email__" || f.type === "EMAIL");
+      if (emailField && data[emailField.id]) exactEmail = data[emailField.id];
+      
+      const phoneField = formFields.find(f => f.label.includes("เบอร์โทร") || f.label.toLowerCase().includes("phone") || f.id === "__phone__" || f.type === "PHONE");
+      if (phoneField && data[phoneField.id]) exactPhone = data[phoneField.id];
+  }
+
   // Name extraction — check all possible keys
   const name =
+    exactName ||
     data["__name__"] ||
     data["name"] ||
     data["default_name"] ||
@@ -29,6 +48,7 @@ export function extractAttendeeInfo(formData: Record<string, unknown>): {
 
   // Email extraction — check all possible keys
   const email =
+    exactEmail ||
     data["__email__"] ||
     data["email"] ||
     data["default_email"] ||
@@ -39,6 +59,7 @@ export function extractAttendeeInfo(formData: Record<string, unknown>): {
 
   // Phone extraction
   const phone =
+    exactPhone ||
     data["__phone__"] ||
     data["phone"] ||
     data["default_phone"] ||

@@ -158,7 +158,7 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                             </TableRow>
                         ) : (
                             registrations.map((reg) => {
-                                const { name, email } = extractAttendeeInfo(reg.formData)
+                                const { name, email } = extractAttendeeInfo(reg.formData, selectedEvent?.formFields)
                                 return (
                                 <TableRow key={reg.id} className="group">
                                     <TableCell className="font-mono text-xs font-medium">

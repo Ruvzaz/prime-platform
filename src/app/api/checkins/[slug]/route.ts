@@ -17,6 +17,7 @@ export async function GET(
         imageUrl: true,
         themeColor: true,
         startDate: true,
+        formFields: true,
       },
     });
 
@@ -45,7 +46,7 @@ export async function GET(
     });
 
     const data = checkIns.map((ci) => {
-      const { name } = extractAttendeeInfo(ci.registration.formData as Record<string, unknown>);
+      const { name } = extractAttendeeInfo(ci.registration.formData as Record<string, unknown>, event.formFields);
       return {
         id: ci.id,
         referenceCode: ci.registration.referenceCode,
