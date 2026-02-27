@@ -74,7 +74,7 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 name="email"
-                placeholder="admin@primedigital.com"
+                placeholder="Email"
                 required
                 className="h-12 bg-muted/40 border-border focus:border-foreground/30 focus:ring-1 focus:ring-foreground/10 transition-all rounded-xl text-[15px]"
               />
