@@ -40,6 +40,7 @@ export interface FormFieldConfig {
   type: FieldType
   required: boolean
   options?: string[] // For SELECT
+  allowOther?: boolean // For SELECT, toggles the 'Other (Please specify)' input
   order: number
   locked?: boolean // Cannot be deleted or type changed
 }
@@ -187,6 +188,19 @@ function SortableFieldItem({
                         <Button type="button" variant="outline" size="sm" className="h-7 text-xs bg-background hover:bg-muted" onClick={() => addOption(field.id)}>
                             <Plus className="mr-2 h-3 w-3" /> เพิ่มตัวเลือก
                         </Button>
+                        
+                        {field.type === "SELECT" && (
+                            <div className="flex items-center gap-2 mt-4 pt-2 border-t border-muted">
+                                <Switch 
+                                    checked={!!field.allowOther} 
+                                    onCheckedChange={(checked: boolean) => updateField(field.id, { allowOther: checked })}
+                                    id={`allowOther-${field.id}`}
+                                />
+                                <Label htmlFor={`allowOther-${field.id}`} className="text-sm font-normal text-muted-foreground cursor-pointer">
+                                    เพิ่มตัวเลือก &quot;อื่นๆ (โปรดระบุ)&quot;
+                                </Label>
+                            </div>
+                        )}
                     </div>
                 )}
               </div>

@@ -279,19 +279,37 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
                         autoComplete="off"
                     />
                     ) : field.type === "SELECT" ? (
-                    <Select 
-                        value={String(formData[field.id] || "")} 
-                        onValueChange={(val) => handleInputChange(field.id, val)}
-                    >
-                        <SelectTrigger id={field.id} className="bg-muted/10 focus:bg-background transition-colors">
-                        <SelectValue placeholder="Select an option" />
-                        </SelectTrigger>
-                        <SelectContent>
-                        {field.options.map(opt => (
-                            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                        ))}
-                        </SelectContent>
-                    </Select>
+                    <div className="space-y-2">
+                        <Select 
+                            value={String(formData[field.id] || "")} 
+                            onValueChange={(val) => handleInputChange(field.id, val)}
+                        >
+                            <SelectTrigger id={field.id} className="bg-muted/10 focus:bg-background transition-colors">
+                            <SelectValue placeholder="Select an option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                            {field.options.map(opt => (
+                                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                            ))}
+                            {/* If the current value is completely custom and not in options, append it so the UI doesn't visually break */}
+                            {(formData[field.id] && !field.options.includes(String(formData[field.id]))) && (
+                                <SelectItem value={String(formData[field.id])}>
+                                    {String(formData[field.id])}
+                                </SelectItem>
+                            )}
+                            </SelectContent>
+                        </Select>
+                        
+                        {/* Optional Input if they want to edit their custom text */}
+                        {(formData[field.id] && !field.options.includes(String(formData[field.id]))) && (
+                            <Input
+                                value={String(formData[field.id])}
+                                onChange={(e) => handleInputChange(field.id, e.target.value)}
+                                className="bg-muted/10 border-dashed"
+                                placeholder="แก้ไขข้อความแบบกำหนดเอง"
+                            />
+                        )}
+                    </div>
                     ) : field.type === "RADIO" ? (
                     <div className="flex flex-col gap-2 p-3 rounded-md border bg-muted/10">
                         {field.options.map((opt) => (
