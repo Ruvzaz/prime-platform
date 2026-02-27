@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input"
 import { getRegistrations } from "@/app/actions/registration"
 import { RegistrationEditSheet } from "./registration-edit-sheet"
 import { Badge } from "@/components/ui/badge"
-import { extractAttendeeInfo } from "@/lib/attendee-utils"
+import { extractAttendeeInfo, getStandardFieldIds } from "@/lib/attendee-utils"
 
 interface Event {
     id: string
@@ -84,7 +84,9 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
     }
 
     // Dynamic Columns
-    const customFields = selectedEvent?.formFields || []
+    const rawCustomFields = selectedEvent?.formFields || []
+    const standardFieldIds = getStandardFieldIds(rawCustomFields)
+    const customFields = rawCustomFields.filter((f: any) => !standardFieldIds.includes(f.id))
 
     return (
         <div className="space-y-4">

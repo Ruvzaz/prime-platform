@@ -21,11 +21,33 @@ export async function registerAttendee(formData: FormData) {
   }
 
   // extract dynamic fields
-  const rawData: Record<string, string> = {};
-  for (const [key, value] of formData.entries()) {
-    if (key.startsWith("field_")) {
+  const rawData: Record<string, any> = {};
+  
+  const keys = Array.from(new Set(Array.from(formData.keys())));
+  
+  for (const key of keys) {
+    if (key.startsWith("field_") && !key.endsWith("_other")) {
        const fieldId = key.replace("field_", "");
-       rawData[fieldId] = value as string;
+       const values = formData.getAll(key) as string[];
+       
+       if (values.length > 1) {
+           // It's a checkbox with multiple selected options
+           rawData[fieldId] = values;
+       } else if (values.length === 1) {
+           let val = values[0];
+           
+           // Intercept "Other" selection and swap with the user's typed input
+           if (val === "__other__") {
+               const otherVal = formData.get(`${key}_other`);
+               if (otherVal && String(otherVal).trim() !== "") {
+                   val = String(otherVal).trim();
+               } else {
+                   val = "อื่นๆ"; // Fallback
+               }
+           }
+           
+           rawData[fieldId] = val;
+       }
     }
   }
 

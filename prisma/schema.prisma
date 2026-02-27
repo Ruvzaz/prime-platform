@@ -62,6 +62,7 @@ model FormField {
   type        FieldType
   options     String[] // JSON array relevant for SELECT/RADIO
   required    Boolean  @default(false)
+  allowOther  Boolean  @default(false)
   order       Int      @default(0)
 
   @@index([eventId])
@@ -74,6 +75,7 @@ enum FieldType {
   NUMBER
   SELECT
   CHECKBOX
+  RADIO
   DATE
 }
 

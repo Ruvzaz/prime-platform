@@ -128,17 +128,61 @@ export default async function EventRegistrationPage({
                       className="bg-background dark:bg-zinc-900 border-border/50 h-12 rounded-xl px-4 transition-all focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground placeholder:text-muted-foreground/50"
                     />
                   ) : q.type === "SELECT" ? (
-                    <select
-                      id={q.id}
-                      name={`field_${q.id}`}
-                      className="flex h-12 w-full items-center rounded-xl border border-border/50 bg-background dark:bg-zinc-900 px-4 py-2 text-sm text-foreground transition-all focus:outline-none focus:ring-1 focus:ring-foreground focus:border-foreground appearance-none cursor-pointer"
-                      required={q.required}
-                    >
-                      <option value="">เลือกตัวเลือก</option>
-                      {q.options.map((opt) => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
+                    <div className="group/select relative">
+                        <select
+                          id={q.id}
+                          name={`field_${q.id}`}
+                          className="flex h-12 w-full items-center rounded-xl border border-border/50 bg-background dark:bg-zinc-900 px-4 py-2 text-sm text-foreground transition-all focus:outline-none focus:ring-1 focus:ring-foreground focus:border-foreground appearance-none cursor-pointer"
+                          required={q.required}
+                        >
+                          <option value="">เลือกตัวเลือก</option>
+                          {q.options.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                    </div>
+                  ) : (q.type as string) === "RADIO" ? (
+                    <div className="space-y-3 pt-2">
+                        {q.options.map((opt) => (
+                           <label key={opt} className="flex items-center gap-3 cursor-pointer group">
+                             <input
+                               type="radio"
+                               name={`field_${q.id}`}
+                               value={opt}
+                               required={q.required}
+                               className="peer h-5 w-5 shrink-0 rounded-full border border-border/50 text-foreground bg-background dark:bg-zinc-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground disabled:cursor-not-allowed disabled:opacity-50 checked:bg-foreground checked:border-foreground appearance-none flex items-center justify-center transition-all before:content-[''] before:block before:w-2 before:h-2 before:rounded-full before:bg-background before:scale-0 checked:before:scale-100 before:transition-transform"
+                             />
+                             <span className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 group-hover:text-foreground/80 transition-colors">
+                               {opt}
+                             </span>
+                           </label>
+                        ))}
+                        {(q as any).allowOther && (
+                           <div className="space-y-3 group/other">
+                             <label className="flex items-center gap-3 cursor-pointer group">
+                               <input
+                                 type="radio"
+                                 name={`field_${q.id}`}
+                                 value="__other__"
+                                 required={q.required}
+                                 className="peer hidden-radio h-5 w-5 shrink-0 rounded-full border border-border/50 text-foreground bg-background dark:bg-zinc-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground disabled:cursor-not-allowed disabled:opacity-50 checked:bg-foreground checked:border-foreground appearance-none flex items-center justify-center transition-all before:content-[''] before:block before:w-2 before:h-2 before:rounded-full before:bg-background before:scale-0 checked:before:scale-100 before:transition-transform"
+                               />
+                               <span className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 group-hover:text-foreground/80 transition-colors">
+                                 อื่นๆ (โปรดระบุ)
+                               </span>
+                             </label>
+                             <div className="hidden group-has-[:checked]/other:block mt-3 animate-in fade-in slide-in-from-top-1 ml-8"> {/* Adjusted margin to align input */}
+                                 <Input
+                                     type="text"
+                                     name={`field_${q.id}_other`}
+                                     placeholder="โปรดระบุ..."
+                                     className="bg-background dark:bg-zinc-900 border-border/50 h-12 rounded-xl px-4 transition-all focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground placeholder:text-muted-foreground/50 w-full"
+                                     required={false}
+                                 />
+                             </div>
+                           </div>
+                        )}
+                    </div>
                   ) : q.type === "CHECKBOX" ? (
                     <div className="space-y-3 pt-2">
                         {q.options.map((opt) => (
