@@ -32,7 +32,7 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 
-export type FieldType = "TEXT" | "EMAIL" | "PHONE" | "NUMBER" | "SELECT" | "CHECKBOX" | "DATE"
+export type FieldType = "TEXT" | "EMAIL" | "PHONE" | "NUMBER" | "SELECT" | "CHECKBOX" | "RADIO" | "DATE"
 
 export interface FormFieldConfig {
   id: string
@@ -103,7 +103,7 @@ function SortableFieldItem({
 
             <CardContent className="p-4 pl-12 pt-4">
               <div className="grid gap-4">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-end justify-between gap-4">
                     <div className="grid gap-2 flex-1">
                         <Label>ชื่อฟิลด์</Label>
                         <Input 
@@ -135,7 +135,7 @@ function SortableFieldItem({
                          </Select>
                     </div>
                     {isLocked ? (
-                      <div className="flex items-center gap-1.5 mt-8 text-muted-foreground" title="ฟิลด์นี้จำเป็นและไม่สามารถลบได้">
+                      <div className="flex items-center gap-1.5 h-10 text-muted-foreground" title="ฟิลด์นี้จำเป็นและไม่สามารถลบได้">
                         <Lock className="h-4 w-4" />
                         <span className="text-xs font-medium">จำเป็น</span>
                       </div>
@@ -144,7 +144,7 @@ function SortableFieldItem({
                           type="button" 
                           variant="ghost" 
                           size="icon" 
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50 mt-8"
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50 h-10 w-10 shrink-0"
                           onClick={() => removeField(field.id)}
                       >
                           <Trash2 className="h-4 w-4" />
@@ -178,7 +178,7 @@ function SortableFieldItem({
                                     type="button" 
                                     variant="ghost" 
                                     size="icon" 
-                                    className="h-8 w-8 text-red-400 hover:text-red-500 hover:bg-red-50"
+                                    className="h-8 w-8 shrink-0 text-red-400 hover:text-red-500 hover:bg-red-50"
                                     onClick={() => removeOption(field.id, optIndex)}
                                     disabled={field.options?.length === 1}
                                 >
