@@ -74,53 +74,59 @@ export function EventForm({ action, initialData }: EventFormProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Event Title</Label>
-              <Input id="title" name="title" required defaultValue={initialData?.title} placeholder="e.g. Tech Conference 2024" />
+              <Label htmlFor="title" className={state?.errors?.title ? "text-destructive" : ""}>Event Title</Label>
+              <Input id="title" name="title" required defaultValue={state?.data?.title ?? initialData?.title} placeholder="e.g. Tech Conference 2024" className={state?.errors?.title ? "border-destructive" : ""} />
+              {state?.errors?.title && <p className="text-[0.8rem] font-medium text-destructive">{state.errors.title}</p>}
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="slug">URL Slug</Label>
-              <Input id="slug" name="slug" required defaultValue={initialData?.slug} placeholder="tech-conf-2024" />
+              <Label htmlFor="slug" className={state?.errors?.slug ? "text-destructive" : ""}>URL Slug</Label>
+              <Input id="slug" name="slug" required defaultValue={state?.data?.slug ?? initialData?.slug} placeholder="tech-conf-2024" className={state?.errors?.slug ? "border-destructive" : ""} />
+              {state?.errors?.slug && <p className="text-[0.8rem] font-medium text-destructive">{state.errors.slug[0]}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea id="description" name="description" defaultValue={initialData?.description || ""} />
+              <Label htmlFor="description" className={state?.errors?.description ? "text-destructive" : ""}>Description</Label>
+              <Textarea id="description" name="description" defaultValue={state?.data?.description ?? initialData?.description ?? ""} className={state?.errors?.description ? "border-destructive" : ""} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startDate">Start Date</Label>
+                <Label htmlFor="startDate" className={state?.errors?.startDate ? "text-destructive" : ""}>Start Date</Label>
                 <Input 
                     id="startDate" 
                     name="startDate" 
                     type="datetime-local" 
                     required 
-                    defaultValue={formatDate(initialData?.startDate)} 
+                    defaultValue={state?.data?.startDate ?? formatDate(initialData?.startDate)} 
+                    className={state?.errors?.startDate ? "border-destructive" : ""}
                 />
+                {state?.errors?.startDate && <p className="text-[0.8rem] font-medium text-destructive">{state.errors.startDate}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="endDate">End Date</Label>
+                <Label htmlFor="endDate" className={state?.errors?.endDate ? "text-destructive" : ""}>End Date</Label>
                 <Input 
                     id="endDate" 
                     name="endDate" 
                     type="datetime-local" 
                     required 
-                    defaultValue={formatDate(initialData?.endDate)} 
+                    defaultValue={state?.data?.endDate ?? formatDate(initialData?.endDate)} 
+                    className={state?.errors?.endDate ? "border-destructive" : ""}
                 />
+                 {state?.errors?.endDate && <p className="text-[0.8rem] font-medium text-destructive">{state.errors.endDate}</p>}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Input id="location" name="location" defaultValue={initialData?.location || ""} placeholder="e.g. Bangkok Hall / Online" />
+              <Label htmlFor="location" className={state?.errors?.location ? "text-destructive" : ""}>Location</Label>
+              <Input id="location" name="location" defaultValue={state?.data?.location ?? initialData?.location ?? ""} placeholder="e.g. Bangkok Hall / Online" className={state?.errors?.location ? "border-destructive" : ""} />
             </div>
 
              <div className="space-y-2">
               <Label htmlFor="themeColor">Theme Color</Label>
               <div className="flex gap-2">
-                  <Input id="themeColor" name="themeColor" type="color" className="w-12 h-10 p-1" defaultValue={initialData?.themeColor || "#000000"} />
-                  <Input type="text" value={initialData?.themeColor || "#000000"} readOnly className="flex-1 bg-muted" />
+                  <Input id="themeColor" name="themeColor" type="color" className="w-12 h-10 p-1 cursor-pointer" defaultValue={state?.data?.themeColor ?? initialData?.themeColor ?? "#000000"} />
+                  <Input type="text" value={state?.data?.themeColor ?? initialData?.themeColor ?? "#000000"} readOnly className="flex-1 bg-muted" />
               </div>
             </div>
 
@@ -143,11 +149,11 @@ export function EventForm({ action, initialData }: EventFormProps) {
               </div>
               <div className="space-y-2">
                   <Label htmlFor="emailSubject">Custom Subject</Label>
-                  <Input id="emailSubject" name="emailSubject" defaultValue={initialData?.emailSubject || ""} placeholder="e.g. Your ticket to Prime Party!" />
+                  <Input id="emailSubject" name="emailSubject" defaultValue={state?.data?.emailSubject ?? initialData?.emailSubject ?? ""} placeholder="e.g. Your ticket to Prime Party!" />
               </div>
               <div className="space-y-2">
                   <Label htmlFor="emailBody">Custom Body Message</Label>
-                  <Textarea id="emailBody" name="emailBody" defaultValue={initialData?.emailBody || ""} placeholder="Add extra details, instructions, or welcome notes here..." className="min-h-[100px]" />
+                  <Textarea id="emailBody" name="emailBody" defaultValue={state?.data?.emailBody ?? initialData?.emailBody ?? ""} placeholder="Add extra details, instructions, or welcome notes here..." className="min-h-[100px]" />
               </div>
               <div className="space-y-2">
                   <Label htmlFor="emailAttachment">Email Attachment</Label>

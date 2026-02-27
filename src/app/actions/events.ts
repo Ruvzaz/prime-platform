@@ -84,9 +84,17 @@ export async function createEvent(prevState: any, formData: FormData) {
     emailAttachmentUrl: emailAttachmentUrl,
   };
 
-  try {
-    const data = eventSchema.parse(rawData);
+  const parsedData = eventSchema.safeParse(rawData);
+  if (!parsedData.success) {
+    return {
+      message: "Validation failed, please check the highlighted fields.",
+      errors: parsedData.error.flatten().fieldErrors,
+      data: rawData
+    };
+  }
+  const data = parsedData.data;
 
+  try {
     const formFieldsRaw = formData.get("formFields");
     let formFields: FormFieldData[] = [];
     if (formFieldsRaw) {
@@ -188,9 +196,17 @@ export async function updateEvent(prevState: any, formData: FormData) {
     emailAttachmentUrl: emailAttachmentUrl,
   };
 
+  const parsedData = eventSchema.safeParse(rawData);
+  if (!parsedData.success) {
+    return {
+      message: "Validation failed, please check the highlighted fields.",
+      errors: parsedData.error.flatten().fieldErrors,
+      data: rawData
+    };
+  }
+  const data = parsedData.data;
+
   try {
-     const data = eventSchema.parse(rawData);
-     
      const formFieldsRaw = formData.get("formFields");
      let formFields: FormFieldData[] = [];
      if (formFieldsRaw) {
