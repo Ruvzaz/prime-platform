@@ -123,14 +123,14 @@ export function getStandardFieldIds(formFields?: { id: string; label: string; ty
     
     const ids: string[] = [];
     
-    // Exact same rules as extractAttendeeInfo
-    const nameField = formFields.find(f => f.label.includes("ชื่อ") || f.id === "__name__");
+    // Explicitly track anything that looks like Name, Email, or Phone
+    const nameField = formFields.find(f => f.label.includes("ชื่อ") || f.id === "__name__" || f.id.toLowerCase() === "name");
     if (nameField) ids.push(nameField.id);
 
-    const emailField = formFields.find(f => f.label.includes("อีเมล") || f.label.toLowerCase().includes("email") || f.id === "__email__" || f.type === "EMAIL");
+    const emailField = formFields.find(f => f.label.includes("อีเมล") || f.label.toLowerCase().includes("email") || f.id === "__email__" || f.id.toLowerCase() === "email" || f.type === "EMAIL");
     if (emailField) ids.push(emailField.id);
     
-    const phoneField = formFields.find(f => f.label.includes("เบอร์โทร") || f.label.toLowerCase().includes("phone") || f.id === "__phone__" || f.type === "PHONE");
+    const phoneField = formFields.find(f => f.label.includes("เบอร์โทร") || f.label.toLowerCase().includes("phone") || f.id === "__phone__" || f.id.toLowerCase() === "phone" || f.type === "PHONE");
     if (phoneField) ids.push(phoneField.id);
 
     return ids;
