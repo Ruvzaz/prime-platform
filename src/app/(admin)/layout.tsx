@@ -61,7 +61,7 @@ function AppSidebar({ userName, userRole }: { userName?: string | null; userRole
         <SidebarMenu className="px-2 py-4">
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link href="/dashboard">
+              <Link href="/dashboard" prefetch={true}>
                 <LayoutDashboard className="mr-2 h-4 w-4" />
                 <span>Dashboard</span>
               </Link>
@@ -69,7 +69,7 @@ function AppSidebar({ userName, userRole }: { userName?: string | null; userRole
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link href="/events">
+              <Link href="/events" prefetch={true}>
                 <Calendar className="mr-2 h-4 w-4" />
                 <span>Events</span>
               </Link>
@@ -77,7 +77,7 @@ function AppSidebar({ userName, userRole }: { userName?: string | null; userRole
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link href="/registrations">
+              <Link href="/registrations" prefetch={true}>
                 <Users className="mr-2 h-4 w-4" />
                 <span>Registrations</span>
               </Link>
@@ -86,7 +86,7 @@ function AppSidebar({ userName, userRole }: { userName?: string | null; userRole
 
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link href="/responses">
+              <Link href="/responses" prefetch={true}>
                 <Table className="mr-2 h-4 w-4" />
                 <span>Responses</span>
               </Link>
@@ -95,7 +95,7 @@ function AppSidebar({ userName, userRole }: { userName?: string | null; userRole
 
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link href="/check-in" target="_blank">
+              <Link href="/check-in" target="_blank" prefetch={false}>
                 <QrCode className="mr-2 h-4 w-4" />
                 <span>Scan QR (Check-in)</span>
               </Link>
