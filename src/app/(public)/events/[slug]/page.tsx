@@ -139,9 +139,9 @@ export default async function EventRegistrationPage({
                           {q.options.map((opt) => (
                             <option key={opt} value={opt}>{opt}</option>
                           ))}
-                          {q.allowOther && <option value="__other__">อื่นๆ (โปรดระบุ)</option>}
+                          {(q as any).allowOther && <option value="__other__">อื่นๆ (โปรดระบุ)</option>}
                         </select>
-                        {q.allowOther && (
+                        {(q as any).allowOther && (
                             <div className="hidden group-has-[option[value='__other__']:checked]/select:block mt-3 animate-in fade-in slide-in-from-top-1">
                                 <Input
                                     type="text"
