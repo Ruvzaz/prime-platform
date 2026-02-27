@@ -177,10 +177,16 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
 
               // Dynamic Fields
               const dynamicCols = customHeaders.map(header => {
-                  const val = formData[header]
-                  if (Array.isArray(val)) return `"${val.join(', ')}"`
+                  const field = reg.event.formFields?.find((f: any) => f.label === header)
+                  let val = formData[header]
+                  if (val === undefined && field) {
+                      val = formData[field.id]
+                  }
+                  
+                  if (val === undefined || val === null) return ""
+                  if (Array.isArray(val)) return `"${val.join(', ').replace(/"/g, '""')}"`
                   if (typeof val === 'string') return `"${val.replace(/"/g, '""')}"` // Escape quotes
-                  return val ? `"${val}"` : ""
+                  return `"${val}"`
               })
 
               return [...standardCols, ...dynamicCols].join(',')
