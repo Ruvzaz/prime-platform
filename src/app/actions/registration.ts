@@ -53,10 +53,7 @@ export async function registerAttendee(formData: FormData) {
     }
   }
 
-  // Extract email and name
-  const { name, email } = extractAttendeeInfo(rawData);
-
-  // Fetch event title and custom email settings
+  // Fetch event title and custom email settings first
   const event = await prisma.event.findUnique({
     where: { id: eventId },
     select: { 
@@ -64,9 +61,13 @@ export async function registerAttendee(formData: FormData) {
         startDate: true,
         emailSubject: true,
         emailBody: true,
-        emailAttachmentUrl: true
+        emailAttachmentUrl: true,
+        formFields: true
     },
   });
+
+  // Extract email and name using formFields
+  const { name, email } = extractAttendeeInfo(rawData, event?.formFields || undefined);
 
   // Send Confirmation Email immediately
   if (email && process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD && event) {
@@ -335,7 +336,7 @@ export async function getRegistrationsForExport(
               title: true,
               formFields: {
                   orderBy: { order: 'asc' },
-                  select: { label: true }
+                  select: { id: true, label: true, type: true }
               }
           }
         }

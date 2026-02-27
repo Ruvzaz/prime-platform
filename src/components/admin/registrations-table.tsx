@@ -58,7 +58,7 @@ interface Registration {
   event: {
       title: string
       slug: string
-      formFields: any
+      formFields: { id: string; label: string; type: string }[]
   }
 }
 
@@ -160,7 +160,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
           const headers = ["Ref Code", "Name", "Email", "Phone", "Event", "Status", "Date", "Check-in", ...customHeaders]
           
           const rows = allData.map(reg => {
-              const { name, email, phone } = extractAttendeeInfo(reg.formData as Record<string, unknown>)
+              const { name, email, phone } = extractAttendeeInfo(reg.formData as Record<string, unknown>, reg.event.formFields)
               const formData = reg.formData as Record<string, unknown> || {}
               
               // Standard Fields
@@ -262,7 +262,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                         </TableRow>
                     ) : (
                         initialData.map((reg) => {
-                            const { name, email } = extractAttendeeInfo(reg.formData as Record<string, unknown>)
+                            const { name, email } = extractAttendeeInfo(reg.formData as Record<string, unknown>, reg.event.formFields)
                             return (
                                 <TableRow key={reg.id}>
                                     <TableCell className="font-mono text-xs">{reg.referenceCode}</TableCell>

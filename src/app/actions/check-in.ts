@@ -25,7 +25,7 @@ export async function verifyAndCheckIn(referenceCode: string): Promise<CheckInRe
     const registration = await prisma.registration.findUnique({
       where: { referenceCode: referenceCode.toUpperCase() },
       include: {
-        event: true,
+        event: { include: { formFields: true } },
         checkIn: true,
       },
     });
@@ -36,7 +36,7 @@ export async function verifyAndCheckIn(referenceCode: string): Promise<CheckInRe
 
     // Extract name/email from formData json
     const formData = registration.formData as Record<string, any>;
-    const { name, email } = extractAttendeeInfo(formData);
+    const { name, email } = extractAttendeeInfo(formData, registration.event.formFields);
 
     // 2. Check if already checked in
     if (registration.checkIn) {

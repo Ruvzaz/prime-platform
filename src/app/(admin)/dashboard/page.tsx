@@ -24,7 +24,7 @@ async function getDashboardStats() {
     prisma.registration.findMany({
       take: 5,
       orderBy: { createdAt: 'desc' },
-      include: { event: true }
+      include: { event: { include: { formFields: true } } }
     })
   ])
 
@@ -111,7 +111,7 @@ export default async function DashboardPage() {
                  </div>
              ) : (
                   stats.recentRegistrations.map((reg) => {
-                      const { name, email } = extractAttendeeInfo(reg.formData as Record<string, unknown>);
+                      const { name, email } = extractAttendeeInfo(reg.formData as Record<string, unknown>, reg.event.formFields);
                       return (
                           <div key={reg.id} className="flex items-center justify-between bg-muted/30 p-3 rounded-lg border border-transparent hover:border-border transition-colors">
                               <div className="flex items-center gap-3">

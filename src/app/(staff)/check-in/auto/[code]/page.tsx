@@ -23,7 +23,7 @@ export default async function AutoCheckInPage({
   const registration = await prisma.registration.findUnique({
     where: { referenceCode: code.toUpperCase() },
     include: {
-      event: true,
+      event: { include: { formFields: true } },
       checkIn: true,
     },
   })
@@ -45,7 +45,7 @@ export default async function AutoCheckInPage({
     )
   }
 
-  const { name, email } = extractAttendeeInfo(registration.formData as Record<string, unknown>)
+  const { name, email } = extractAttendeeInfo(registration.formData as Record<string, unknown>, registration.event.formFields)
 
   // Already checked in
   if (registration.checkIn) {
