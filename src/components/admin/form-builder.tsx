@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Trash2, GripVertical, Type, List, Lock } from "lucide-react"
+import { Plus, Trash2, GripVertical, Type, List, Lock, Circle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -129,6 +129,7 @@ function SortableFieldItem({
                                 <SelectItem value="EMAIL">Email</SelectItem>
                                 <SelectItem value="PHONE">Phone</SelectItem>
                                 <SelectItem value="SELECT">Dropdown</SelectItem>
+                                <SelectItem value="RADIO">Radio (เลือกได้ 1 ข้อ)</SelectItem>
                                 <SelectItem value="CHECKBOX">Checkbox</SelectItem>
                             </SelectContent>
                          </Select>
@@ -162,10 +163,10 @@ function SortableFieldItem({
                   </div>
                 )}
 
-                {/* OPTIONS EDITOR FOR SELECT & CHECKBOX */}
-                {(field.type === "SELECT" || field.type === "CHECKBOX") && (
+                {/* OPTIONS EDITOR FOR SELECT, RADIO, & CHECKBOX */}
+                {(field.type === "SELECT" || (field.type as string) === "RADIO" || field.type === "CHECKBOX") && (
                     <div className="pl-4 border-l-2 border-muted mt-2 space-y-2">
-                        <Label className="text-xs text-muted-foreground">ตัวเลือก {field.type === "SELECT" ? "Dropdown" : "Checkbox"}</Label>
+                        <Label className="text-xs text-muted-foreground">ตัวเลือก {field.type === "SELECT" ? "Dropdown" : (field.type as string) === "RADIO" ? "Radio" : "Checkbox"}</Label>
                         {field.options?.map((opt, optIndex) => (
                             <div key={optIndex} className="flex items-center gap-2">
                                 <Input 
@@ -189,7 +190,7 @@ function SortableFieldItem({
                             <Plus className="mr-2 h-3 w-3" /> เพิ่มตัวเลือก
                         </Button>
                         
-                        {field.type === "SELECT" && (
+                        {((field.type as string) === "RADIO") && (
                             <div className="flex items-center gap-2 mt-4 pt-2 border-t border-muted">
                                 <Switch 
                                     checked={!!field.allowOther} 
@@ -317,6 +318,9 @@ export function FormBuilder({ onChange, initialFields = [] }: FormBuilderProps) 
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={() => addField("CHECKBOX")}>
             <List className="mr-2 h-4 w-4" /> Checkbox
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => addField("RADIO" as any)}>
+            <Circle className="mr-2 h-4 w-4" /> Radio
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={() => addField("SELECT")}>
             <List className="mr-2 h-4 w-4" /> Dropdown

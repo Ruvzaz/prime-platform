@@ -310,7 +310,7 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
                             />
                         )}
                     </div>
-                    ) : field.type === "RADIO" ? (
+                    ) : (field.type as string) === "RADIO" ? (
                     <div className="flex flex-col gap-2 p-3 rounded-md border bg-muted/10">
                         {field.options.map((opt) => (
                             <label key={opt} className="flex items-center gap-3 text-sm cursor-pointer hover:bg-muted/20 p-1.5 rounded-md transition-colors">
@@ -327,6 +327,31 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
                                 <span className="text-foreground/90">{opt}</span>
                             </label>
                         ))}
+
+                        {/* If the current value is completely custom and not in options, append it so the UI doesn't visually break */}
+                        {(formData[field.id] && !field.options.includes(String(formData[field.id]))) && (
+                            <div className="flex flex-col gap-2 p-1.5">
+                                <label className="flex items-center gap-3 text-sm cursor-pointer hover:bg-muted/20 rounded-md transition-colors">
+                                    <div className="relative flex items-center">
+                                        <input 
+                                            type="radio" 
+                                            name={field.id} 
+                                            checked={true}
+                                            readOnly
+                                            className="peer sr-only "
+                                        />
+                                        <div className="w-4 h-4 border border-input rounded-full peer-checked:border-primary peer-checked:border-4 transition-all"></div>
+                                    </div>
+                                    <span className="text-foreground/90">อื่นๆ (โปรดระบุ)</span>
+                                </label>
+                                <Input
+                                    value={String(formData[field.id])}
+                                    onChange={(e) => handleInputChange(field.id, e.target.value)}
+                                    className="bg-muted/10 border-dashed ml-7 w-auto"
+                                    placeholder="แก้ไขข้อความแบบกำหนดเอง"
+                                />
+                            </div>
+                        )}
                     </div>
                     ) : field.type === "CHECKBOX" ? (
                         <div className="flex flex-col gap-2 p-3 rounded-md border bg-muted/10">

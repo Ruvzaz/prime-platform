@@ -75,6 +75,7 @@ enum FieldType {
   NUMBER
   SELECT
   CHECKBOX
+  RADIO
   DATE
 }
 
