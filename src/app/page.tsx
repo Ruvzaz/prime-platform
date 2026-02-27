@@ -67,7 +67,7 @@ export default function Home() {
           </Link>
 
           {/* CARD 3: STAFF */}
-          <Link href="/check-in" className="group">
+          <Link href="/check-in" className="group" prefetch={false}>
             <div className="h-full p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:-translate-y-1">
               <div className="mb-6 p-4 rounded-xl bg-pink-500/10 w-fit group-hover:bg-pink-500/20 transition-colors">
                 <QrCode className="w-8 h-8 text-pink-400" />
