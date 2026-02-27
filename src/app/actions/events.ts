@@ -73,7 +73,7 @@ export async function createEvent(prevState: any, formData: FormData) {
   const rawData = {
     title: formData.get("title"),
     description: formData.get("description"),
-    slug: formData.get("slug"),
+    slug: (formData.get("slug") as string)?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
     startDate: formData.get("startDate"),
     endDate: formData.get("endDate"),
     location: formData.get("location"),
@@ -177,7 +177,7 @@ export async function updateEvent(prevState: any, formData: FormData) {
   const rawData = {
     title: formData.get("title"),
     description: formData.get("description"),
-    slug: formData.get("slug"),
+    slug: (formData.get("slug") as string)?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
     startDate: formData.get("startDate"),
     endDate: formData.get("endDate"),
     location: formData.get("location"),
