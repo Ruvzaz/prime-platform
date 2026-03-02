@@ -90,13 +90,8 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f7f9] dark:bg-zinc-950 text-foreground relative selection:bg-primary/20 font-sans">
-      {/* Background Decorators - Clean Light Dashboard Tone */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {/* Subtle top-right and bottom-left decorators matching the reference wave vibe */}
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-br from-[#e5edf2] dark:from-zinc-900/50 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-[#e5edf2] dark:from-zinc-900/50 to-transparent rounded-full blur-3xl translate-y-1/4 -translate-x-1/4"></div>
-      </div>
+    <div className="h-screen overflow-hidden text-foreground relative selection:bg-primary/20 font-sans flex flex-col">
+
 
       {/* Header */}
       <header className="relative z-10 sticky top-0 bg-transparent">
@@ -124,7 +119,7 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
         </div>
       </header>
 
-      <main className="relative z-10 max-w-[85rem] mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
+      <main className="relative z-10 max-w-[85rem] mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start flex-1 min-h-0">
         {/* Left Column: Spotlight (Latest Check-in) */}
         <div className="lg:col-span-5 flex justify-center lg:justify-end lg:pt-4">
           {checkIns.length > 0 ? (
@@ -188,8 +183,8 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
         </div>
 
         {/* Right Column: Feed */}
-        <div className="lg:col-span-7 flex flex-col h-[700px] lg:h-[800px] pt-4">
-          <div className="flex items-center justify-between mb-6 px-1">
+        <div className="lg:col-span-7 flex flex-col h-full pt-4 overflow-hidden">
+          <div className="flex items-center justify-between mb-6 px-1 shrink-0">
             <h3 className="text-[13px] font-bold text-[#2d3748] dark:text-white uppercase tracking-wider flex items-center gap-2">
               <ArrowRight className="w-4 h-4 text-[#4a89c8]" />
               Recent Activity Data

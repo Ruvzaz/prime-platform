@@ -32,8 +32,8 @@ export default async function AdminLayout({
     <SidebarProvider defaultOpen={defaultOpen}>
       <div className="flex min-h-screen w-full">
         <AppSidebar userName={session?.user?.name} userRole={session?.user?.role} />
-        <main className="flex-1 overflow-y-auto bg-background">
-          <div className="flex h-16 items-center border-b border-border bg-card px-6 shadow-sm">
+        <main className="flex-1 overflow-y-auto bg-transparent">
+          <div className="flex h-16 items-center border-b border-border bg-transparent px-6 shadow-sm">
             <SidebarTrigger />
             <h1 className="ml-4 text-lg font-semibold">Prime Digital Admin</h1>
             <div className="ml-auto">

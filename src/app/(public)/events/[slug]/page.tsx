@@ -33,27 +33,6 @@ export default async function EventRegistrationPage({
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 md:p-8 font-sans transition-colors duration-500 overflow-x-hidden">
-      
-      {/* FULL-SCREEN BACKGROUND IMAGE (BLURRED) */}
-      <div className="fixed inset-0 z-0">
-        {event.imageUrl ? (
-          <>
-            <img
-              src={event.imageUrl}
-              alt="Background"
-              className="w-full h-full object-cover blur-xl scale-110 opacity-60 dark:opacity-30 transition-opacity duration-500"
-            />
-            {/* Overlay to ensure text readability */}
-            <div className="absolute inset-0 bg-background/40 dark:bg-zinc-950/60 mix-blend-multiply" />
-          </>
-        ) : (
-          <div className="absolute inset-0 bg-zinc-100 dark:bg-zinc-950">
-            <div className="absolute top-[10%] left-[20%] w-[600px] h-[600px] rounded-full blur-[120px] bg-black/5 dark:bg-white/5" />
-            <div className="absolute bottom-[20%] right-[10%] w-[500px] h-[500px] rounded-full blur-[140px] bg-black/5 dark:bg-white/5" />
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] dark:opacity-[0.06] mix-blend-overlay"></div>
-          </div>
-        )}
-      </div>
 
       {/* FLOATING THEME TOGGLE */}
       <div className="fixed top-4 right-4 md:top-8 md:right-8 z-50">

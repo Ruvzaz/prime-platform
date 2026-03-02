@@ -55,7 +55,7 @@
   --radius: 0.5rem; /* Standard rounded edges */
   
   /* LIGHT DASHBOARD MODE */
-  --background: oklch(0.97 0 0); /* #f4f7f9 light gray */
+  --background: oklch(1 0 0); /* Pure White */
   --foreground: oklch(0.3 0 0); /* Dark slate for high contrast */
   
   --card: oklch(1 0 0); /* Pure White */
@@ -98,14 +98,14 @@
   --sidebar-foreground: oklch(0.3 0 0); 
   --sidebar-primary: oklch(0.6 0.12 250);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.95 0 0); 
+  --sidebar-accent: oklch(0.98 0 0); 
   --sidebar-accent-foreground: oklch(0.3 0 0);
-  --sidebar-border: oklch(0.9 0 0);
+  --sidebar-border: oklch(0.92 0 0);
   --sidebar-ring: oklch(0.6 0.12 250);
 }
 
 .dark {
-  /* DARK DASHBOARD MODE (Adjusted for contrast but keeping same hue/vibe) */
+  /* DARK DASHBOARD MODE */
   --background: oklch(0.15 0 0); /* Dark Zinc */
   --foreground: oklch(0.95 0 0); /* Light slate */
   
@@ -158,11 +158,32 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground antialiased min-h-screen;
+    @apply bg-background text-foreground antialiased min-h-screen relative overflow-x-hidden;
     font-family: 'Outfit', sans-serif;
-    /* Subtle dot grid for premium Light Theme aesthetic */
-    background-image: radial-gradient(color-mix(in srgb, var(--border) 40%, transparent) 1px, transparent 1px);
-    background-size: 24px 24px;
+  }
+  
+  /* Animated Global Dashboard Background */
+  body::before {
+    content: "";
+    @apply fixed top-[-10%] right-[-5%] w-[60vw] h-[60vw] max-w-[800px] max-h-[800px] rounded-full bg-[#4a89c8]/20 blur-[120px] -z-10 pointer-events-none;
+    animation: float-blob-right 12s ease-in-out infinite alternate;
+  }
+  body::after {
+    content: "";
+    @apply fixed bottom-[-10%] left-[-5%] w-[50vw] h-[50vw] max-w-[700px] max-h-[700px] rounded-full bg-[#4a89c8]/20 blur-[100px] -z-10 pointer-events-none;
+    animation: float-blob-left 15s ease-in-out infinite alternate-reverse;
+  }
+  
+  @keyframes float-blob-right {
+    0% { transform: translate(10%, -10%) scale(1); }
+    50% { transform: translate(-10%, 10%) scale(1.1); }
+    100% { transform: translate(10%, -10%) scale(1); }
+  }
+  
+  @keyframes float-blob-left {
+    0% { transform: translate(-10%, 10%) scale(1); }
+    50% { transform: translate(10%, -10%) scale(1.15); }
+    100% { transform: translate(-10%, 10%) scale(1); }
   }
   
   /* 4. UTILITIES FOR GLASS & NOISE */

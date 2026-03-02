@@ -129,7 +129,7 @@ function SortableFieldItem({
                                 <SelectItem value="EMAIL">Email</SelectItem>
                                 <SelectItem value="PHONE">Phone</SelectItem>
                                 <SelectItem value="SELECT">Dropdown</SelectItem>
-                                <SelectItem value="RADIO">Radio (เลือกได้ 1 ข้อ)</SelectItem>
+                                <SelectItem value="RADIO">Radio</SelectItem>
                                 <SelectItem value="CHECKBOX">Checkbox</SelectItem>
                             </SelectContent>
                          </Select>
