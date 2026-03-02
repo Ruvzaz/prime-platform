@@ -20,6 +20,7 @@ const eventSchema = z.object({
   emailSubject: z.string().optional(),
   emailBody: z.string().optional(),
   emailAttachmentUrl: z.string().optional().nullable(),
+  isActive: z.boolean().default(true),
 });
 
 const formFieldSchema = z.array(z.object({
@@ -53,6 +54,7 @@ export async function createEvent(prevState: any, formData: FormData) {
     themeColor: formData.get("themeColor"),
     emailSubject: formData.get("emailSubject"),
     emailBody: formData.get("emailBody"),
+    isActive: formData.get("isActive") === "on",
   };
 
   // checkbox for image size > 0
@@ -93,6 +95,7 @@ export async function createEvent(prevState: any, formData: FormData) {
     emailSubject: formData.get("emailSubject"),
     emailBody: formData.get("emailBody"),
     emailAttachmentUrl: emailAttachmentUrl,
+    isActive: formData.get("isActive") === "on",
   };
 
   const parsedData = eventSchema.safeParse(rawData);
@@ -131,6 +134,7 @@ export async function createEvent(prevState: any, formData: FormData) {
         emailSubject: data.emailSubject,
         emailBody: data.emailBody,
         emailAttachmentUrl: emailAttachmentUrl,
+        isActive: data.isActive,
         organizer: {
             connect: { id: session.user.id }
         },
@@ -174,6 +178,7 @@ export async function updateEvent(prevState: any, formData: FormData) {
     themeColor: formData.get("themeColor"),
     emailSubject: formData.get("emailSubject"),
     emailBody: formData.get("emailBody"),
+    isActive: formData.get("isActive") === "on",
   };
 
   let imageUrl = formData.get("currentImageUrl") as string | null;
@@ -216,6 +221,7 @@ export async function updateEvent(prevState: any, formData: FormData) {
     emailSubject: formData.get("emailSubject"),
     emailBody: formData.get("emailBody"),
     emailAttachmentUrl: emailAttachmentUrl,
+    isActive: formData.get("isActive") === "on",
   };
 
   const parsedData = eventSchema.safeParse(rawData);
@@ -258,6 +264,7 @@ export async function updateEvent(prevState: any, formData: FormData) {
                 emailSubject: data.emailSubject,
                 emailBody: data.emailBody,
                 emailAttachmentUrl: emailAttachmentUrl,
+                isActive: data.isActive,
             }
         });
 
@@ -328,7 +335,6 @@ export async function getEvents() {
 
   try {
     const events = await prisma.event.findMany({
-      where: { isActive: true },
       orderBy: { startDate: "desc" },
       include: {
         _count: {
@@ -350,21 +356,37 @@ export async function deleteEvents(eventIds: string[]) {
   }
 
   try {
-    // Soft delete: set isActive to false instead of removing from DB
-    await prisma.event.updateMany({
+// Use deleteMany for hard delete. Prisma level cascading handles relations
+    await prisma.event.deleteMany({
       where: {
         id: { in: eventIds }
-      },
-      data: {
-        isActive: false,
       }
     });
 
     revalidatePath("/events");
-    return { message: "Events archived successfully" };
+    return { message: "Events deleted successfully" };
   } catch (error) {
-    console.error("Failed to archive events:", error);
-    return { message: "Failed to archive events" };
+    console.error("Failed to delete events:", error);
+    return { message: "Failed to delete events" };
+  }
+}
+
+export async function toggleEventStatus(eventId: string, currentStatus: boolean) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== 'ADMIN') {
+      return { success: false, message: "Unauthorized" };
+  }
+
+  try {
+    await prisma.event.update({
+      where: { id: eventId },
+      data: { isActive: !currentStatus }
+    });
+    revalidatePath("/events");
+    return { success: true, message: "Event status updated" };
+  } catch (error) {
+    console.error("Failed to toggle event status:", error);
+    return { success: false, message: "Failed to update status" };
   }
 }
 

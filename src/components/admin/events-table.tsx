@@ -23,8 +23,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { deleteEvents } from "@/app/actions/events"
+import { deleteEvents, toggleEventStatus } from "@/app/actions/events"
 import { useRouter } from "next/navigation"
+import { Switch } from "@/components/ui/switch"
 
 interface Event {
   id: string
@@ -45,6 +46,7 @@ export function EventsTable({ initialEvents }: EventsTableProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteTargetIds, setDeleteTargetIds] = useState<string[]>([])
+  const [togglingId, setTogglingId] = useState<string | null>(null)
   const router = useRouter()
 
   const toggleSelectAll = () => {
@@ -74,6 +76,13 @@ export function EventsTable({ initialEvents }: EventsTableProps) {
     setSelectedIds(prev => prev.filter(id => !deleteTargetIds.includes(id)))
     setDeleteTargetIds([])
     setIsDeleting(false)
+    router.refresh()
+  }
+
+  const handleToggleStatus = async (eventId: string, currentStatus: boolean) => {
+    setTogglingId(eventId)
+    await toggleEventStatus(eventId, currentStatus)
+    setTogglingId(null)
     router.refresh()
   }
 
@@ -146,11 +155,18 @@ export function EventsTable({ initialEvents }: EventsTableProps) {
                   </div>
                 </TableCell>
                 <TableCell>
-                  {event.isActive ? (
-                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">Active</Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-muted-foreground">Draft</Badge>
-                  )}
+                  <div className="flex items-center gap-2">
+                    <Switch 
+                      checked={event.isActive}
+                      disabled={togglingId === event.id}
+                      onCheckedChange={() => handleToggleStatus(event.id, event.isActive)}
+                    />
+                    {event.isActive ? (
+                      <span className="text-sm text-muted-foreground mr-1">Active</span>
+                    ) : (
+                      <span className="text-sm text-muted-foreground mr-1">Closed</span>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center text-sm text-muted-foreground">

@@ -1,0 +1,144 @@
+---
+title: How Event Registration Works in Prime Platform
+nav_title: Event Registration Workflow
+description: Learn how the public event registration form, validation, and Server Actions power the Prime Platform ticketing system.
+related:
+  title: Next Steps
+  description: Explore the related API references and components.
+  links:
+    - app/api-reference/functions/register-attendee
+    - app/api-reference/components/registration-form
+---
+
+This guide explains the data flow and best practices used for event registration in the Prime Platform. It covers how we use React 19's `useActionState`, robust form validation, and server-side logic to handle high-concurrency event sign-ups.
+
+<AppOnly>This documentation is specific to the Next.js App Router implementation used in Prime Platform.</AppOnly>
+
+> **Good to know**:
+>
+> - The registration form dynamically renders based on the `formFields` defined by the Event organizer.
+> - We strictly follow Vercel's Server Actions patterns to handle data fetching and mutation without client-side waterfalls.
+
+## Prerequisites
+
+Before modifying the registration flow, you should understand:
+- React 19's `useActionState` and `useFormStatus` hooks.
+- How Zod is used for data validation on the server.
+- The structure of the `Event` and `Registration` Prisma models.
+
+## Step 1: The Client Component (RegistrationForm)
+
+The public registration form is isolated into a Client Component (`src/components/public/registration-form.tsx`). This allows us to use interactive React hooks while keeping the parent page (`page.tsx`) as a fast Server Component.
+
+We use `useActionState` to track the success or failure of the submission seamlessly without throwing unhandled exceptions to the user.
+
+```tsx filename="components/public/registration-form.tsx" switcher
+// TypeScript Example
+"use client"
+
+import { useActionState } from "react"
+import { registerAttendee } from "@/app/actions/registration"
+import { SubmitButton } from "@/components/submit-button"
+
+const initialState = { success: false, message: "", redirectUrl: "" }
+
+export function RegistrationForm({ event }: { event: any }) {
+  const [state, formAction] = useActionState(registerAttendee, initialState)
+
+  return (
+    <form action={formAction}>
+      {/* Dynamic Fields */}
+      <SubmitButton type="submit">ลงทะเบียน</SubmitButton>
+      
+      {state.message && !state.success && (
+        <Alert variant="destructive">{state.message}</Alert>
+      )}
+    </form>
+  )
+}
+```
+
+```jsx filename="components/public/registration-form.js" switcher
+// JavaScript Example
+"use client"
+
+import { useActionState } from "react"
+import { registerAttendee } from "@/app/actions/registration"
+import { SubmitButton } from "@/components/submit-button"
+
+const initialState = { success: false, message: "", redirectUrl: "" }
+
+export function RegistrationForm({ event }) {
+  const [state, formAction] = useActionState(registerAttendee, initialState)
+
+  return (
+    <form action={formAction}>
+      {/* Dynamic Fields */}
+      <SubmitButton type="submit">ลงทะเบียน</SubmitButton>
+      
+      {state.message && !state.success && (
+        <Alert variant="destructive">{state.message}</Alert>
+      )}
+    </form>
+  )
+}
+```
+
+## Step 2: The Server Action (registerAttendee)
+
+When the form is submitted, Next.js calls the `registerAttendee` Server Action. This function is responsible for:
+1. Validating input data.
+2. Handling database transactions (Prisma).
+3. Sending the confirmation email via Nodemailer.
+4. Returning a structured state object (React 19 pattern).
+
+> **Good to know**: Do not use `throw new Error` inside a Server Action intended for a public form. Always return an object with `{ success: false, message: string }` so the UI can gracefully display the error.
+
+```tsx filename="app/actions/registration.ts" switcher
+"use server"
+
+import { prisma } from "@/lib/prisma"
+import { extractAttendeeInfo } from "@/lib/attendee-utils"
+
+export async function registerAttendee(prevState: any, formData: FormData) {
+  const eventId = formData.get("eventId") as string;
+  
+  if (!eventId) {
+    return { success: false, message: "Event ID is missing." };
+  }
+
+  try {
+    // 1. Process FormData into JSON
+    // ...
+
+    // 2. Save to Database
+    await prisma.registration.create({
+      data: {
+        eventId,
+        formData: rawData,
+        referenceCode: generateRefCode(),
+        status: "CONFIRMED",
+      },
+    });
+
+    // 3. Return Success
+    return { 
+      success: true, 
+      message: "Registration successful!", 
+      redirectUrl: `/events/${slug}/success` 
+    };
+  } catch (error) {
+    return { success: false, message: "System error. Please try again." };
+  }
+}
+```
+
+## Step 3: Server Rendering the Form
+
+The `RegistrationForm` component is imported into the dynamic route `app/(public)/events/[slug]/page.tsx`. This page is a Server Component that fetches the Event data (including custom form fields and the `isActive` status) directly from the database.
+
+If `event.isActive` is `false`, the server bypasses rendering the form entirely and displays a beautiful "Closed" UI, enhancing security and UX simultaneously.
+
+## Next Steps
+
+Now that you understand the registration flow, you can explore adding Analytics tracking to the Success Page or customizing the Email Template generator.

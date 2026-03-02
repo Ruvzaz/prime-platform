@@ -153,8 +153,11 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased min-h-screen;
     font-family: 'Outfit', sans-serif;
+    /* Subtle dot grid for premium Light Theme aesthetic */
+    background-image: radial-gradient(color-mix(in srgb, var(--border) 40%, transparent) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
   
   /* 4. UTILITIES FOR GLASS & NOISE */

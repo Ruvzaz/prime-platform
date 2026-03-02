@@ -1,0 +1,58 @@
+---
+title: RegistrationForm
+description: A client component that provides a dynamic, robust form for event registration with built-in action state handling.
+---
+
+{/* The content of this doc is shared between the app and pages router. You can use the `<PagesOnly>Content</PagesOnly>` component to add content that is specific to the Pages Router. Any shared content should not be wrapped in a component. */}
+
+The `<RegistrationForm>` component renders a dynamic form derived from the Event's database configuration. It natively utilizes React 19's `useActionState` to track loading states, display error boundaries, and redirect the user upon successful registration.
+
+## Reference
+
+### Props
+
+<div style={{ overflowX: 'auto', width: '100%' }}>
+
+| Prop             | Example                               | Type   | Status   |
+| ---------------- | ------------------------------------- | ------ | -------- |
+| [`event`](#event) | `event={{ id: "123", slug: "foo" }}` | Object | Required |
+
+</div>
+
+#### `event`
+
+The database object representing the Event being registered for. This must include the event ID, slug, and the `formFields` array which defines the dynamic questions.
+
+```tsx filename="app/example.tsx" switcher
+// TypeScript example
+import { RegistrationForm } from "@/components/public/registration-form"
+
+export default function Page({ params }: { params: { slug: string } }) {
+  // Fetch event...
+  return <RegistrationForm event={event} />
+}
+```
+
+```jsx filename="app/example.js" switcher
+// JavaScript example
+import { RegistrationForm } from "@/components/public/registration-form"
+
+export default function Page({ params }) {
+  // Fetch event...
+  return <RegistrationForm event={event} />
+}
+```
+
+### Server Action State Return Structure
+
+The internal Server Action bound to this form returns the following strict structure:
+
+<div style={{ overflowX: 'auto', width: '100%' }}>
+
+| Property | Type | Description |
+| :-- | :-- | :-- |
+| `success` | `boolean` | Indicates if the database transaction and validation succeeded (`true`) or failed (`false`). |
+| `message` | `string` | Human-readable string. Shown as an Alert component at the top of the form for user feedback. |
+| `redirectUrl` | `string?` | Optional route string used to navigate the user out of the form upon success (e.g., `/events/foo/success`). |
+
+</div>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { FormBuilder, FormFieldConfig } from "@/components/admin/form-builder"
 import { CalendarIcon, Loader2 } from "lucide-react"
@@ -26,6 +27,7 @@ interface EventFormProps {
     emailSubject?: string | null
     emailBody?: string | null
     emailAttachmentUrl?: string | null
+    isActive?: boolean
     formFields: FormFieldConfig[]
   }
 }
@@ -151,6 +153,22 @@ export function EventForm({ action, initialData }: EventFormProps) {
                       Current image: <a href={initialData.imageUrl} target="_blank" className="underline">View</a>
                   </div>
               )}
+            </div>
+
+            <hr className="my-6 border-muted" />
+
+            <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-background/50">
+              <div className="space-y-0.5">
+                <Label htmlFor="isActive" className="text-base font-semibold">สถานะเปิดรับสมัคร (Registration Status)</Label>
+                <p className="text-sm text-muted-foreground">
+                  เลื่อนปิดเพื่อหยุดรับการเชื่อมต่อใหม่และแสดงหน้าประกาศ "ปิดรับสมัคร"
+                </p>
+              </div>
+              <Switch
+                id="isActive"
+                name="isActive"
+                defaultChecked={initialData?.isActive ?? true}
+              />
             </div>
 
             <hr className="my-6 border-muted" />
