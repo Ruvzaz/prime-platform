@@ -10,7 +10,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 
 async function getEvent(slug: string) {
   const event = await prisma.event.findFirst({
-    where: { slug, isActive: true },
+    where: { slug },
     include: {
       formFields: {
         orderBy: { order: 'asc' }
@@ -66,9 +66,9 @@ export default async function EventRegistrationPage({
         
         {/* Header Block */}
         <div className="p-6 md:p-10 pb-6 border-b border-border/40">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-6 bg-foreground text-background">
-            <Sparkles className="w-3.5 h-3.5 text-yellow-500" />
-            เปิดรับลงทะเบียน
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-6 ${event.isActive ? 'bg-foreground text-background' : 'bg-destructive/10 text-destructive'}`}>
+            <Sparkles className={`w-3.5 h-3.5 ${event.isActive ? 'text-yellow-500' : 'text-destructive'}`} />
+            {event.isActive ? 'เปิดรับลงทะเบียน' : 'ปิดรับลงทะเบียนแล้ว'}
           </div>
 
           <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1] mb-6 text-foreground">
@@ -99,9 +99,10 @@ export default async function EventRegistrationPage({
           )}
         </div>
 
-        {/* Form Block */}
-        <div className="p-6 md:p-10 bg-muted/30 dark:bg-zinc-950/50">
-          <div className="flex items-center gap-2 mb-6">
+        {/* Form Block or Closed UI */}
+        {event.isActive ? (
+          <div className="p-6 md:p-10 bg-muted/30 dark:bg-zinc-950/50">
+            <div className="flex items-center gap-2 mb-6">
             <h2 className="text-base font-bold text-foreground">
               ลงทะเบียนเข้าร่วมงาน
             </h2>
@@ -219,6 +220,23 @@ export default async function EventRegistrationPage({
             <span>Powered by Prime Digital</span>
           </p>
         </div>
+        ) : (
+          <div className="p-10 md:p-14 bg-muted/30 dark:bg-zinc-950/50 flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mb-6">
+              <Calendar className="w-8 h-8 text-destructive" />
+            </div>
+            <h2 className="text-2xl font-bold text-foreground mb-3">
+              ปิดรับลงทะเบียนแล้ว
+            </h2>
+            <p className="text-muted-foreground max-w-sm mb-8">
+              ขออภัย กิจกรรมนี้ได้ปิดรับลงทะเบียนเรียบร้อยแล้ว หากมีข้อสงสัยเพิ่มเติม กรุณาติดต่อผู้จัดงาน
+            </p>
+            <div className="w-full h-px bg-border/40" />
+            <p className="mt-8 text-[11px] text-muted-foreground/60 font-medium uppercase tracking-widest flex items-center justify-center gap-2">
+              <span>Powered by Prime Digital</span>
+            </p>
+          </div>
+        )}
 
       </div>
     </div>
