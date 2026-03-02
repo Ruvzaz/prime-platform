@@ -49,46 +49,78 @@ export default async function DashboardPage() {
          </div>
       </div>
       
-      {/* STATS GRID - PREMIUM MONOCHROME */}
-      <div className="grid gap-4 md:grid-cols-3">
+      {/* STATS GRID - DASHBOARD THEME */}
+      <div className="grid gap-6 md:grid-cols-3">
         
-        <div className="bg-card text-card-foreground p-6 rounded-xl border border-border shadow-sm hover:shadow-md transition-all group">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Total Events</h3>
-            <CalendarCheck className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+        {/* Card 1: Blue Background */}
+        <div className="bg-[#4a89c8] text-white p-7 rounded-[1.5rem] shadow-[0_15px_30px_rgba(74,137,200,0.15)] transition-all">
+          <div className="w-10 h-10 rounded-xl bg-[#fae29c] flex items-center justify-center mb-6 shadow-sm">
+             <CalendarCheck className="h-5 w-5 text-[#2c4059]" />
           </div>
-          <div className="mt-2">
-            <div className="text-3xl font-bold">{stats.eventCount}</div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3 text-primary" /> Active campaigns
+          <div>
+            <h3 className="text-sm font-semibold text-white/90 mb-1 tracking-wide">Total Events</h3>
+            <div className="text-4xl font-black tracking-tight">{stats.eventCount}</div>
+            <p className="text-xs text-white/70 mt-2 flex items-center gap-1 font-medium">
+                on track
             </p>
           </div>
         </div>
         
-        <div className="bg-card text-card-foreground p-6 rounded-xl border border-border shadow-sm hover:shadow-md transition-all group">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Registrations</h3>
-            <Users className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+        {/* Card 2: Blue Background */}
+        <div className="bg-[#4a89c8] text-white p-7 rounded-[1.5rem] shadow-[0_15px_30px_rgba(74,137,200,0.15)] transition-all">
+          <div className="w-10 h-10 rounded-xl bg-[#fae29c] flex items-center justify-center mb-6 shadow-sm">
+             <Users className="h-5 w-5 text-[#2c4059]" />
           </div>
-          <div className="mt-2">
-            <div className="text-3xl font-bold">{stats.registrationCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">Global sign-ups</p>
+          <div>
+            <h3 className="text-sm font-semibold text-white/90 mb-1 tracking-wide">Registrations</h3>
+            <div className="text-4xl font-black tracking-tight">
+               +{stats.registrationCount}
+            </div>
+            <p className="text-xs text-white/70 mt-2 font-medium">projected growth</p>
           </div>
         </div>
         
-        <div className="bg-card text-card-foreground p-6 rounded-xl border border-border shadow-sm hover:shadow-md transition-all group">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Checked In</h3>
-            <UserCheck className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+        {/* Card 3: White Background / Ring Chart */}
+        <div className="bg-white dark:bg-zinc-900 border border-border p-7 rounded-[1.5rem] shadow-sm transition-all flex flex-col justify-between relative overflow-hidden">
+          <div className="w-10 h-10 rounded-xl bg-[#2c4059] flex items-center justify-center mb-6 shadow-sm">
+             <UserCheck className="h-5 w-5 text-[#fae29c]" />
           </div>
-          <div className="mt-2">
-            <div className="text-3xl font-bold">{stats.checkInCount}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+          <div>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-1 tracking-wide">Checked In</h3>
+            <div className="text-4xl font-black text-foreground tracking-tight">{stats.checkInCount}</div>
+            <p className="text-xs text-muted-foreground mt-2 font-medium">
               {stats.registrationCount > 0 
-                ? `${Math.round((stats.checkInCount / stats.registrationCount) * 100)}% attendance rate`
+                ? `${Math.round((stats.checkInCount / stats.registrationCount) * 100)}% achieved`
                 : "No data yet"}
             </p>
           </div>
+
+          {/* Fake Ring Chart for Visuals matching the reference */}
+          {stats.registrationCount > 0 && (
+            <div className="absolute right-6 bottom-6 w-24 h-24">
+              <svg viewBox="0 0 36 36" className="w-full h-full drop-shadow-sm">
+                <path
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="#fae29c"
+                  strokeWidth="6"
+                />
+                <path
+                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                  fill="none"
+                  stroke="#2c4059"
+                  strokeWidth="6"
+                  strokeDasharray={`${Math.round((stats.checkInCount / stats.registrationCount) * 100)}, 100`}
+                  className="animate-[spin_2s_ease-out]"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                 <span className="text-sm font-black text-[#2c4059] dark:text-white">
+                    {Math.round((stats.checkInCount / stats.registrationCount) * 100)}%
+                 </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       

@@ -90,19 +90,12 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative selection:bg-primary/20">
-      {/* Background Decorators - Clean White Tone with Grain & Soft Globs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden bg-slate-50 dark:bg-zinc-950">
-        {/* Soft Gradients (Purple & Blue mapped to light/pastel colors) */}
-        <div className="absolute -top-[10%] -left-[10%] w-[60vw] h-[60vh] bg-[#f3e8ff] dark:bg-[#3b0764] rounded-full blur-[140px] mix-blend-multiply dark:mix-blend-screen opacity-80"></div>
-        <div className="absolute top-[30%] -right-[15%] w-[50vw] h-[70vh] bg-[#dbeafe] dark:bg-[#1e3a8a] rounded-full blur-[140px] mix-blend-multiply dark:mix-blend-screen opacity-80"></div>
-        <div className="absolute -bottom-[10%] left-[20%] w-[40vw] h-[40vh] bg-[#fce7f3] dark:bg-[#831843] rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen opacity-60"></div>
-        
-        {/* Noise overlay for texture */}
-        <div 
-          className="absolute inset-0 opacity-[0.5] dark:opacity-[0.2] mix-blend-overlay" 
-          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
-        ></div>
+    <div className="min-h-screen bg-[#f4f7f9] dark:bg-zinc-950 text-foreground relative selection:bg-primary/20 font-sans">
+      {/* Background Decorators - Clean Light Dashboard Tone */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        {/* Subtle top-right and bottom-left decorators matching the reference wave vibe */}
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-br from-[#e5edf2] dark:from-zinc-900/50 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-[#e5edf2] dark:from-zinc-900/50 to-transparent rounded-full blur-3xl translate-y-1/4 -translate-x-1/4"></div>
       </div>
 
       {/* Header */}
@@ -110,49 +103,50 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
         <div className="max-w-[85rem] mx-auto px-6 py-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             {event.imageUrl ? (
-              <img src={event.imageUrl} alt="Event logo" className="w-12 h-12 rounded-2xl object-cover shadow-[0_2px_10px_rgb(0,0,0,0.08)] hidden sm:block" />
+              <img src={event.imageUrl} alt="Event logo" className="w-12 h-12 rounded-xl object-cover shadow-[0_2px_10px_rgb(0,0,0,0.05)] hidden sm:block border-[3px] border-white" />
             ) : (
-              <div className="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 flex items-center justify-center hidden sm:flex shadow-[0_2px_10px_rgb(0,0,0,0.04)] border border-black/5 dark:border-white/5">
-                <Sparkles className="w-6 h-6 text-slate-400" />
+              <div className="w-12 h-12 rounded-xl bg-white dark:bg-zinc-800 flex items-center justify-center hidden sm:flex shadow-[0_2px_10px_rgb(0,0,0,0.04)] border border-black/5 dark:border-white/5">
+                <Sparkles className="w-6 h-6 text-[#4a89c8]" />
               </div>
             )}
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight">{event.title}</h1>
-              <p className="text-xs font-semibold text-slate-500 flex items-center gap-1.5 mt-0.5 uppercase tracking-wider">
-                <Radio className="w-3 h-3 text-red-500 animate-pulse" />
+              <h1 className="text-2xl font-bold tracking-tight text-[#2d3748] dark:text-white leading-tight">{event.title}</h1>
+              <p className="text-xs font-bold text-slate-400 flex items-center gap-1.5 mt-0.5 uppercase tracking-wider">
+                <Radio className="w-3 h-3 text-[#fbaa33] animate-pulse" />
                 Live Check-in Board
               </p>
             </div>
           </div>
           <div className="flex flex-col items-end mr-2">
             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">Total Attendees</span>
-            <span className="text-3xl font-black text-slate-900 dark:text-white leading-none">{total.toLocaleString()}</span>
+            <span className="text-3xl font-black text-[#2d3748] dark:text-white leading-none">{total.toLocaleString()}</span>
           </div>
         </div>
       </header>
 
       <main className="relative z-10 max-w-[85rem] mx-auto px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
         {/* Left Column: Spotlight (Latest Check-in) */}
-        <div className="lg:col-span-6 flex justify-center lg:justify-end lg:pt-10">
+        <div className="lg:col-span-5 flex justify-center lg:justify-end lg:pt-4">
           {checkIns.length > 0 ? (
             <div className="w-full relative group">
-              <div className="relative bg-white dark:bg-zinc-950 rounded-[3.5rem] p-12 lg:p-16 text-center shadow-[0_30px_60px_rgba(0,0,0,0.04)] dark:shadow-[0_30px_60px_rgba(0,0,0,0.3)] border border-transparent dark:border-white/5 transition-all duration-500 overflow-hidden">
-                {/* Decorative background logo (Bottom Right Subtle Graphic) */}
-                <div className="absolute -right-16 -bottom-16 text-slate-100 dark:text-zinc-900 pointer-events-none">
-                  <Sparkles className="w-80 h-80" strokeWidth={1} />
+              <div className="relative bg-[#4a89c8] dark:bg-blue-900 rounded-[2rem] p-10 lg:p-14 text-center shadow-[0_20px_40px_rgba(74,137,200,0.2)] dark:shadow-none transition-all duration-500 overflow-hidden">
+                {/* Decorative background logo */}
+                <div className="absolute -right-10 -bottom-10 text-white/5 dark:text-white/5 pointer-events-none">
+                  <Sparkles className="w-72 h-72" strokeWidth={1} />
                 </div>
 
                 <div className="relative z-10 flex flex-col items-center">
-                  {/* Pill: Latest Arrival */}
-                  <div className="inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-slate-100/80 dark:bg-zinc-800/80 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-12 border border-slate-200/50 dark:border-white/5">
-                    <span className="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-500"></span>
-                    Latest Arrival
+                  {/* Pill: Latest Arrival (Yellow theme) */}
+                  <div className="w-full flex justify-start mb-8">
+                     <div className="inline-flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl bg-[#fae29c] text-[#2c4059] text-[11px] font-black uppercase tracking-wider shadow-sm">
+                       <Sparkles className="w-4 h-4" strokeWidth={3} />
+                     </div>
                   </div>
 
                   {/* Avatar */}
-                  <div className="relative w-40 h-40 mx-auto mb-10">
-                    <div className="absolute inset-x-0 bottom-0 top-1/2 bg-black/5 dark:bg-black/40 rounded-full blur-2xl -z-10 transform scale-90 translate-y-6"></div>
-                    <div className="relative w-full h-full rounded-full bg-white dark:bg-zinc-900 flex items-center justify-center text-5xl font-black text-slate-900 dark:text-white shadow-[0_15px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_15px_40px_rgba(0,0,0,0.4)] border border-slate-50 dark:border-zinc-800 overflow-hidden">
+                  <div className="relative w-36 h-36 mx-auto mb-8">
+                    <div className="absolute inset-x-0 bottom-0 top-1/2 bg-[#2a5b8e]/40 rounded-full blur-xl -z-10 transform scale-90 translate-y-4"></div>
+                    <div className="relative w-full h-full rounded-full bg-white flex items-center justify-center text-5xl font-black text-[#4a89c8] shadow-lg border-[6px] border-white/20 overflow-hidden">
                       {event.imageUrl ? (
                         <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover" />
                       ) : (
@@ -162,85 +156,85 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
                   </div>
 
                   {/* Name */}
-                  <h2 className="text-4xl lg:text-[40px] font-black mb-8 text-slate-800 dark:text-gray-100 tracking-tight leading-tight">
+                  <h2 className="text-3xl lg:text-4xl font-bold mb-6 text-white tracking-tight leading-tight">
                     {checkIns[0].name}
                   </h2>
                   
                   {/* Pill: Ref Code */}
-                  <div className="inline-flex items-center justify-center gap-2 text-slate-600 dark:text-slate-300 font-medium text-sm bg-slate-100/60 dark:bg-zinc-800/60 py-2 px-5 rounded-2xl mx-auto border border-slate-200/50 dark:border-white/5 mb-12">
-                    <span className="text-slate-400">#</span>
+                  <div className="inline-flex items-center justify-center gap-2 text-white/90 font-bold text-sm bg-white/10 py-2.5 px-6 rounded-xl mx-auto border border-white/20 mb-8 backdrop-blur-sm">
+                    <span className="opacity-60 text-xs">#</span>
                     <span>{checkIns[0].referenceCode}</span>
                   </div>
 
                   {/* Time */}
-                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-[0.1em] uppercase">
-                    Checked in at {new Date(checkIns[0].scannedAt).toLocaleTimeString("th-TH", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                    })}
+                  <p className="text-xs font-medium text-blue-100/70 tracking-widest uppercase mb-2">
+                    Latest Check-in
+                  </p>
+                  <p className="text-lg font-bold text-white tracking-wide">
+                    {new Date(checkIns[0].scannedAt).toLocaleTimeString("th-TH")}
                   </p>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="w-full aspect-square border border-dashed border-slate-300 dark:border-zinc-800 rounded-[3rem] flex flex-col items-center justify-center text-center p-12 bg-white/30 dark:bg-zinc-900/30 backdrop-blur-sm">
-              <div className="w-24 h-24 bg-white dark:bg-zinc-800 shadow-sm rounded-full flex items-center justify-center mb-6">
-                <Users className="w-10 h-10 text-slate-400" />
+            <div className="w-full aspect-square bg-[#4a89c8]/10 border border-dashed border-[#4a89c8]/30 dark:border-zinc-800 rounded-[2rem] flex flex-col items-center justify-center text-center p-12 backdrop-blur-sm">
+              <div className="w-20 h-20 bg-white dark:bg-zinc-800 shadow-sm rounded-full flex items-center justify-center mb-6">
+                <Users className="w-8 h-8 text-[#4a89c8]" />
               </div>
-              <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight">Waiting for guests...</h3>
-              <p className="text-base text-slate-500 dark:text-slate-400 max-w-[280px]">The spotlight will automatically appear when the first guest checks in.</p>
+              <h3 className="text-2xl font-bold text-[#2d3748] dark:text-white mb-3 tracking-tight">Waiting for guests...</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-[280px]">The spotlight will appear when the first guest checks in.</p>
             </div>
           )}
         </div>
 
         {/* Right Column: Feed */}
-        <div className="lg:col-span-6 flex flex-col h-[700px] lg:h-[850px] pt-10">
-          <div className="flex items-center justify-between mb-8 px-2">
-            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] flex items-center gap-3">
-              <ArrowRight className="w-4 h-4" />
-              Recent Activity Feed
+        <div className="lg:col-span-7 flex flex-col h-[700px] lg:h-[800px] pt-4">
+          <div className="flex items-center justify-between mb-6 px-1">
+            <h3 className="text-[13px] font-bold text-[#2d3748] dark:text-white uppercase tracking-wider flex items-center gap-2">
+              <ArrowRight className="w-4 h-4 text-[#4a89c8]" />
+              Recent Activity Data
             </h3>
-            <span className="text-[10px] font-bold text-slate-400 bg-white/60 dark:bg-zinc-900/60 rounded-full px-4 py-1.5 border border-slate-200/50 dark:border-white/5 uppercase tracking-widest">Auto-updating</span>
+            <span className="text-[10px] font-bold text-[#4a89c8] bg-[#e8f1f8] dark:bg-blue-900/30 rounded-lg px-3 py-1.5 uppercase tracking-widest">Auto Update</span>
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-4 space-y-4 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto pr-3 space-y-3 custom-scrollbar">
             {checkIns.map((ci, index) => {
               const isNew = ci.id === highlightId;
+              const isEven = index % 2 === 0;
               return (
                 <div
                   key={ci.id}
                   className={`
-                    group relative p-5 md:px-6 md:py-5 rounded-[1.5rem] transition-all duration-500
+                    group relative p-4 md:px-6 md:py-4 rounded-2xl transition-all duration-300
                     ${isNew 
-                      ? "bg-white dark:bg-zinc-900 shadow-[0_15px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_15px_40px_rgba(0,0,0,0.25)] -translate-y-1 z-10" 
-                      : "bg-white/60 dark:bg-zinc-900/60 backdrop-blur-xl border border-transparent hover:bg-white dark:hover:bg-zinc-900 shadow-sm hover:shadow-[0_8px_30px_rgba(0,0,0,0.03)]"
+                      ? "bg-white dark:bg-zinc-900 shadow-[0_15px_40px_rgba(74,137,200,0.15)] -translate-y-1 z-10 border border-[#b8d4f0]" 
+                      : "bg-white dark:bg-zinc-900 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-transparent hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]"
                     }
                   `}
                 >
-                  <div className="flex items-center gap-5 md:gap-6">
+                  <div className="flex items-center gap-4 md:gap-5">
                      <div className={`
-                       w-14 h-14 rounded-full flex items-center justify-center text-lg font-black shrink-0 transition-colors
-                       ${isNew ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md" : "bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-slate-400"}
+                       w-12 h-12 rounded-[1rem] flex items-center justify-center text-lg font-black shrink-0 shadow-sm transition-colors
+                       ${isNew ? "bg-[#fae29c] text-[#2c4059]" : (isEven ? "bg-[#e5eff5] text-[#4a89c8]" : "bg-[#65cbd2] text-white")}
                      `}>
                        {ci.name.substring(0, 2)}
                      </div>
                      <div className="flex-1 min-w-0">
-                       <h4 className="text-lg md:text-xl font-bold text-slate-800 dark:text-gray-100 truncate">{ci.name}</h4>
-                       <div className="flex items-center gap-3 mt-1.5">
-                         <span className="text-xs font-medium text-slate-400 uppercase tracking-widest">
-                           {ci.referenceCode}
+                       <h4 className="text-base md:text-lg font-bold text-[#2d3748] dark:text-white truncate">{ci.name}</h4>
+                       <div className="flex items-center gap-3 mt-1">
+                         <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                           #{ci.referenceCode}
                          </span>
                        </div>
                      </div>
                      <div className="text-right shrink-0 flex flex-col items-end justify-center">
-                       <span className="text-lg md:text-xl font-bold text-slate-800 dark:text-gray-100 leading-none">
+                       <span className="text-base md:text-lg font-black text-[#4a89c8] dark:text-blue-400 leading-none">
                          {new Date(ci.scannedAt).toLocaleTimeString("th-TH", {
                            hour: "2-digit",
                            minute: "2-digit",
                          })}
                        </span>
-                       <span className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-[0.1em]">
+                       <span className="text-[10px] font-semibold text-slate-400 mt-1.5 uppercase tracking-wide">
                          Today
                        </span>
                      </div>
@@ -250,8 +244,8 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
             })}
             
             {checkIns.length === 0 && (
-               <div className="text-center py-24 border border-dashed border-slate-200 dark:border-zinc-800 rounded-[1.5rem] bg-white/30 dark:bg-zinc-900/30">
-                 <p className="text-base text-slate-400 font-medium">No activity yet. Waiting for guests.</p>
+               <div className="text-center py-20 bg-white dark:bg-zinc-900 rounded-[1.5rem] shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                 <p className="text-base text-slate-400 font-medium">No activity data yet.</p>
                </div>
             )}
           </div>
