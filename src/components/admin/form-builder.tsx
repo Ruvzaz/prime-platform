@@ -32,7 +32,7 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 
-export type FieldType = "TEXT" | "EMAIL" | "PHONE" | "NUMBER" | "SELECT" | "CHECKBOX" | "RADIO" | "DATE"
+export type FieldType = "TEXT" | "EMAIL" | "PHONE" | "NUMBER" | "SELECT" | "CHECKBOX" | "RADIO" | "DATE" | "FILE"
 
 export interface FormFieldConfig {
   id: string
