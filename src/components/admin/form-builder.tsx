@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Trash2, GripVertical, Type, List, Lock, Circle } from "lucide-react"
+import { Plus, Trash2, GripVertical, Type, List, Lock, Circle, File as FileIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -131,6 +131,7 @@ function SortableFieldItem({
                                 <SelectItem value="SELECT">Dropdown</SelectItem>
                                 <SelectItem value="RADIO">Radio</SelectItem>
                                 <SelectItem value="CHECKBOX">Checkbox</SelectItem>
+                                <SelectItem value="FILE">อัปโหลดไฟล์ (รูป/เอกสาร)</SelectItem>
                             </SelectContent>
                          </Select>
                     </div>
@@ -324,6 +325,9 @@ export function FormBuilder({ onChange, initialFields = [] }: FormBuilderProps) 
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={() => addField("SELECT")}>
             <List className="mr-2 h-4 w-4" /> Dropdown
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => addField("FILE" as any)}>
+            <FileIcon className="mr-2 h-4 w-4" /> File
         </Button>
       </div>
 

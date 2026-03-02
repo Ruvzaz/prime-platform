@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { SubmitButton } from "@/components/submit-button"
 import { registerAttendee } from "@/app/actions/registration"
+import { FileUpload } from "@/components/public/file-upload"
 
 interface RegistrationFormProps {
   event: {
@@ -155,6 +156,16 @@ export function RegistrationForm({ event }: RegistrationFormProps) {
                       </span>
                     </label>
                   ))}
+                </div>
+              ) : q.type === "FILE" ? (
+                <div className="pt-2">
+                  <FileUpload
+                    id={q.id}
+                    name={`field_${q.id}`}
+                    eventSlug={event.slug}
+                    required={q.required}
+                    disabled={state.success}
+                  />
                 </div>
               ) : null}
             </div>

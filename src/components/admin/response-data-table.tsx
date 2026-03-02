@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Download, Search, Filter, Pencil } from "lucide-react"
+import { Download, Search, Filter, Pencil, FileIcon, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -185,11 +185,32 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                                     {customFields.map((field: any) => {
                                         // Try label first (most likely), then ID
                                         const val = (reg.formData as any)?.[field.label] || (reg.formData as any)?.[field.id]
-                                        // Handle arrays (Checkbox)
-                                        const displayVal = Array.isArray(val) ? val.join(", ") : val
+                                        
+                                        let displayContent: React.ReactNode = <span className="text-muted-foreground/30">-</span>
+                                        
+                                        if (val) {
+                                            if (field.type === "FILE" && typeof val === "string") {
+                                                displayContent = (
+                                                    <a 
+                                                        href={val} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors whitespace-nowrap"
+                                                    >
+                                                        <FileIcon className="w-3.5 h-3.5" />
+                                                        <span>แฟ้มแนบ</span>
+                                                        <ExternalLink className="w-3 h-3 ml-0.5 opacity-70" />
+                                                    </a>
+                                                )
+                                            } else {
+                                                const displayVal = Array.isArray(val) ? val.join(", ") : val
+                                                displayContent = <span className="truncate max-w-[200px] block">{displayVal}</span>
+                                            }
+                                        }
+
                                         return (
                                             <TableCell key={`${reg.id}-${field.id}`} className="text-sm">
-                                                {displayVal || <span className="text-muted-foreground/30">-</span>}
+                                                {displayContent}
                                             </TableCell>
                                         )
                                     })}

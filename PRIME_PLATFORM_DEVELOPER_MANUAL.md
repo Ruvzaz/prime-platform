@@ -1,138 +1,69 @@
-# 📘 Prime Platform - Developer Manual & Complete Learning Guide
+# PRIME PLATFORM - Developer Context Manual
 
-คู่มือฉบับนี้ถูกเขียนขึ้นมาเพื่อให้คุณ **"เข้าใจระบบทั้งหมดจนถึงแก่น"** ราวกับว่าคุณเป็นคนออกแบบและเขียนมันขึ้นมาด้วยมือตัวเองทั้งหมดตั้งแต่บรรทัดแรก โดยไม่ต้องพึ่งหา AI หากคุณอ่านและศึกษาตามคู่มือนี้ คุณจะสามารถต่อยอด แก้ไข และดูแลระบบนี้ได้ด้วยตัวเองในระยะยาวแบบ 100%
-
----
-
-## 🏗️ 1. ภาพรวมสถาปัตยกรรม (System Architecture)
-
-ระบบนี้ถูกพัฒนาด้วยแนวคิด **Modern Web Development (2025/2026)** ยึดหลัก **"เร็ว เสถียร และปลอดภัยระดับ Enterprise"**
-
-*   **Framework หลัก:** **Next.js (App Router V14+)** - เป็นเทคโนโลยีโครงสร้างเว็บที่ทรงพลังที่สุดในปัจจุบัน รองรับทั้งการดึงข้อมูลบนเซิร์ฟเวอร์ (Server-Side) และบราวเซอร์ (Client-Side)
-*   **ภาษาโปรแกรม:** **TypeScript** - คือ JavaScript ที่มีการบังคับระบุ "ชนิดข้อมูล" เพื่อป้องกันบั๊กเวลาส่งของข้ามไฟล์
-*   **ฐานข้อมูล (Database):** **Supabase (PostgreSQL)** - ฐานข้อมูลเชิงสัมพันธ์ (SQL) ที่แข็งแกร่ง รองรับข้อมูลหลักล้าน Reccord ได้สบายๆ
-*   **ตัวคุยกับฐานข้อมูล (ORM):** **Prisma** - เครื่องมือที่เปลี่ยนภาษา SQL ยากๆ ให้กลายเป็นภาษา TypeScript สั้นๆ ที่อ่านทำความเข้าใจง่าย (`prisma.event.findMany()`)
-*   **ที่เก็บไฟล์ (Storage):** **Cloudflare R2** - ที่เก็บไฟล์แบบ S3-compatible ราคาถูกและโหลดไวมาก ใช้เก็บรูป Event Banner และไฟล์แนบอีเมล
-*   **หน้าตาเว็บ (UI):** **Tailwind CSS + Shadcn UI** - ใช้คลาส CSS สำเร็จรูปผสมกับ Component (ปุ่ม, ฟอร์ม, การ์ด) ที่หยิบมาแต่งต่อได้ง่าย ไม่ต้องเขียน CSS ใหม่ทุกครั้ง
-*   **ส่งอีเมล:** **Nodemailer + Gmail** - ส่งตั๋วและแจ้งเตือนหาคนลงทะเบียน
+> **Purpose:** 
+> This document serves as the absolute source of truth for the Prime Platform's architecture, design decisions, and bespoke features. 
+> 
+> *Provide this file to the AI assistant when starting a fresh chat to immediately restore project context.*
 
 ---
 
-## 📂 2. โครงสร้างและหน้าที่ของแต่ละโฟลเดอร์ (Directory Structure)
-
-โฟลเดอร์หัวใจหลักคือ `src/` (Source) ของระบบทั้งหมด:
-
-```text
-src/
-├── app/                  # กลุ่มไฟล์ที่เป็น "หน้าจอ" และควบคุมทิศทาง (Routing) ของเว็บ
-│   ├── (admin)/          # กลุ่มเพจแอดมิน (วงเล็บแปลว่าพาธไม่ติดคำว่า admin เช่น เว็บ.com/dashboard)
-│   │   ├── dashboard/    # หน้า Dashboard หลัก 
-│   │   ├── events/       # หน้ารายการ Event, หน้าสร้างใหม่ (/new), หน้าแก้ไข (/[slug]/edit)
-│   │   ├── check-in/     # หน้าระบบสแกนตั๋วเข้างาน
-│   │   └── responses/    # หน้าดูตารางผู้ลงทะเบียนทั้งหมด
-│   ├── (public)/         # กลุ่มเพจคนนอก (คนมาลงทะเบียน)
-│   │   └── events/[slug]/# หน้าลงทะเบียนแบบ Dynamic ตามชื่องาน (slug)
-│   ├── actions/          # 🧠 "Server Actions" - โค้ดที่แอบรันบนฝั่ง Server เท่านั้น (พวกต่อ Database, ส่งเมล)
-│   ├── api/              # API Routes ดั้งเดิม (เช่น ไฟล์ดึงของจากฮาร์ดแวร์ หรือ Webhook ภายนอก)
-│   ├── login/            # หน้า Login (ยังไม่ได้เชื่อม Auth เต็มรูปแบบ)
-│   ├── layout.tsx        # "โครงกระดูกร่วม" ของเว็บ (ฝัง NavBar, เมนูข้าง, แถบสลับธีมดำ-ขาว)
-│   └── page.tsx          # หน้า Landing page อันดับแรกสุดที่คนเห็น
-│
-├── components/           # โฟลเดอร์เก็บ "ชิ้นส่วน UI เลโก้" ที่หยิบมาประกอบหน้าเว็บได้
-│   ├── ui/               # ชิ้นส่วนพื้นฐานจาก Shadcn UI (เช่น Input, Button, Table, Card)
-│   └── admin/            # ชิ้นส่วน UI ระดับซับซ้อนของแอดมิน (เช่น กล่องสแกน QR, ฟอร์มสร้างอีเวนต์ EventForm)
-│
-└── lib/                  # โฟลเดอร์เก็บ "เครื่องมือ" ช่วยเหลือโค้ดต่างๆ (Utilities)
-    ├── prisma.ts         # ตัวต่อท่อก๊อกน้ำเข้าหาฐานข้อมูล (Supabase)
-    ├── email.ts          # โค้ดรับคำสั่งและส่งอีเมล (ตั้งค่า NodeMailer, Template)
-    ├── storage.ts        # โค้ดสับเปลี่ยนไฟล์แล้วอัปโหลดขึ้น Cloudflare R2
-    └── utils.ts          # ฟังก์ชันคำนวณจิปาถะทั่วไป (เช่น หาวันที่แปลกๆ หรือรวมชื่อคลาส css)
-```
+## 🏗️ 1. Core Tech Stack
+*   **Framework**: Next.js 15 (App Router) + React 19. 
+*   **Styling**: Tailwind CSS v4 + Shadcn UI (Customized heavily for premium Glassmorphism).
+*   **Database**: PostgreSQL hosted on Supabase (accessed via Connection Pooling `?pgbouncer=true`).
+*   **ORM**: Prisma ORM (`v5.22.0`).
+*   **Authentication**: NextAuth.js (`v5.0.0-beta.30`) using Credentials Provider (Role-based: `ADMIN`).
+*   **Emails**: Nodemailer / Resend.
+*   **Testing**: Playwright (`test:e2e`) + Vitest (`test`).
 
 ---
 
-## 💾 3. แกะกล่องฐานข้อมูลและกติกา (Prisma Schema)
-
-หากคุณเปิดไฟล์ `prisma/schema.prisma` คุณจะพบ "พิมพ์เขียว" (Blueprint) ของแอป:
-
-**ตัวอย่างโมเดลที่สำคัญ:**
-1.  **User (`model User`)**: แอดมินหรือสต๊าฟในระบบ (Role: `ADMIN`, `STAFF`)
-2.  **Event (`model Event`)**: ถังเก็บงานอีเวนต์ แต่ละงานจะมีข้อมูล `emailSubject`, `title`, รูปภาพต่างๆ. สิ่งที่น่าสนใจคือ:
-    *   `Event` หนึ่งงาน จะเชื่อม (Relation) ไปหาคำถามฟอร์ม (`FormField`) หลายข้อ (1-to-Many)
-3.  **FormField (`model FormField`)**: เป็นตารางที่บอกว่า "งาน A มีช่องกรอก อีเมล และ คำถาม Dropdown ตัวเลือก ก,ข,ค" โครงสร้างนี้ยืดหยุ่นมาก (Dynamic Form) ทำให้ไม่ต้องแก้เจาะโค้ดทุกครั้งที่เปลี่ยนคำถาม
-4.  **Registration (`model Registration`)**: เก็บข้อมูลคนที่ส่งฟอร์มสำเร็จ:
-    *   **ทริคขั้นเทพ (`formData Json`)**: ระบบบันทึกคำตอบผู้ใช้ทั้งหมดเข้าไปในช่อง `formData` แบบตระกร้า JSON (Object) ทำให้ตารางเดียวเก็บข้อมูลคำตอบของงานที่มีคำถามร้อยแปดพันเก้าได้หมดโดยไม่ต้องเพิ่ม Column ให้รกฐานข้อมูล!
-    *   `referenceCode`: รหัส CUID เล็กๆ ที่ไว้ใช้เจน QR Code แจกบัตรเข้างาน
-5.  **CheckIn (`model CheckIn`)**: ถูกสร้างขึ้นเฉพาะเมื่อมีการ "เอาบัตรมาสแกนหน้างาน" โดยจะต้องเชื่อมกลับไปหาตั๋วใบนั้นเสมอ (1-to-1)
+## 🎨 2. Design System & Aesthetics
+*   **Global Theme**: The application recently underwent a massive visual overhaul, pivoting from dark/purple gradients to a **Premium Light Monochrome & Dashboard Aesthetic**.
+*   **Color Palette (`globals.css`)**:
+    *   `--background`: Pure White (`#ffffff`) or Light-Dashboard Gray (`#f4f7f9`).
+    *   `--primary`: Strong Branded Blue (`#3b82f6` or `#4a89c8`).
+    *   `--accent`: Pastel Yellow (`#fae29c`) used for highlights and Skeleton loaders.
+*   **Component Overrides**:
+    *   Hardcoded background strings (e.g. `bg-zinc-950`) were globally stripped from `layout.tsx` and public pages (`live`, `events`) to ensure `globals.css` animated blobs display consistently underneath transparent cards.
+    *   Form elements use custom transitions (e.g., SVG checkmarks in checkboxes, smooth expanding accordions).
 
 ---
 
-## 🔄 4. วงจรการไหลของข้อมูล (Logic & Data Flow)
+## 🚀 3. Core Features & Architecture
 
-ใน Next.js รุ่นใหม่ โค้ดแบ่งโลกออกเป็น 2 ใบ คือ **Client Component** (รันบนบราวเซอร์ผู้ใช้) และ **Server Component / Server Actions** (รันบนเซิร์ฟเวอร์เราที่คนนอกขโมยดูไม่ได้)
+### A. Dynamic Registration Form Builder
+*   **Where it lives**: `src/components/admin/form-builder.tsx`
+*   **How it works**: Admins can construct custom forms per Event. The UI structure is serialized into a JSON array and stored in the Prisma `Event.formFields` column.
+*   **Supported Types**: `TEXT`, `EMAIL`, `PHONE`, `NUMBER`, `SELECT`, `CHECKBOX`, `RADIO`, and `FILE`.
+*   **Special Logic**: 
+    *   `RADIO` and dropdowns support an `allowOther` boolean. If true, the public UI seamlessly animates to reveal an "อื่นๆ (โปรดระบุ)..." text input.
 
-### Flow 1: การสร้าง Event และตั้งค่า Custom Email
-1.  **[โลก Client]** แอดมินเปิด `src/app/(admin)/events/new/page.tsx` กรอกข้อมูลและอัปโหลดไฟล์
-2.  **[โลก Client]** พอกด **Submit** ข้อมูลฟอร์มทั้งหมด (รวมรูป) จะถูกปาใส่ท่อ `<form action={createEvent}>` 
-3.  **[โลก Server]** ฟังก์ชัน `createEvent` มุดเข้าไปทำงานในไฟล์ `src/app/actions/events.ts`
-    *   **ด่านตรวจ (Validation):** ใช้ **Zod** เช็คว่าข้อมูลครบไหม รูปใหญ่ไปไหม
-    *   **ด่านจัดการไฟล์:** ให้เครื่องมือ `storage.ts` ไปคุยกับ R2 รับเอา URL ของรูปคืนมา (`https://pub-.../123.jpg`)
-    *   **ด่านบันทึก (Save to DB):** ฟังก์ชันใช้ `prisma.event.create` บันทึกทุกอย่างลงฐานข้อมูลแบบรวดเดียวจบ
-    *   **ด่านรีเฟรช:** โค้ดสั่ง `revalidatePath('/events')` เพื่อให้ฝั่ง Client เห็นตารางใหม่ทันที
+### B. Cloudflare R2 File Uploads
+*   **Architecture**: Direct-to-Cloud (Presigned URLs).
+*   **Implementation**: 
+    1.  The `<FileUpload>` component (`src/components/public/file-upload.tsx`) requests a ticket from the Server Action `getPresignedUrl` (`src/app/actions/upload.ts`).
+    2.   The server uses `@aws-sdk/s3-request-presigner` configured with R2 Credentials to sign the ticket.
+    3.  The client executes a `PUT` fetch directly to the Cloudflare Edge network (bypassing the Vercel/Node server to save bandwidth).
+    4.  Files are strictly organized in the R2 bucket as: `[EventSlug]/[AttendeeName]/[Date]-[UUID]-[FileName]`.
+    5.  The Admin `ResponseDataTable` formats incoming R2 URLs into clickable "ดูไฟล์" (View File) badges.
 
-### Flow 2: คนลงทะเบียนและรับอีเมลมหาประลัย
-1.  **[โลก Client]** คนนอกเปิดหน้า `/events/test-event` 
-2.  **[โลก Server]** โค้ดในหน้า `page.tsx` ฝั่งเซิร์ฟเวอร์จะไป "ล้วง" รูป, ชื่องาน, และข้อคำถามจาก Database มาวาดลงคอมฯ ลูกค้า
-3.  **[โลก Client]** ลูกค้ากรอกอีเมลและตัวเลือก พอรับกดลงทะเบียน ข้อมูลจะพุ่งไปที่ **Action: `registerAttendee`**
-4.  **[โลก Server]** ใน `src/app/actions/registration.ts`:
-    *   มัดรวมคำตอบใส่ JSON
-    *   สร้างรหัสบัตร `referenceCode` สุดพิเศษ
-    *   บันทึกคนลงฐานข้อมูล `prisma.registration.create()`
-    *   ระบบเช็คว่า **"งานนี้เจ้าของตั้งอีเมล Custom หรือเปล่า?"** (ถ้าตั้ง) โค้ดก็คว้าหัวข้อ (`emailSubject`) และข้อความ (`emailBody`) ออกมา
-    *   โค้ดทักไปหา `email.ts` พร้อมข้อมูลบอกให้ Gmail ยิงตั๋วแนบไฟล์ออกแบบ Stream ไปหาคนลงทะเบียน
-
----
-
-## 🎨 5. โครงสร้างการเขียน UI ขั้นเทพ (React + Tailwind + Shadcn)
-
-หากคุณไปส่องดูหน้าลงทะเบียน คุณจะเห็นสไตล์การพิมพ์โค้ดที่เป็นแบบอย่างที่ดี:
-
-*   **Tailwind CSS (ไม่ต้องมีไฟล์ .css อีกต่อไป):** 
-    เช่น `<div className="fixed inset-0 z-0 bg-background/40 dark:bg-zinc-950/60 mix-blend-multiply" />`
-    เราบอกให้กล่องสีเหลี่ยมเกาะจอ (fixed), มืดสนิทเมื่อเปิดโหมดแบล็ค (dark:bg-...), และผสมกลืนสีพื้นหลัง นี่คือพลังของ Tailwind
-*   **การหั่นชิ้นส่วน UI (Component Composition):**
-    สังเกตว่าเราไม่พิมพ์ปุ่ม `Save` เองยาวๆ แต่เราเรียก `<SubmitButton>` (ที่อยู่ในโฟลเดอร์ `components`) ซึ่งปุ่มนี้ฉลาดพอจะแสดงข้อความ "กำลังบันทึก..." ตอนที่เราต่อเน็ตช้าได้ด้วย!
-*   **Dark Mode แบบฝังตัว:** เราใช้ `next-themes` แค่เขียน `dark:text-white dark:bg-black` เว็บคุณก็ดูพรีเมียมได้ทันที
+### C. Live Board & QR Check-in System
+*   **QR Generation**: `qrcode.react` is utilized. Reference codes (e.g., `REF-XY9Z`) are generated on registration and securely embedded in tickets.
+*   **Email Deliverability**: Modified `sendRegistrationEmail` logic in `src/app/actions/registration.ts` incorporates a Try/Catch block; if SMTP fails, the user is still successfully registered and redirected to the success page to view their QR code directly online.
+*   **Scanner**: Staff use `html5-qrcode` on the `/check-in` route to scan tickets and trigger the check-in Server Action.
+*   **Live Feed**: `/live/[slug]` pulls real-time attendee stats. It has been refactored to use strictly `h-screen overflow-hidden` to prevent ugly browser scrolling.
 
 ---
 
-## 📌 6. สิ่งที่เป็น "Best Practices" ที่ซ่อนอยู่ในตอนนี้
-
-คนพัฒนาเก่งๆ ไม่ได้แค่วางองค์ประกอบให้รันผ่าน แต่ต้องคิดถึงอนาคต (และผมฝังมันใว้ให้คุณแล้ว):
-
-1.  **Server Actions แทนที่ API:** ระบบนี้แทบไม่เขียนไฟล์ `/api/` ปกติเลย เพราะการเชื่อมโยงข้อมูลตรงระหว่าง Form <-> Database ผ่าน Server Actions ทำให้ลดเวลาเขียนโค้ดและปลอดภัยจากการถูกแฮ็ก
-2.  **FormData & Progressive Enhancement:** พลังของแท็ก `<form>` ดั้งเดิม ต่อให้ผู้ใช้เน็ตมือถือ เน่า หรือโหลด JavaScript ไม่เสร็จ ก็กดปุ่มส่งข้อมูลเข้าฐานข้อมูลได้สบาย! (ล้ำกว่า React สมัยก่อนเยอะ)
-3.  **Zod Schema Defense:** เรามี ทหารยาม คอยเฝ้าไม่ให้ใครยิงของมั่วซั่วเข้าฐานข้อมูล (ป้องกัน SQL Injection)
-4.  **DB Connection Pooling:** ใช้ลิงก์ Direct พ่วงกับ pgBouncer จาก Supabase ทำให้รองรับคน "กดแย่งบัตรพร้อมกัน" ได้โดยระบบฐานข้อมูลไม่เด้งหลุด
+## 🛡️ 4. Security Enhancements
+*   All `/admin` Server Actions (`getRegistrations`, `updateEvent`, `deleteCheckIn`) strictly verify `session?.user?.role === 'ADMIN'`, preventing unauthorized public API exploitation.
+*   End-to-End (E2E) test suites run via Playwright ensure that routing logic (`auth.config.ts`) protects all dashboard views.
+*   Hydration issues have been squashed by encapsulating client-side operations (like `Math.random` generation for UI keys) within `useEffect` boundaries.
 
 ---
 
-## 🚀 7. ไอเดีย: จะแก้ แงะ ดูแล หรือสเกลระบบนี้อย่างไร? (Room for Improvements)
-
-ถ้าวันนึงงานใหญ่ม๊ากๆ ฐานผู้ใช้เหยียบหลักแสนหรือล้าน คุณอาจจะต้องทำระบบเพิ่มส่วนนี้:
-
-### ระดับเบสิก (แก้ไขได้ในปัจจุบัน)
-*   **เพิ่มคำถามประเภทใหม่:** เข้าไปแก้ `FieldType` enum ใน `schema.prisma` แล้วไปเพิ่มหน้าตาช่องกรอกในฝั่ง UI รับรองว่ารองรับการเพิ่มฟิลด์ "รูปโปรไฟล์" ในฟอร์มแน่นอน 
-*   **แก้หน้าตา Dashboard:** ข้อมูลโหลดมาครบแล้ว ลองเข้าไปเพิ่มกราฟ (Recharts) วงกลมส่วยๆ วิเคราะห์ดูฝั่ง `app/(admin)/events/[slug]/dashboard` ได้เลย!
-
-### ระดับ Advance (เมื่อคนเล่นเหยียบหมื่นต่อวินาที)
-1.  **Rate Limiting (ล้อมคอกบอทจองตั๋ว):** 
-    *   คนสร้างบอทมารัวลงทะเบียนจะทำไง? สิ่งที่ต้องเติมคือ **Upstash Redis** (บริการเช่าหน่วยความจำชั่วคราว) เพื่อบอกระบบว่า "เห้ย IP นี้กดยิงฟอร์มเกิน 3 ครั้งใน 1 นาทีแล้ว เตะบล็อกมัน 1 ชั่วโมง"
-2.  **แยกกระบวนการส่งอีเมล (Background Jobs):**
-    *   Gmail อาจตายได้ถ้ามีคนส่งเยอะๆ ค้างทีละ 2 วิคนรอเซ็ง 
-    *   ทางแก้คือเอาเครื่องมือ **Inngest / BullMQ** มาช่วยรับข้อมูลบันทึกลงคลังไปก่อน จากนั้นให้บอทตัวเงียบๆ ทยอยไปดึงชื่อมาส่งเมลตอนชิลๆ ทีละคน
-3.  **คิวการเข้าคิว (Queue System):**
-    *   งานใหญ่เว่อร์? ต้องเอา Redis ทยอยปล่อยคนเข้าหน้ากรอกข้อมูลให้เท่าๆ กัน
-
-### ถ้าอยากลองวิชา... ผมแนะนำ:
-ลองสร้างหน้าจอ "แอดมินลบรูปทิ้ง" (ตอนนี้เราทำปุ่มลบอีเวนต์ได้แล้ว แต่รูปใน R2 อาจะมีไฟล์ค้างตกหล่น) ลองเขียน Server Action ทักไปหา Cloudflare ลากไฟล์ขยะจาก R2 ทิ้ง เพื่อประหยัดพื้นที่ดูครับ! ยิ่งรื้อ ยิ่งเก่งแน่นอน! 🌟
+## 📋 5. Known Quirks / Reminders
+*   When pushing Prisma changes (e.g., modifying `enum FieldType`), on certain Windows machines `&&` statements might fail in Powershell. Use `npx prisma generate ; npx prisma db push` instead.
+*   Always ensure Zod schemas strictly parse JSON structures coming from `formFields` to prevent application crashes when rendering the admin tables.
+*   `UploadThing` and `Vercel Blob` are NOT used. We rely entirely on the manual `S3Client` instantiation for R2.

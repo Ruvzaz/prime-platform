@@ -374,6 +374,23 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
                                 )
                             })}
                         </div>
+                    ) : field.type === "FILE" ? (
+                        <div className="flex items-center gap-3">
+                            <Input
+                                id={field.id}
+                                value={String(formData[field.id] || "")}
+                                onChange={(e) => handleInputChange(field.id, e.target.value)}
+                                className="bg-muted/10 font-mono text-xs max-w-[calc(100%-100px)]"
+                                placeholder="ไม่มีไฟล์แนบ"
+                            />
+                            {formData[field.id] && typeof formData[field.id] === "string" && (formData[field.id].startsWith("http") || formData[field.id].startsWith("https")) && (
+                                <Button size="sm" variant="outline" type="button" className="shrink-0" asChild>
+                                    <a href={formData[field.id]} target="_blank" rel="noopener noreferrer">
+                                        ดูไฟล์
+                                    </a>
+                                </Button>
+                            )}
+                        </div>
                     ) : (
                         <Input
                             id={field.id}
