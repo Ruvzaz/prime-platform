@@ -29,14 +29,8 @@ export default async function SuccessPage({
   const checkInUrl = code ? `${baseUrl}/check-in/auto/${code}` : ''
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-background text-foreground transition-colors duration-500">
-      {/* === BACKGROUND EFFECTS === */}
-      <div className="absolute inset-0 z-0 bg-zinc-50 dark:bg-zinc-950 transition-colors duration-500">
-         {/* Subtle premium glows instead of colorful pulses */}
-         <div className="absolute top-[10%] left-[20%] w-[600px] h-[600px] rounded-full blur-[120px] bg-black/5 dark:bg-white/5" />
-         <div className="absolute bottom-[20%] right-[10%] w-[500px] h-[500px] rounded-full blur-[140px] bg-black/5 dark:bg-white/5" />
-         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] dark:opacity-[0.06] mix-blend-overlay"></div>
-      </div>
+    <div className="min-h-screen relative overflow-hidden bg-transparent text-foreground transition-colors duration-500">
+
 
       {/* === CONTENT === */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4 md:p-8">

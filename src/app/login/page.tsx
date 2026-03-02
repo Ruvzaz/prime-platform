@@ -39,7 +39,7 @@ export default function LoginPage() {
     <div className="h-screen w-full lg:grid lg:grid-cols-5 relative overflow-hidden">
       
       {/* LEFT: FORM SECTION (2/5 width on desktop) */}
-      <div className="col-span-2 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-background relative z-10">
+      <div className="col-span-2 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-transparent relative z-10">
 
         {/* Subtle background texture */}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.02] dark:opacity-[0.04]" />
@@ -113,30 +113,30 @@ export default function LoginPage() {
       </div>
 
       {/* RIGHT: BRAND VISUAL (3/5 width, hidden on mobile) */}
-      <div className="hidden lg:flex col-span-3 relative bg-zinc-950 items-center justify-center overflow-hidden">
+      <div className="hidden lg:flex col-span-3 relative bg-transparent items-center justify-center overflow-hidden border-l border-border/50">
         
         {/* Layered background effects */}
         <div className="absolute inset-0">
           {/* Base gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950" />
+          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-primary/5 to-transparent" />
           
           {/* Grid pattern overlay */}
           <div 
-            className="absolute inset-0 opacity-[0.04]"
+            className="absolute inset-0 opacity-[0.03]"
             style={{
-              backgroundImage: `linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)`,
+              backgroundImage: `linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)`,
               backgroundSize: '60px 60px',
             }}
           />
           
           {/* Radial glow - top */}
-          <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-white/[0.03] rounded-full blur-[100px]" />
+          <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/10 rounded-full blur-[100px]" />
           
           {/* Radial glow - bottom accent */}
-          <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-white/[0.02] rounded-full blur-[120px]" />
+          <div className="absolute -bottom-20 -right-20 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px]" />
           
           {/* Noise texture */}
-          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.25] mix-blend-overlay" />
+          <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.02] mix-blend-overlay" />
         </div>
 
         {/* Content */}
@@ -145,10 +145,10 @@ export default function LoginPage() {
           {/* Top bar */}
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-widest">System Online</span>
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-widest">System Online</span>
             </div>
-            <div className="px-4 py-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm text-[11px] font-medium text-zinc-400 tracking-wider uppercase">
+            <div className="px-4 py-1.5 rounded-full border border-border bg-background/50 backdrop-blur-sm text-[11px] font-medium text-muted-foreground tracking-wider uppercase">
                 Enterprise v2.0
             </div>
           </div>
@@ -157,34 +157,34 @@ export default function LoginPage() {
           <div className="flex-1 flex items-center">
             <div className="space-y-8">
               {/* Decorative line */}
-              <div className="w-12 h-px bg-gradient-to-r from-white/40 to-transparent" />
+              <div className="w-12 h-px bg-gradient-to-r from-primary/40 to-transparent" />
               
-              <blockquote className="text-[2.5rem] font-bold leading-[1.15] text-white tracking-tight">
+              <blockquote className="text-[2.5rem] font-bold leading-[1.15] text-foreground tracking-tight">
                 Your events.<br />
-                <span className="text-zinc-500">Brilliantly managed.</span>
+                <span className="text-muted-foreground">Brilliantly managed.</span>
               </blockquote>
               
-              <p className="text-zinc-500 text-base leading-relaxed max-w-md">
+              <p className="text-muted-foreground text-base leading-relaxed max-w-md">
                 Registration, check-in, analytics, and attendee management — all in one seamless platform built for scale.
               </p>
 
               {/* Feature pillars */}
               <div className="flex gap-6 pt-4">
-                <div className="flex items-center gap-2.5 text-zinc-500">
-                  <div className="w-8 h-8 rounded-lg border border-white/[0.08] bg-white/[0.03] flex items-center justify-center">
-                    <Fingerprint className="w-4 h-4 text-zinc-400" />
+                <div className="flex items-center gap-2.5 text-muted-foreground">
+                  <div className="w-8 h-8 rounded-lg border border-border bg-background/50 flex items-center justify-center">
+                    <Fingerprint className="w-4 h-4 text-primary" />
                   </div>
                   <span className="text-xs font-medium">QR Check-in</span>
                 </div>
-                <div className="flex items-center gap-2.5 text-zinc-500">
-                  <div className="w-8 h-8 rounded-lg border border-white/[0.08] bg-white/[0.03] flex items-center justify-center">
-                    <svg className="w-4 h-4 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                <div className="flex items-center gap-2.5 text-muted-foreground">
+                  <div className="w-8 h-8 rounded-lg border border-border bg-background/50 flex items-center justify-center">
+                    <svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
                   </div>
                   <span className="text-xs font-medium">Live Analytics</span>
                 </div>
-                <div className="flex items-center gap-2.5 text-zinc-500">
-                  <div className="w-8 h-8 rounded-lg border border-white/[0.08] bg-white/[0.03] flex items-center justify-center">
-                    <Shield className="w-4 h-4 text-zinc-400" />
+                <div className="flex items-center gap-2.5 text-muted-foreground">
+                  <div className="w-8 h-8 rounded-lg border border-border bg-background/50 flex items-center justify-center">
+                    <Shield className="w-4 h-4 text-primary" />
                   </div>
                   <span className="text-xs font-medium">Secure</span>
                 </div>
@@ -194,12 +194,12 @@ export default function LoginPage() {
 
           {/* Bottom: Company branding */}
           <div className="flex items-center justify-between w-full">
-            <div className="text-[11px] text-zinc-600 tracking-wider">
+            <div className="text-[11px] text-muted-foreground tracking-wider">
               © 2026 Prime Digital Consultant
             </div>
             <div className="flex gap-1">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="w-1.5 h-1.5 rounded-full bg-zinc-700" />
+                <div key={i} className="w-1.5 h-1.5 rounded-full bg-primary/20" />
               ))}
             </div>
           </div>

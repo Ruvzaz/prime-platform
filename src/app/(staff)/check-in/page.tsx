@@ -87,7 +87,7 @@ export default function CheckInPage() {
   }, [result])
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-4 flex items-center justify-center transition-colors">
+    <div className="min-h-screen bg-transparent text-foreground p-4 flex items-center justify-center transition-colors">
       {/* Floating Back Button */}
       <div className="absolute top-4 left-4 z-50">
         <Button asChild variant="ghost" className="hidden sm:flex gap-2 text-muted-foreground hover:bg-muted">
