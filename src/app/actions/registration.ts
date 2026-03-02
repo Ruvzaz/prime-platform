@@ -12,12 +12,12 @@ function generateRefCode(): string {
   return "REF-" + crypto.randomBytes(4).toString("hex").toUpperCase();
 }
 
-export async function registerAttendee(formData: FormData) {
+export async function registerAttendee(prevState: any, formData: FormData) {
   const eventId = formData.get("eventId") as string;
   const slug = formData.get("eventSlug") as string;
   
   if (!eventId || !slug) {
-    throw new Error("Event ID or Slug missing");
+    return { success: false, message: "Event ID or Slug missing. Please refresh the page and try again." };
   }
 
   // extract dynamic fields
@@ -71,7 +71,7 @@ export async function registerAttendee(formData: FormData) {
         continue; 
       }
       console.error(e);
-      throw new Error("Registration failed: " + (e instanceof Error ? e.message : "Unknown error"));
+      return { success: false, message: "Registration failed: " + (e instanceof Error ? e.message : "ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง") };
     }
   }
 
@@ -110,7 +110,7 @@ export async function registerAttendee(formData: FormData) {
     }
   }
   
-  redirect(`/events/${slug}/success?code=${referenceCode}`);
+  return { success: true, message: "Registration successful!", redirectUrl: `/events/${slug}/success?code=${referenceCode}` };
 }
 
 export async function getRegistrations(
