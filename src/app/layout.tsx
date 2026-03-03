@@ -12,8 +12,8 @@ const notoSansThai = Noto_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "Prime Digital Consultant Platform",
-  description: "Internal platform for Prime Digital Consultant",
+  title: "Prime Event Registration",
+  description: "ระบบลงทะเบียนเข้าร่วมกิจกรรม",
 };
 
 export default function RootLayout({
