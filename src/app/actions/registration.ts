@@ -382,3 +382,26 @@ export async function getRegistrationsForExport(
     return [];
   }
 }
+
+export async function deleteRegistrations(registrationIds: string[]) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== 'ADMIN') {
+      return { message: "Unauthorized" };
+  }
+
+  try {
+    await prisma.registration.deleteMany({
+      where: {
+        id: { in: registrationIds }
+      }
+    });
+
+    revalidatePath("/registrations");
+    revalidatePath("/dashboard");
+    revalidatePath("/events");
+    return { message: "Registrations deleted successfully" };
+  } catch (error) {
+    console.error("Failed to delete registrations:", error);
+    return { message: "Failed to delete registrations" };
+  }
+}

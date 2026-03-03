@@ -17,6 +17,12 @@ const ALLOWED_MIME_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
 ]
 
+// Strict allowed extensions to prevent executable uploads even if MIME type is spoofed
+const ALLOWED_EXTENSIONS = [
+  ".jpg", ".jpeg", ".png", ".webp", ".gif",
+  ".pdf", ".doc", ".docx"
+]
+
 const s3Client = new S3Client({
   region: "auto",
   endpoint: process.env.R2_ENDPOINT!,
@@ -43,10 +49,13 @@ export async function getPresignedUrl(
 
   // 2. Strict MIME Type Validation
   if (!ALLOWED_MIME_TYPES.includes(contentType)) {
-    return { 
-      success: false, 
-      error: "ไม่อนุญาตให้อัปโหลดไฟล์ประเภทนี้ ระบบรองรับเฉพาะรูปภาพ และไฟล์ PDF/Word เท่านั้น" 
-    }
+    return { success: false, error: "ไม่อนุญาตให้อัปโหลดไฟล์ประเภทนี้ ระบบรองรับเฉพาะรูปภาพ และไฟล์ PDF/Word เท่านั้น" }
+  }
+
+  // 3. Strict File Extension Validation (Defense in Depth against Spoofing)
+  const extension = fileName.substring(fileName.lastIndexOf(".")).toLowerCase()
+  if (!ALLOWED_EXTENSIONS.includes(extension)) {
+    return { success: false, error: "นามสกุลไฟล์ไม่ปลอดภัยหรือไม่รองรับ กรุณาใช้ไฟล์ .jpg, .png, .pdf หรือ .docx เท่านั้น" }
   }
 
   try {
