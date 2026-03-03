@@ -2,6 +2,20 @@
 
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
+import { getRateLimit } from "@/lib/rate-limit"
+import { headers } from "next/headers"
+
+const ALLOWED_MIME_TYPES = [
+  // Images
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  // Documents
+  "application/pdf",
+  "application/msword", // .doc
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+]
 
 const s3Client = new S3Client({
   region: "auto",
@@ -18,6 +32,23 @@ export async function getPresignedUrl(
   eventSlug: string,
   attendeeName: string
 ) {
+  // 1. Rate Limiting (10 requests per 10 minutes)
+  const headersList = await headers()
+  const ip = headersList.get("x-forwarded-for") || "unknown-ip"
+  
+  const isAllowed = await getRateLimit(ip, 10, 10 * 60 * 1000)
+  if (!isAllowed) {
+    return { success: false, error: "Too Many Requests. Please wait." }
+  }
+
+  // 2. Strict MIME Type Validation
+  if (!ALLOWED_MIME_TYPES.includes(contentType)) {
+    return { 
+      success: false, 
+      error: "ไม่อนุญาตให้อัปโหลดไฟล์ประเภทนี้ ระบบรองรับเฉพาะรูปภาพ และไฟล์ PDF/Word เท่านั้น" 
+    }
+  }
+
   try {
     const bucketName = process.env.R2_BUCKET_NAME!
     

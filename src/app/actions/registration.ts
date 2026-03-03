@@ -7,12 +7,23 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { RegStatus } from "@prisma/client";
 import { extractAttendeeInfo } from "@/lib/attendee-utils";
+import { getRateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
 
 function generateRefCode(): string {
   return "REF-" + crypto.randomBytes(4).toString("hex").toUpperCase();
 }
 
 export async function registerAttendee(prevState: any, formData: FormData) {
+  // 1. Rate Limiting (5 requests per 10 minutes)
+  const headersList = await headers()
+  const ip = headersList.get("x-forwarded-for") || "unknown-ip"
+  
+  const isAllowed = await getRateLimit(ip, 5, 10 * 60 * 1000)
+  if (!isAllowed) {
+    return { success: false, message: "คำขอมากเกินไป กรุณารอสักครู่แล้วลองใหม่ (Too Many Requests)" }
+  }
+
   const eventId = formData.get("eventId") as string;
   const slug = formData.get("eventSlug") as string;
   

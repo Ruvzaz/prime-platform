@@ -85,7 +85,7 @@ export default async function DashboardPage() {
           <div className="w-10 h-10 rounded-xl bg-[#2c4059] flex items-center justify-center mb-6 shadow-sm">
              <UserCheck className="h-5 w-5 text-[#fae29c]" />
           </div>
-          <div>
+          <div className="flex flex-col h-full z-10">
             <h3 className="text-sm font-semibold text-muted-foreground mb-1 tracking-wide">Checked In</h3>
             <div className="text-4xl font-black text-foreground tracking-tight">{stats.checkInCount}</div>
             <p className="text-xs text-muted-foreground mt-2 font-medium">
@@ -94,33 +94,6 @@ export default async function DashboardPage() {
                 : "No data yet"}
             </p>
           </div>
-
-          {/* Fake Ring Chart for Visuals matching the reference */}
-          {stats.registrationCount > 0 && (
-            <div className="absolute right-6 bottom-6 w-24 h-24">
-              <svg viewBox="0 0 36 36" className="w-full h-full drop-shadow-sm">
-                <path
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  fill="none"
-                  stroke="#fae29c"
-                  strokeWidth="6"
-                />
-                <path
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  fill="none"
-                  stroke="#2c4059"
-                  strokeWidth="6"
-                  strokeDasharray={`${Math.round((stats.checkInCount / stats.registrationCount) * 100)}, 100`}
-                  className="animate-[spin_2s_ease-out]"
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                 <span className="text-sm font-black text-[#2c4059] dark:text-white">
-                    {Math.round((stats.checkInCount / stats.registrationCount) * 100)}%
-                 </span>
-              </div>
-            </div>
-          )}
         </div>
       </div>
       
