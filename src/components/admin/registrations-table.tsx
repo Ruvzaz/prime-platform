@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import { Download, Filter, Search, MoreHorizontal, ChevronLeft, ChevronRight, Copy, Pencil } from "lucide-react"
+import { Download, Filter, Search, MoreHorizontal, ChevronLeft, ChevronRight, Copy, Pencil, Trash2, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -29,8 +30,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { RegistrationEditSheet } from "@/components/admin/registration-edit-sheet"
 import { extractAttendeeInfo, getStandardFieldIds } from "@/lib/attendee-utils"
+import { deleteRegistrations } from "@/app/actions/registration"
 
 // Simple debounce hook if not exists, for now implementing inline logic or using timeout
 function useDebounceValue<T>(value: T, delay: number): T {
@@ -97,6 +110,44 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
   // Edit State
   const [editingRegistration, setEditingRegistration] = useState<any>(null)
   const [isEditOpen, setIsEditOpen] = useState(false)
+
+  // Selection State
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === initialData.length) {
+      setSelectedIds([])
+    } else {
+      setSelectedIds(initialData.map(r => r.id))
+    }
+  }
+
+  const toggleSelect = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter(itemId => itemId !== id))
+    } else {
+      setSelectedIds([...selectedIds, id])
+    }
+  }
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) return
+    setIsDeleting(true)
+    try {
+      const res = await deleteRegistrations(selectedIds)
+      if (res.message.includes("successfully")) {
+         setSelectedIds([])
+         router.refresh()
+      } else {
+         alert(res.message)
+      }
+    } catch (e) {
+      alert("Failed to delete registrations")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   // Update URL function
   const updateUrl = (updates: Record<string, string | number | null>) => {
@@ -171,7 +222,6 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
               const { name, email, phone } = extractAttendeeInfo(reg.formData as Record<string, unknown>, reg.event.formFields)
               const formData = reg.formData as Record<string, unknown> || {}
               
-              // Standard Fields
               const standardCols = [
                   reg.referenceCode,
                   `"${name}"`, 
@@ -179,8 +229,8 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                   phone || "",
                   `"${reg.event.title}"`,
                   reg.status,
-                  new Date(reg.createdAt).toLocaleDateString(),
-                  reg.checkIn ? new Date(reg.checkIn.scannedAt).toLocaleString() : ''
+                  `"${new Date(reg.createdAt).toLocaleDateString()}"`,
+                  reg.checkIn ? `"${new Date(reg.checkIn.scannedAt).toLocaleString()}"` : '""'
               ]
 
               // Dynamic Fields
@@ -247,10 +297,36 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                     </SelectContent>
                  </Select>
             </div>
-            <Button variant="outline" onClick={exportCSV} disabled={isExporting}>
-                <Download className={`mr-2 h-4 w-4 ${isExporting ? 'animate-bounce' : ''}`} />
-                {isExporting ? "Exporting..." : "Export CSV"}
-            </Button>
+            <div className="flex items-center gap-2">
+                {selectedIds.length > 0 && (
+                     <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Selected ({selectedIds.length})
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>คุณแน่ใจหรือไม่?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    การกระทำนี้จะลบข้อมูลผู้ลงทะเบียน <b>{selectedIds.length} รายการ</b> ออกจากระบบอย่างถาวร (Hard Delete) ไม่สามารถกู้คืนได้
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteSelected} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+                                    {isDeleting ? "กำลังลบ..." : "ลบข้อมูลอย่างถาวร"}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                     </AlertDialog>
+                )}
+                <Button variant="outline" onClick={exportCSV} disabled={isExporting}>
+                    <Download className={`mr-2 h-4 w-4 ${isExporting ? 'animate-bounce' : ''}`} />
+                    {isExporting ? "Exporting..." : "Export CSV"}
+                </Button>
+            </div>
         </div>
 
         {/* TABLE */}
@@ -258,6 +334,13 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
             <Table>
                 <TableHeader>
                     <TableRow>
+                        <TableHead className="w-[50px]">
+                            <Checkbox 
+                                checked={initialData.length > 0 && selectedIds.length === initialData.length}
+                                onCheckedChange={toggleSelectAll}
+                                aria-label="Select all"
+                            />
+                        </TableHead>
                         <TableHead>Ref Code</TableHead>
                         <TableHead>Attendee</TableHead>
                         <TableHead>Event</TableHead>
@@ -281,7 +364,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                 <TableBody>
                     {initialData.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={7} className="text-center h-24 text-muted-foreground">
+                            <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
                                 No registrations found.
                             </TableCell>
                         </TableRow>
@@ -289,7 +372,14 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                         initialData.map((reg) => {
                             const { name, email } = extractAttendeeInfo(reg.formData as Record<string, unknown>, reg.event.formFields)
                             return (
-                                <TableRow key={reg.id}>
+                                <TableRow key={reg.id} data-state={selectedIds.includes(reg.id) && "selected"}>
+                                    <TableCell>
+                                        <Checkbox 
+                                            checked={selectedIds.includes(reg.id)}
+                                            onCheckedChange={() => toggleSelect(reg.id)}
+                                            aria-label="Select row"
+                                        />
+                                    </TableCell>
                                     <TableCell className="font-mono text-xs">{reg.referenceCode}</TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">

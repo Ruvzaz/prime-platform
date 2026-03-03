@@ -83,7 +83,7 @@ enum FieldType {
 model Registration {
   id            String   @id @default(cuid())
   eventId       String
-  event         Event    @relation(fields: [eventId], references: [id])
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   formData      Json     // Stores dynamic form answers: { "fieldId": "answer" }
   referenceCode String   @unique // Generated unique code for check-in
   status        RegStatus @default(PENDING) // Default to PENDING for verification
@@ -104,7 +104,7 @@ enum RegStatus {
 model CheckIn {
   id             String       @id @default(cuid())
   registrationId String       @unique
-  registration   Registration @relation(fields: [registrationId], references: [id])
+  registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   staffId        String
   staff          User         @relation(fields: [staffId], references: [id])
   scannedAt      DateTime     @default(now())
