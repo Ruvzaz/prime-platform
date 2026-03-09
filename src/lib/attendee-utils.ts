@@ -21,14 +21,24 @@ export function extractAttendeeInfo(
   let exactPhone = null;
 
   if (formFields && formFields.length > 0) {
-      const nameField = formFields.find(f => f.label.includes("ชื่อ") || f.id === "__name__");
-      if (nameField && data[nameField.id]) exactName = data[nameField.id];
+      // Find ALL fields that could act as name, email, or phone
+      const nameFields = formFields.filter(f => f.label.includes("ชื่อ") || f.label.toLowerCase().includes("name") || f.id === "__name__");
+      for (const f of nameFields) {
+          if (data[f.id]) { exactName = data[f.id]; break; }
+          if (data[f.label]) { exactName = data[f.label]; break; }
+      }
 
-      const emailField = formFields.find(f => f.label.includes("อีเมล") || f.label.toLowerCase().includes("email") || f.id === "__email__" || f.type === "EMAIL");
-      if (emailField && data[emailField.id]) exactEmail = data[emailField.id];
+      const emailFields = formFields.filter(f => f.label.includes("อีเมล") || f.label.toLowerCase().includes("email") || f.id === "__email__" || f.type === "EMAIL");
+      for (const f of emailFields) {
+          if (data[f.id]) { exactEmail = data[f.id]; break; }
+          if (data[f.label]) { exactEmail = data[f.label]; break; }
+      }
       
-      const phoneField = formFields.find(f => f.label.includes("เบอร์โทร") || f.label.toLowerCase().includes("phone") || f.id === "__phone__" || f.type === "PHONE");
-      if (phoneField && data[phoneField.id]) exactPhone = data[phoneField.id];
+      const phoneFields = formFields.filter(f => f.label.includes("เบอร์โทร") || f.label.toLowerCase().includes("phone") || f.id === "__phone__" || f.type === "PHONE");
+      for (const f of phoneFields) {
+          if (data[f.id]) { exactPhone = data[f.id]; break; }
+          if (data[f.label]) { exactPhone = data[f.label]; break; }
+      }
   }
 
   // Name extraction — check all possible keys
@@ -124,14 +134,14 @@ export function getStandardFieldIds(formFields?: { id: string; label: string; ty
     const ids: string[] = [];
     
     // Explicitly track anything that looks like Name, Email, or Phone
-    const nameField = formFields.find(f => f.label.includes("ชื่อ") || f.id === "__name__" || f.id.toLowerCase() === "name");
-    if (nameField) ids.push(nameField.id);
+    const nameFields = formFields.filter(f => f.label.includes("ชื่อ") || f.id === "__name__" || f.id.toLowerCase() === "name");
+    nameFields.forEach(f => ids.push(f.id));
 
-    const emailField = formFields.find(f => f.label.includes("อีเมล") || f.label.toLowerCase().includes("email") || f.id === "__email__" || f.id.toLowerCase() === "email" || f.type === "EMAIL");
-    if (emailField) ids.push(emailField.id);
+    const emailFields = formFields.filter(f => f.label.includes("อีเมล") || f.label.toLowerCase().includes("email") || f.id === "__email__" || f.id.toLowerCase() === "email" || f.type === "EMAIL");
+    emailFields.forEach(f => ids.push(f.id));
     
-    const phoneField = formFields.find(f => f.label.includes("เบอร์โทร") || f.label.toLowerCase().includes("phone") || f.id === "__phone__" || f.id.toLowerCase() === "phone" || f.type === "PHONE");
-    if (phoneField) ids.push(phoneField.id);
+    const phoneFields = formFields.filter(f => f.label.includes("เบอร์โทร") || f.label.toLowerCase().includes("phone") || f.id === "__phone__" || f.id.toLowerCase() === "phone" || f.type === "PHONE");
+    phoneFields.forEach(f => ids.push(f.id));
 
     return ids;
 }

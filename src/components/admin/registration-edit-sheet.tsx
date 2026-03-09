@@ -36,6 +36,7 @@ interface FormField {
   type: string
   required: boolean
   options: string[]
+  allowOther?: boolean
   order: number
 }
 
@@ -174,6 +175,16 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
   const { name, email } = extractAttendeeInfo(registration.formData, event?.formFields)
   const initials = name.substring(0, 2).toUpperCase()
 
+  // For legacy registrations: if formData has data for an old custom Name/Email field, but the new "__name__"/"__email__" fields are empty, hide the new empty ones.
+  const hasLegacyNameData = formFields.some(f => (f.label.includes("ชื่อ") || f.id.toLowerCase() === "name") && f.id !== "__name__" && formData[f.id]);
+  const hasLegacyEmailData = formFields.some(f => (f.label.includes("อีเมล") || f.label.toLowerCase().includes("email")) && f.id !== "__email__" && formData[f.id]);
+
+  const visibleFormFields = formFields.filter(f => {
+      if (f.id === "__name__" && hasLegacyNameData && !formData["__name__"]) return false;
+      if (f.id === "__email__" && hasLegacyEmailData && !formData["__email__"]) return false;
+      return true;
+  });
+
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -263,7 +274,7 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
                     <Copy className="w-4 h-4" />
                     Response Data
                 </h3>
-                {formFields.map((field) => (
+                {visibleFormFields.map((field) => (
                 <div key={field.id} className="space-y-2">
                     <Label htmlFor={field.id} className="text-sm font-medium text-foreground/80">
                     {field.label} {field.required && <span className="text-red-500">*</span>}
@@ -328,28 +339,36 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
                             </label>
                         ))}
 
-                        {/* If the current value is completely custom and not in options, append it so the UI doesn't visually break */}
-                        {(formData[field.id] && !field.options.includes(String(formData[field.id]))) && (
+                        {/* If the current value is completely custom and not in options, OR if the field allows Other */}
+                        {(field.allowOther || (formData[field.id] && !field.options.includes(String(formData[field.id])))) && (
                             <div className="flex flex-col gap-2 p-1.5">
                                 <label className="flex items-center gap-3 text-sm cursor-pointer hover:bg-muted/20 rounded-md transition-colors">
                                     <div className="relative flex items-center">
                                         <input 
                                             type="radio" 
                                             name={field.id} 
-                                            checked={true}
-                                            readOnly
+                                            checked={formData[field.id] ? !field.options.includes(String(formData[field.id])) : false}
+                                            onChange={() => {
+                                                if (!formData[field.id] || field.options.includes(String(formData[field.id]))) {
+                                                    handleInputChange(field.id, "อื่นๆ")
+                                                }
+                                            }}
                                             className="peer sr-only "
                                         />
                                         <div className="w-4 h-4 border border-input rounded-full peer-checked:border-primary peer-checked:border-4 transition-all"></div>
                                     </div>
                                     <span className="text-foreground/90">อื่นๆ (โปรดระบุ)</span>
                                 </label>
-                                <Input
-                                    value={String(formData[field.id])}
-                                    onChange={(e) => handleInputChange(field.id, e.target.value)}
-                                    className="bg-muted/10 border-dashed ml-7 w-auto"
-                                    placeholder="แก้ไขข้อความแบบกำหนดเอง"
-                                />
+                                {((formData[field.id] && !field.options.includes(String(formData[field.id]))) || (formData[field.id] === undefined && field.allowOther && !field.options.includes("อื่นๆ"))) && (
+                                     <div className={`transition-all duration-300 ${(formData[field.id] && !field.options.includes(String(formData[field.id]))) ? "block" : "hidden"}`}>
+                                        <Input
+                                            value={String(formData[field.id] || "")}
+                                            onChange={(e) => handleInputChange(field.id, e.target.value)}
+                                            className="bg-muted/10 border-dashed ml-7 w-auto"
+                                            placeholder="ระบุข้อความ..."
+                                        />
+                                     </div>
+                                )}
                             </div>
                         )}
                     </div>
