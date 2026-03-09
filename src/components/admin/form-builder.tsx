@@ -258,12 +258,12 @@ export function FormBuilder({ onChange, initialFields = [] }: FormBuilderProps) 
     setFields(fields.map((f) => {
         if (f.id !== id) return f;
         
-        // If switching TO "SELECT" or "CHECKBOX" and it doesn't have options yet, initialize them
-        if ((updates.type === "SELECT" || updates.type === "CHECKBOX") && (!f.options || f.options.length === 0)) {
+        // If switching TO "SELECT", "CHECKBOX" or "RADIO" and it doesn't have options yet, initialize them
+        if ((updates.type === "SELECT" || updates.type === "CHECKBOX" || updates.type === "RADIO") && (!f.options || f.options.length === 0)) {
             return { ...f, ...updates, options: ["Option 1", "Option 2"] };
         }
         
-        // If switching AWAY from "SELECT" or "CHECKBOX", we might want to clean up options, but leaving them is safe too.
+        // If switching AWAY from "SELECT", "CHECKBOX" or "RADIO", we might want to clean up options, but leaving them is safe too.
         return { ...f, ...updates };
     }))
   }
@@ -279,8 +279,9 @@ export function FormBuilder({ onChange, initialFields = [] }: FormBuilderProps) 
 
   const addOption = (fieldId: string) => {
     const field = fields.find((f) => f.id === fieldId)
-    if (field && field.options) {
-        updateField(fieldId, { options: [...field.options, `Option ${field.options.length + 1}`] })
+    if (field) {
+        const currentOptions = field.options || [];
+        updateField(fieldId, { options: [...currentOptions, `Option ${currentOptions.length + 1}`] })
     }
   }
   
