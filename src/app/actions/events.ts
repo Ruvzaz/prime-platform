@@ -247,7 +247,7 @@ export async function updateEvent(prevState: any, formData: FormData) {
          }
      }
 
-     // Transaction to handle updates securely
+     // Transaction to handle updates securely with extended timeout for complex form field loops
      await prisma.$transaction(async (tx) => {
         // 1. Update basic info
         await tx.event.update({
@@ -317,6 +317,9 @@ export async function updateEvent(prevState: any, formData: FormData) {
                 });
             }
         }
+     }, {
+         maxWait: 5000, // default is 2000
+         timeout: 20000 // default is 5000 (5 seconds), increased to 20s
      });
 
   } catch (e) {

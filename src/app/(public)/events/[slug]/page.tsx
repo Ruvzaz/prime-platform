@@ -42,8 +42,20 @@ export default async function EventRegistrationPage({
       {/* CENTERED REGISTRATION CARD */}
       <div className="relative z-10 w-full max-w-2xl bg-card dark:bg-zinc-900 border border-border/40 shadow-2xl rounded-2xl overflow-hidden backdrop-blur-md">
         
+        {/* Banner Block */}
+        {event.imageUrl && (
+          <div className="w-full aspect-[212/100] relative bg-muted/20 border-b border-border/40 overflow-hidden shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
+              src={event.imageUrl} 
+              alt={`${event.title} Banner`}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          </div>
+        )}
+
         {/* Header Block */}
-        <div className="p-6 md:p-10 pb-6 border-b border-border/40">
+        <div className="p-6 md:p-10 pb-6 border-b border-border/40 relative">
           <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold mb-6 ${event.isActive ? 'bg-foreground text-background' : 'bg-destructive/10 text-destructive'}`}>
             <Sparkles className={`w-3.5 h-3.5 ${event.isActive ? 'text-yellow-500' : 'text-destructive'}`} />
             {event.isActive ? 'เปิดรับลงทะเบียน' : 'ปิดรับลงทะเบียนแล้ว'}
