@@ -4,15 +4,22 @@ import { hash } from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
-  const password = await hash('password', 12)
+  const adminEmail = process.env.ADMIN_EMAIL
+  const adminPassword = process.env.ADMIN_PASSWORD
+
+  if (!adminEmail || !adminPassword) {
+    throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be strictly set in environment variables.")
+  }
+
+  const password = await hash(adminPassword, 12)
   const user = await prisma.user.upsert({
-    where: { email: 'admin@primedigital.com' },
+    where: { email: adminEmail },
     update: {
         password: password,
         role: 'ADMIN'
     },
     create: {
-      email: 'admin@primedigital.com',
+      email: adminEmail,
       name: 'Admin User',
       password,
       role: 'ADMIN',
