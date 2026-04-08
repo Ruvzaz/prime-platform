@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Trash2, GripVertical, Type, List, Lock, Circle, File as FileIcon } from "lucide-react"
+import { Plus, Trash2, Copy, GripVertical, Type, List, Lock, Circle, File as FileIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -61,6 +61,7 @@ function SortableFieldItem({
     field, 
     updateField, 
     removeField, 
+    duplicateField,
     updateOption, 
     addOption, 
     removeOption 
@@ -68,6 +69,7 @@ function SortableFieldItem({
     field: FormFieldConfig
     updateField: (id: string, updates: Partial<FormFieldConfig>) => void
     removeField: (id: string) => void
+    duplicateField: (id: string) => void
     updateOption: (fieldId: string, index: number, value: string) => void
     addOption: (fieldId: string) => void
     removeOption: (fieldId: string, index: number) => void
@@ -141,15 +143,28 @@ function SortableFieldItem({
                         <span className="text-xs font-medium">จำเป็น</span>
                       </div>
                     ) : (
-                      <Button 
-                          type="button" 
-                          variant="ghost" 
-                          size="icon" 
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50 h-10 w-10 shrink-0"
-                          onClick={() => removeField(field.id)}
-                      >
-                          <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-muted-foreground hover:text-foreground hover:bg-muted h-10 w-10 shrink-0"
+                            onClick={() => duplicateField(field.id)}
+                            title="คัดลอกฟิลด์"
+                        >
+                            <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-red-500 hover:text-red-600 hover:bg-red-50 h-10 w-10 shrink-0"
+                            onClick={() => removeField(field.id)}
+                            title="ลบฟิลด์"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     )}
                 </div>
 
@@ -249,9 +264,27 @@ export function FormBuilder({ onChange, initialFields = [] }: FormBuilderProps) 
   }
 
   const removeField = (id: string) => {
-    // Prevent removing locked/default fields
-    if (DEFAULT_FIELDS.some(df => df.id === id)) return;
     setFields(fields.filter((f) => f.id !== id))
+  }
+
+  const duplicateField = (id: string) => {
+    const fieldIndex = fields.findIndex(f => f.id === id);
+    if (fieldIndex === -1) return;
+
+    const original = fields[fieldIndex];
+    const newField: FormFieldConfig = {
+      ...original,
+      id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `field-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      label: `${original.label} (Copy)`,
+      locked: false, // Duplicates are never locked
+      order: fields.length, // Will be re-indexed if needed, but for now just add to end or after original
+    };
+
+    const newFields = [...fields];
+    newFields.splice(fieldIndex + 1, 0, newField);
+    
+    // Re-index all fields to ensure order is correct
+    setFields(newFields.map((f, idx) => ({ ...f, order: idx })));
   }
 
   const updateField = (id: string, updates: Partial<FormFieldConfig>) => {
@@ -355,6 +388,7 @@ export function FormBuilder({ onChange, initialFields = [] }: FormBuilderProps) 
                         field={field}
                         updateField={updateField}
                         removeField={removeField}
+                        duplicateField={duplicateField}
                         updateOption={updateOption}
                         addOption={addOption}
                         removeOption={removeOption}
