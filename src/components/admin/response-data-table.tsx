@@ -204,12 +204,16 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                                                 )
                                             } else {
                                                 const displayVal = Array.isArray(val) ? val.join(", ") : val
-                                                displayContent = <span className="truncate max-w-[200px] block">{displayVal}</span>
+                                                displayContent = displayVal
                                             }
                                         }
 
                                         return (
-                                            <TableCell key={`${reg.id}-${field.id}`} className="text-sm">
+                                            <TableCell 
+                                                key={`${reg.id}-${field.id}`} 
+                                                className="text-sm max-w-[200px] truncate"
+                                                title={typeof displayContent === 'string' ? displayContent : ''}
+                                            >
                                                 {displayContent}
                                             </TableCell>
                                         )

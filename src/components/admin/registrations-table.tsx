@@ -421,7 +421,11 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                                                 const val = (reg.formData as any)?.[field.label] || (reg.formData as any)?.[field.id]
                                                 const displayVal = Array.isArray(val) ? val.join(", ") : val
                                                 return (
-                                                    <TableCell key={field.id} className="text-sm">
+                                                    <TableCell 
+                                                        key={field.id} 
+                                                        className="text-sm max-w-[200px] truncate"
+                                                        title={typeof displayVal === 'string' ? displayVal : ''}
+                                                    >
                                                         {displayVal || <span className="text-muted-foreground/30">-</span>}
                                                     </TableCell>
                                                 )

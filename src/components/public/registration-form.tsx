@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { SubmitButton } from "@/components/submit-button"
 import { registerAttendee } from "@/app/actions/registration"
 import { FileUpload } from "@/components/public/file-upload"
+import { Textarea } from "@/components/ui/textarea"
 
 interface RegistrationFormProps {
   event: {
@@ -79,6 +80,16 @@ export function RegistrationForm({ event }: RegistrationFormProps) {
                   required={q.required}
                   disabled={state.success}
                   className="bg-background dark:bg-zinc-900 border-border/50 h-12 rounded-xl px-4 transition-all focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground placeholder:text-muted-foreground/50"
+                />
+              ) : q.type === "LONG_TEXT" ? (
+                <Textarea
+                  id={q.id}
+                  name={`field_${q.id}`}
+                  placeholder={`กรอก${q.label}`}
+                  required={q.required}
+                  disabled={state.success}
+                  className="bg-background dark:bg-zinc-900 border-border/50 min-h-[100px] rounded-xl px-4 py-3 transition-all focus-visible:ring-1 focus-visible:ring-foreground focus-visible:border-foreground placeholder:text-muted-foreground/50 resize-y"
+                  rows={3}
                 />
               ) : q.type === "SELECT" ? (
                 <div className="group/select relative">

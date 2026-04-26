@@ -70,6 +70,7 @@ model FormField {
 
 enum FieldType {
   TEXT
+  LONG_TEXT
   EMAIL
   PHONE
   NUMBER
@@ -91,6 +92,7 @@ model Registration {
   updatedAt     DateTime @updatedAt
   
   checkIn       CheckIn?
+
 
   @@index([eventId])
 }
