@@ -11,6 +11,7 @@ import { FormBuilder, FormFieldConfig } from "@/components/admin/form-builder"
 import { CalendarIcon, Loader2 } from "lucide-react"
 import { useFormStatus } from "react-dom"
 import { useRouter } from "next/navigation"
+import { AdminFileUpload } from "@/components/admin/admin-file-upload"
 
 interface EventFormProps {
   action: (prevState: any, payload: FormData) => Promise<any> 
@@ -146,13 +147,16 @@ export function EventForm({ action, initialData }: EventFormProps) {
             </div>
 
              <div className="space-y-2">
-              <Label htmlFor="image">Event Banner</Label>
-              <Input id="image" name="image" type="file" accept="image/*" />
-              {initialData?.imageUrl && (
-                  <div className="mt-2 text-xs text-muted-foreground">
-                      Current image: <a href={initialData.imageUrl} target="_blank" className="underline">View</a>
-                  </div>
-              )}
+              <Label>Event Banner</Label>
+              <AdminFileUpload 
+                id="imageUrl" 
+                name="imageUrl" 
+                defaultValue={initialData?.imageUrl} 
+                accept="image/*"
+                label="Click to upload banner"
+                folder="events"
+                eventSlug={initialData?.slug || "new-event"}
+              />
             </div>
 
             <hr className="my-6 border-muted" />
@@ -187,15 +191,17 @@ export function EventForm({ action, initialData }: EventFormProps) {
                   <Textarea id="emailBody" name="emailBody" defaultValue={state?.data?.emailBody ?? initialData?.emailBody ?? ""} placeholder="Add extra details, instructions, or welcome notes here..." className="min-h-[100px]" />
               </div>
               <div className="space-y-2">
-                  <Label htmlFor="emailAttachment">Email Attachment</Label>
-                  <Input id="emailAttachment" name="emailAttachment" type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" />
-                  {initialData?.emailAttachmentUrl && (
-                      <div className="mt-2 text-xs text-muted-foreground">
-                          Current attachment: <a href={initialData.emailAttachmentUrl} target="_blank" className="underline">View File</a>
-                          <input type="hidden" name="currentAttachmentUrl" value={initialData.emailAttachmentUrl} />
-                      </div>
-                  )}
-                  <p className="text-xs text-muted-foreground">Attach a PDF, Image, or Document. Max 5MB.</p>
+                  <Label>Email Attachment</Label>
+                  <AdminFileUpload 
+                    id="emailAttachmentUrl" 
+                    name="emailAttachmentUrl" 
+                    defaultValue={initialData?.emailAttachmentUrl} 
+                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                    label="Click to upload attachment"
+                    folder="attachments"
+                    eventSlug={initialData?.slug || "new-event"}
+                  />
+                  <p className="text-xs text-muted-foreground">Attach a PDF, Image, or Document. Max 20MB.</p>
               </div>
             </div>
           </CardContent>

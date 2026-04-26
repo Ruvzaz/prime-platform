@@ -5,7 +5,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "@/auth";
-import { uploadToR2 } from "@/lib/storage";
 import { FieldType } from "@prisma/client";
 
 const eventSchema = z.object({
@@ -41,47 +40,8 @@ export async function createEvent(prevState: any, formData: FormData) {
       return { success: false, message: "Unauthorized" };
   }
 
-  let imageUrl = null;
-  const imageFile = formData.get("image") as File;
-  
-  const rawDataFallback = {
-    title: formData.get("title"),
-    slug: formData.get("slug"),
-    description: formData.get("description"),
-    startDate: formData.get("startDate"),
-    endDate: formData.get("endDate"),
-    location: formData.get("location"),
-    themeColor: formData.get("themeColor"),
-    emailSubject: formData.get("emailSubject"),
-    emailBody: formData.get("emailBody"),
-    isActive: formData.get("isActive") === "on",
-  };
-
-  // checkbox for image size > 0
-  if (imageFile && imageFile.size > 0) {
-      if (imageFile.size > 5 * 1024 * 1024) {
-          return { success: false, message: "Image size too large (Max 5MB)", data: rawDataFallback };
-      }
-      try {
-        imageUrl = await uploadToR2(imageFile, "events");
-      } catch (e) {
-        return { success: false, message: "Failed to upload image", data: rawDataFallback };
-      }
-  }
-
-  let emailAttachmentUrl = null;
-  const attachmentFile = formData.get("emailAttachment") as File;
-  
-  if (attachmentFile && attachmentFile.size > 0) {
-      if (attachmentFile.size > 5 * 1024 * 1024) {
-          return { success: false, message: "Attachment size too large (Max 5MB)", data: rawDataFallback };
-      }
-      try {
-        emailAttachmentUrl = await uploadToR2(attachmentFile, "attachments");
-      } catch (e) {
-        return { success: false, message: "Failed to upload attachment", data: rawDataFallback };
-      }
-  }
+  const imageUrl = (formData.get("imageUrl") as string) || null;
+  const emailAttachmentUrl = (formData.get("emailAttachmentUrl") as string) || null;
 
   const rawData = {
     title: formData.get("title"),
@@ -169,46 +129,8 @@ export async function updateEvent(prevState: any, formData: FormData) {
   const eventId = formData.get("id") as string;
   if (!eventId) return { success: false, message: "Event ID missing" };
 
-  const rawDataFallback = {
-    title: formData.get("title"),
-    slug: formData.get("slug"),
-    description: formData.get("description"),
-    startDate: formData.get("startDate"),
-    endDate: formData.get("endDate"),
-    location: formData.get("location"),
-    themeColor: formData.get("themeColor"),
-    emailSubject: formData.get("emailSubject"),
-    emailBody: formData.get("emailBody"),
-    isActive: formData.get("isActive") === "on",
-  };
-
-  let imageUrl = formData.get("currentImageUrl") as string | null;
-  const imageFile = formData.get("image") as File;
-  
-  if (imageFile && imageFile.size > 0) {
-      if (imageFile.size > 5 * 1024 * 1024) {
-          return { success: false, message: "Image size too large (Max 5MB)", data: rawDataFallback };
-      }
-      try {
-        imageUrl = await uploadToR2(imageFile, "events");
-      } catch (e) {
-        return { success: false, message: "Failed to upload image", data: rawDataFallback };
-      }
-  }
-
-  let emailAttachmentUrl = formData.get("currentAttachmentUrl") as string | null;
-  const attachmentFile = formData.get("emailAttachment") as File;
-  
-  if (attachmentFile && attachmentFile.size > 0) {
-      if (attachmentFile.size > 5 * 1024 * 1024) {
-          return { success: false, message: "Attachment size too large (Max 5MB)", data: rawDataFallback };
-      }
-      try {
-        emailAttachmentUrl = await uploadToR2(attachmentFile, "attachments");
-      } catch (e) {
-        return { success: false, message: "Failed to upload attachment", data: rawDataFallback };
-      }
-  }
+  const imageUrl = (formData.get("imageUrl") as string) || null;
+  const emailAttachmentUrl = (formData.get("emailAttachmentUrl") as string) || null;
 
   const rawData = {
     title: formData.get("title"),

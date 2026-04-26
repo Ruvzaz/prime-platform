@@ -36,13 +36,13 @@ export async function getPresignedUrl(
   fileName: string,
   contentType: string,
   eventSlug: string,
-  attendeeName: string
+  folderName: string = "uploads"
 ) {
-  // 1. Rate Limiting (10 requests per 10 minutes)
+  // 1. Rate Limiting (20 requests per 10 minutes for combined usage)
   const headersList = await headers()
   const ip = headersList.get("x-forwarded-for") || "unknown-ip"
   
-  const isAllowed = await getRateLimit(ip, 10, 10 * 60 * 1000)
+  const isAllowed = await getRateLimit(ip, 20, 10 * 60 * 1000)
   if (!isAllowed) {
     return { success: false, error: "Too Many Requests. Please wait." }
   }
@@ -61,12 +61,14 @@ export async function getPresignedUrl(
   try {
     const bucketName = process.env.R2_BUCKET_NAME!
     
-    // Sanitize inputs for safe S3 keys
-    const safeAttendeeName = attendeeName.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() || 'anonymous'
+    // Sanitize inputs for safe S3 keys to prevent path traversal
+    const safeSlug = eventSlug.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() || 'global'
+    const safeFolder = folderName.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase() || 'uploads'
     const safeFileName = fileName.replace(/[^a-zA-Z0-9_.-]/g, '_')
     const uniqueId = Math.random().toString(36).substring(2, 8)
     
-    const key = `${eventSlug}/${safeAttendeeName}/${Date.now()}-${uniqueId}-${safeFileName}`
+    // Key structure: event-slug/folder/timestamp-id-filename
+    const key = `${safeSlug}/${safeFolder}/${Date.now()}-${uniqueId}-${safeFileName}`
 
     const command = new PutObjectCommand({
       Bucket: bucketName,
