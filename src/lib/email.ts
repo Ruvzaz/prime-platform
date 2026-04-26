@@ -31,11 +31,19 @@ export const sendRegistrationEmail = async (
     
     let emailAttachments: any[] = [];
     if (attachmentUrl) {
-        // Extract original filename after the UUID prefix: folder/uuid-filename.ext
+        // Extract original filename from the R2 path
         const rawFilename = attachmentUrl.split('/').pop() || 'attachment.file';
-        // Assuming format is UUID-realfilename.ext
-        const dashIndex = rawFilename.indexOf('-');
-        const filename = dashIndex !== -1 ? rawFilename.substring(dashIndex + 1) : rawFilename;
+        
+        let filename = rawFilename;
+        const parts = rawFilename.split('_');
+        if (parts.length >= 3) {
+            // New format: YYYYMMDD_UUID_filename.ext
+            filename = parts.slice(2).join('_');
+        } else {
+            // Fallback for old format: uuid-filename.ext
+            const dashIndex = rawFilename.indexOf('-');
+            filename = dashIndex !== -1 ? rawFilename.substring(dashIndex + 1) : rawFilename;
+        }
         
         emailAttachments.push({
             filename: filename,
@@ -59,8 +67,8 @@ export const sendRegistrationEmail = async (
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #333;">Registration Confirmed</h1>
-          <p>Hi ${name},</p>
-          <p>You are successfully registered for <strong>${eventTitle}</strong>.</p>
+          <p>สวัสดี ${name},</p>
+          <p>คุณได้ลงทะเบียนสำหรับงาน <strong>${eventTitle}</strong> เรียบร้อยแล้ว</p>
           
           ${optionalCustomBodyHtml}
           

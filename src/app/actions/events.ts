@@ -26,7 +26,7 @@ const eventSchema = z.object({
 const formFieldSchema = z.array(z.object({
   id: z.string().optional(),
   label: z.string().min(1),
-  type: z.nativeEnum(FieldType),
+  type: z.enum(["TEXT", "LONG_TEXT", "EMAIL", "PHONE", "NUMBER", "SELECT", "CHECKBOX", "RADIO", "DATE", "FILE"]),
   required: z.boolean().default(false),
   options: z.array(z.string()).default([]),
   allowOther: z.boolean().optional(),
@@ -117,6 +117,7 @@ export async function createEvent(prevState: any, formData: FormData) {
             const parsedArray = JSON.parse(formFieldsRaw as string);
             formFields = formFieldSchema.parse(parsedArray);
         } catch (e) {
+            console.error("Form Fields Validation Error:", e);
             return { success: false, message: "Invalid form fields data", data: rawData };
         }
     }

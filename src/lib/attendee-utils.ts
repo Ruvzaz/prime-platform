@@ -21,23 +21,50 @@ export function extractAttendeeInfo(
   let exactPhone = null;
 
   if (formFields && formFields.length > 0) {
-      // Find ALL fields that could act as name, email, or phone
-      const nameFields = formFields.filter(f => f.label.includes("ชื่อ") || f.label.toLowerCase().includes("name") || f.id === "__name__");
-      for (const f of nameFields) {
-          if (data[f.id]) { exactName = data[f.id]; break; }
-          if (data[f.label]) { exactName = data[f.label]; break; }
+      // 1. Check for strict IDs first (Best case)
+      const nameField = formFields.find(f => f.id === "__name__");
+      if (nameField && data[nameField.id]) {
+          exactName = data[nameField.id];
       }
 
-      const emailFields = formFields.filter(f => f.label.includes("อีเมล") || f.label.toLowerCase().includes("email") || f.id === "__email__" || f.type === "EMAIL");
-      for (const f of emailFields) {
-          if (data[f.id]) { exactEmail = data[f.id]; break; }
-          if (data[f.label]) { exactEmail = data[f.label]; break; }
+      const emailField = formFields.find(f => f.id === "__email__");
+      if (emailField && data[emailField.id]) {
+          exactEmail = data[emailField.id];
       }
-      
-      const phoneFields = formFields.filter(f => f.label.includes("เบอร์โทร") || f.label.toLowerCase().includes("phone") || f.id === "__phone__" || f.type === "PHONE");
-      for (const f of phoneFields) {
-          if (data[f.id]) { exactPhone = data[f.id]; break; }
-          if (data[f.label]) { exactPhone = data[f.label]; break; }
+
+      const phoneField = formFields.find(f => f.id === "__phone__");
+      if (phoneField && data[phoneField.id]) {
+          exactPhone = data[phoneField.id];
+      }
+
+      // 2. Fallback to fuzzy matching ONLY if exact fields weren't found OR were empty
+      if (!exactName) {
+          const fuzzyNameField = formFields.find(f => 
+            f.id.toLowerCase() === "name" || 
+            f.label === "ชื่อ" || 
+            f.label === "ชื่อ-นามสกุล" ||
+            f.label === "ชื่อ - นามสกุล"
+          );
+          if (fuzzyNameField) exactName = data[fuzzyNameField.id] || data[fuzzyNameField.label];
+      }
+
+      if (!exactEmail) {
+          const fuzzyEmailField = formFields.find(f => 
+            f.id.toLowerCase() === "email" || 
+            f.label === "อีเมล" || 
+            f.type === "EMAIL"
+          );
+          if (fuzzyEmailField) exactEmail = data[fuzzyEmailField.id] || data[fuzzyEmailField.label];
+      }
+
+      if (!exactPhone) {
+          const fuzzyPhoneField = formFields.find(f => 
+            f.id.toLowerCase() === "phone" || 
+            f.label === "เบอร์โทร" || 
+            f.label === "โทรศัพท์" ||
+            f.type === "PHONE"
+          );
+          if (fuzzyPhoneField) exactPhone = data[fuzzyPhoneField.id] || data[fuzzyPhoneField.label];
       }
   }
 
@@ -133,15 +160,33 @@ export function getStandardFieldIds(formFields?: { id: string; label: string; ty
     
     const ids: string[] = [];
     
-    // Explicitly track anything that looks like Name, Email, or Phone
-    const nameFields = formFields.filter(f => f.label.includes("ชื่อ") || f.id === "__name__" || f.id.toLowerCase() === "name");
-    nameFields.forEach(f => ids.push(f.id));
+    // If __name__ or __email__ exist, they are the ONLY standard fields for those categories.
+    const hasStrictName = formFields.some(f => f.id === "__name__");
+    const hasStrictEmail = formFields.some(f => f.id === "__email__");
+    const hasStrictPhone = formFields.some(f => f.id === "__phone__");
 
-    const emailFields = formFields.filter(f => f.label.includes("อีเมล") || f.label.toLowerCase().includes("email") || f.id === "__email__" || f.id.toLowerCase() === "email" || f.type === "EMAIL");
-    emailFields.forEach(f => ids.push(f.id));
-    
-    const phoneFields = formFields.filter(f => f.label.includes("เบอร์โทร") || f.label.toLowerCase().includes("phone") || f.id === "__phone__" || f.id.toLowerCase() === "phone" || f.type === "PHONE");
-    phoneFields.forEach(f => ids.push(f.id));
+    formFields.forEach(f => {
+        // Name matching
+        if (f.id === "__name__") {
+            ids.push(f.id);
+        } else if (!hasStrictName && (f.id.toLowerCase() === "name" || f.label === "ชื่อ" || f.label === "ชื่อ-นามสกุล")) {
+            ids.push(f.id);
+        }
 
-    return ids;
+        // Email matching
+        if (f.id === "__email__") {
+            ids.push(f.id);
+        } else if (!hasStrictEmail && (f.id.toLowerCase() === "email" || f.label === "อีเมล" || f.type === "EMAIL")) {
+            ids.push(f.id);
+        }
+
+        // Phone matching
+        if (f.id === "__phone__") {
+            ids.push(f.id);
+        } else if (!hasStrictPhone && (f.id.toLowerCase() === "phone" || f.label === "เบอร์โทร" || f.type === "PHONE")) {
+            ids.push(f.id);
+        }
+    });
+
+    return Array.from(new Set(ids));
 }

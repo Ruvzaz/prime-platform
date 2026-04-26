@@ -31,6 +31,25 @@ export async function registerAttendee(prevState: any, formData: FormData) {
     return { success: false, message: "Event ID or Slug missing. Please refresh the page and try again." };
   }
 
+  // Fetch event details and schema before processing data to allow validation
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { 
+        title: true, 
+        startDate: true,
+        emailSubject: true,
+        emailBody: true,
+        emailAttachmentUrl: true,
+        formFields: true
+    },
+  });
+
+  if (!event) {
+      return { success: false, message: "ไม่พบข้อมูลกิจกรรม (Event not found)" };
+  }
+
+  const formFields = event.formFields as { id: string; label: string; type: string }[];
+
   // extract dynamic fields
   const rawData: Record<string, any> = {};
   
@@ -41,7 +60,7 @@ export async function registerAttendee(prevState: any, formData: FormData) {
        const fieldId = key.replace("field_", "");
        const values = formData.getAll(key) as string[];
        
-       if (values.length > 1) {
+        if (values.length > 1) {
            // It's a checkbox with multiple selected options
            rawData[fieldId] = values;
        } else if (values.length === 1) {
@@ -54,6 +73,16 @@ export async function registerAttendee(prevState: any, formData: FormData) {
                    val = String(otherVal).trim();
                } else {
                    val = "อื่นๆ"; // Fallback
+               }
+           }
+           
+           // Length Validation
+           const fieldDef = formFields.find(f => f.id === fieldId);
+           if (fieldDef && typeof val === "string") {
+               if (fieldDef.type === "LONG_TEXT" && val.length > 2000) {
+                   return { success: false, message: `ข้อความในช่อง "${fieldDef.label}" ยาวเกินไป (สูงสุด 2000 ตัวอักษร)` };
+               } else if (fieldDef.type !== "LONG_TEXT" && fieldDef.type !== "FILE" && val.length > 255) {
+                   return { success: false, message: `ข้อความในช่อง "${fieldDef.label}" ยาวเกินไป (สูงสุด 255 ตัวอักษร)` };
                }
            }
            
@@ -86,18 +115,7 @@ export async function registerAttendee(prevState: any, formData: FormData) {
     }
   }
 
-  // Fetch event title and custom email settings first
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
-    select: { 
-        title: true, 
-        startDate: true,
-        emailSubject: true,
-        emailBody: true,
-        emailAttachmentUrl: true,
-        formFields: true
-    },
-  });
+  // Registration created successfully
 
   // Extract email and name using formFields
   const { name, email } = extractAttendeeInfo(rawData, event?.formFields || undefined);

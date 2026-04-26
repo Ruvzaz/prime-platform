@@ -32,7 +32,7 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 
-export type FieldType = "TEXT" | "EMAIL" | "PHONE" | "NUMBER" | "SELECT" | "CHECKBOX" | "RADIO" | "DATE" | "FILE"
+export type FieldType = "TEXT" | "LONG_TEXT" | "EMAIL" | "PHONE" | "NUMBER" | "SELECT" | "CHECKBOX" | "RADIO" | "DATE" | "FILE"
 
 export interface FormFieldConfig {
   id: string
@@ -128,6 +128,7 @@ function SortableFieldItem({
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="TEXT">Text Input</SelectItem>
+                                <SelectItem value="LONG_TEXT">Long Text (Paragraph)</SelectItem>
                                 <SelectItem value="EMAIL">Email</SelectItem>
                                 <SelectItem value="PHONE">Phone</SelectItem>
                                 <SelectItem value="SELECT">Dropdown</SelectItem>
@@ -264,6 +265,8 @@ export function FormBuilder({ onChange, initialFields = [] }: FormBuilderProps) 
   }
 
   const removeField = (id: string) => {
+    // Prevent removing locked/default fields
+    if (DEFAULT_FIELDS.some(df => df.id === id)) return;
     setFields(fields.filter((f) => f.id !== id))
   }
 
@@ -347,6 +350,9 @@ export function FormBuilder({ onChange, initialFields = [] }: FormBuilderProps) 
       <div className="flex flex-wrap gap-2 mb-4">
         <Button type="button" variant="outline" size="sm" onClick={() => addField("TEXT")}>
             <Type className="mr-2 h-4 w-4" /> Text
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={() => addField("LONG_TEXT")}>
+            <Type className="mr-2 h-4 w-4" /> Long Text
         </Button>
         <Button type="button" variant="outline" size="sm" onClick={() => addField("PHONE")}>
             <Type className="mr-2 h-4 w-4" /> Phone

@@ -21,8 +21,8 @@ export function FileUpload({ id, name, eventSlug, disabled, required }: FileUplo
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = async (selectedFile: File) => {
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      setError("ขนาดไฟล์ต้องไม่เกิน 10MB")
+    if (selectedFile.size > 20 * 1024 * 1024) {
+      setError("ขนาดไฟล์ต้องไม่เกิน 20MB")
       return
     }
 
@@ -136,7 +136,7 @@ export function FileUpload({ id, name, eventSlug, disabled, required }: FileUplo
             คลิก หรือ ลากไฟล์มาวางที่นี่
           </p>
           <p className="text-xs text-muted-foreground">
-            รองรับไฟล์รูปภาพ และ PDF ขนาดไม่เกิน 10MB
+            รองรับไฟล์รูปภาพ และ PDF ขนาดไม่เกิน 20MB
           </p>
           {error && <p className="text-xs text-destructive font-medium mt-3">{error}</p>}
         </div>
