@@ -15,11 +15,12 @@ function generateRefCode(): string {
 }
 
 export async function registerAttendee(prevState: any, formData: FormData) {
-  // 1. Rate Limiting (5 requests per 10 minutes)
+  // 1. Rate Limiting (15 requests per 10 minutes)
   const headersList = await headers()
-  const ip = headersList.get("x-forwarded-for") || "unknown-ip"
+  const forwarded = headersList.get("x-forwarded-for")
+  const ip = forwarded ? forwarded.split(',')[0].trim() : "unknown-ip"
   
-  const isAllowed = await getRateLimit(ip, 5, 10 * 60 * 1000)
+  const isAllowed = await getRateLimit(ip, 15, 10 * 60 * 1000)
   if (!isAllowed) {
     return { success: false, message: "คำขอมากเกินไป กรุณารอสักครู่แล้วลองใหม่ (Too Many Requests)" }
   }

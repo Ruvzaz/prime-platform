@@ -38,11 +38,12 @@ export async function getPresignedUrl(
   eventSlug: string,
   folderName: string = "uploads"
 ) {
-  // 1. Rate Limiting (20 requests per 10 minutes for combined usage)
+  // 1. Rate Limiting (50 requests per 10 minutes for combined usage)
   const headersList = await headers()
-  const ip = headersList.get("x-forwarded-for") || "unknown-ip"
+  const forwarded = headersList.get("x-forwarded-for")
+  const ip = forwarded ? forwarded.split(',')[0].trim() : "unknown-ip"
   
-  const isAllowed = await getRateLimit(ip, 20, 10 * 60 * 1000)
+  const isAllowed = await getRateLimit(ip, 50, 10 * 60 * 1000)
   if (!isAllowed) {
     return { success: false, error: "Too Many Requests. Please wait." }
   }
