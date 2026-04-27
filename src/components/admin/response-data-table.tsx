@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Download, Search, Filter, Pencil, FileIcon, ExternalLink } from "lucide-react"
+import { Download, Search, Filter, Pencil, FileIcon, ExternalLink, ChevronLeft } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -55,6 +55,8 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
 
     const [isLoading, setIsLoading] = useState(false)
     const [registrations, setRegistrations] = useState<any[]>([])
+    const [metadata, setMetadata] = useState<any>({ total: 0, page: 1, pageSize: 50, totalPages: 0 })
+    const [currentPage, setCurrentPage] = useState(1)
     const [searchTerm, setSearchTerm] = useState("")
     const [sortBy, setSortBy] = useState("createdAt")
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
@@ -69,16 +71,22 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
 
     useEffect(() => {
         if (selectedEventId) {
+            setCurrentPage(1)
+        }
+    }, [selectedEventId, debouncedSearchTerm])
+
+    useEffect(() => {
+        if (selectedEventId) {
             fetchData()
         }
-    }, [selectedEventId, debouncedSearchTerm, sortBy, sortOrder])
+    }, [selectedEventId, debouncedSearchTerm, sortBy, sortOrder, currentPage])
 
     const fetchData = async () => {
         setIsLoading(true)
         try {
-            // For now, let's fetch 50 items to fill the screen.
-            const result = await getRegistrations(selectedEventId, 1, 50, debouncedSearchTerm, sortBy, sortOrder)
+            const result = await getRegistrations(selectedEventId, currentPage, 50, debouncedSearchTerm, sortBy, sortOrder)
             setRegistrations(result.data)
+            setMetadata(result.metadata)
         } catch (error) {
             console.error(error)
         } finally {
@@ -266,9 +274,41 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                     </TableBody>
                 </Table>
             </div>
-            
-            <div className="text-xs text-muted-foreground text-center">
-                Showing top 50 results. Use search to filter.
+
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between px-4 py-4 border-t bg-muted/20">
+                <div className="text-xs text-muted-foreground">
+                    Showing {registrations.length} of {metadata.total} responses
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage <= 1 || isLoading}
+                        className="h-8 gap-1"
+                    >
+                        <ChevronLeft className="h-4 w-4" /> Previous
+                    </Button>
+                    <div className="text-xs font-medium px-2">
+                        Page {currentPage} of {metadata.totalPages || 1}
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(metadata.totalPages, prev + 1))}
+                        disabled={currentPage >= metadata.totalPages || isLoading}
+                        className="h-8 gap-1"
+                    >
+                        Next <ChevronLeft className="h-4 w-4 rotate-180" />
+                    </Button>
+                </div>
+            </div>
+
+            <div className="p-4 text-center">
+                <p className="text-[10px] text-muted-foreground">
+                    Use search to filter across all records. Sorting affects all pages.
+                </p>
             </div>
 
             <RegistrationEditSheet 
