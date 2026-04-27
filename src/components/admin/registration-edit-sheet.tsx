@@ -176,12 +176,13 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
   const initials = name.substring(0, 2).toUpperCase()
 
   // For legacy registrations: if formData has data for an old custom Name/Email field, but the new "__name__"/"__email__" fields are empty, hide the new empty ones.
-  const hasLegacyNameData = formFields.some(f => (f.label.includes("ชื่อ") || f.id.toLowerCase() === "name") && f.id !== "__name__" && formData[f.id]);
-  const hasLegacyEmailData = formFields.some(f => (f.label.includes("อีเมล") || f.label.toLowerCase().includes("email")) && f.id !== "__email__" && formData[f.id]);
+  const hasLegacyNameData = formFields.some(f => (f.label.includes("ชื่อ") || f.id.toLowerCase() === "name") && !f.id.startsWith("__name__") && formData[f.id]);
+  const hasLegacyEmailData = formFields.some(f => (f.label.includes("อีเมล") || f.label.toLowerCase().includes("email")) && !f.id.startsWith("__email__") && formData[f.id]);
 
   const visibleFormFields = formFields.filter(f => {
-      if (f.id === "__name__" && hasLegacyNameData && !formData["__name__"]) return false;
-      if (f.id === "__email__" && hasLegacyEmailData && !formData["__email__"]) return false;
+      // Find the specific system ID in the formData that matches the prefix. If it exists, don't hide it.
+      if (f.id.startsWith("__name__") && hasLegacyNameData && !formData[f.id]) return false;
+      if (f.id.startsWith("__email__") && hasLegacyEmailData && !formData[f.id]) return false;
       return true;
   });
 

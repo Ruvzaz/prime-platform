@@ -22,17 +22,17 @@ export function extractAttendeeInfo(
 
   if (formFields && formFields.length > 0) {
       // 1. Check for strict IDs first (Best case)
-      const nameField = formFields.find(f => f.id === "__name__");
+      const nameField = formFields.find(f => f.id.startsWith("__name__"));
       if (nameField && data[nameField.id]) {
           exactName = data[nameField.id];
       }
 
-      const emailField = formFields.find(f => f.id === "__email__");
+      const emailField = formFields.find(f => f.id.startsWith("__email__"));
       if (emailField && data[emailField.id]) {
           exactEmail = data[emailField.id];
       }
 
-      const phoneField = formFields.find(f => f.id === "__phone__");
+      const phoneField = formFields.find(f => f.id.startsWith("__phone__"));
       if (phoneField && data[phoneField.id]) {
           exactPhone = data[phoneField.id];
       }
@@ -161,27 +161,27 @@ export function getStandardFieldIds(formFields?: { id: string; label: string; ty
     const ids: string[] = [];
     
     // If __name__ or __email__ exist, they are the ONLY standard fields for those categories.
-    const hasStrictName = formFields.some(f => f.id === "__name__");
-    const hasStrictEmail = formFields.some(f => f.id === "__email__");
-    const hasStrictPhone = formFields.some(f => f.id === "__phone__");
+    const hasStrictName = formFields.some(f => f.id.startsWith("__name__"));
+    const hasStrictEmail = formFields.some(f => f.id.startsWith("__email__"));
+    const hasStrictPhone = formFields.some(f => f.id.startsWith("__phone__"));
 
     formFields.forEach(f => {
         // Name matching
-        if (f.id === "__name__") {
+        if (f.id.startsWith("__name__")) {
             ids.push(f.id);
         } else if (!hasStrictName && (f.id.toLowerCase() === "name" || f.label === "ชื่อ" || f.label === "ชื่อ-นามสกุล")) {
             ids.push(f.id);
         }
 
         // Email matching
-        if (f.id === "__email__") {
+        if (f.id.startsWith("__email__")) {
             ids.push(f.id);
         } else if (!hasStrictEmail && (f.id.toLowerCase() === "email" || f.label === "อีเมล" || f.type === "EMAIL")) {
             ids.push(f.id);
         }
 
         // Phone matching
-        if (f.id === "__phone__") {
+        if (f.id.startsWith("__phone__")) {
             ids.push(f.id);
         } else if (!hasStrictPhone && (f.id.toLowerCase() === "phone" || f.label === "เบอร์โทร" || f.type === "PHONE")) {
             ids.push(f.id);
