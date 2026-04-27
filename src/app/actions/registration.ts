@@ -9,138 +9,140 @@ import { RegStatus } from "@prisma/client";
 import { extractAttendeeInfo } from "@/lib/attendee-utils";
 import { getRateLimit } from "@/lib/rate-limit";
 import { headers } from "next/headers";
+import { ActionResult, ErrorCodes, errorResult, successResult } from "@/lib/action-result";
+import { handleActionError } from "@/lib/error-utils";
 
 function generateRefCode(): string {
   return "REF-" + crypto.randomBytes(4).toString("hex").toUpperCase();
 }
 
-export async function registerAttendee(prevState: any, formData: FormData) {
-  // 1. Rate Limiting (15 requests per 10 minutes)
-  const headersList = await headers()
-  const forwarded = headersList.get("x-forwarded-for")
-  const ip = forwarded ? forwarded.split(',')[0].trim() : "unknown-ip"
-  
-  const isAllowed = await getRateLimit(ip, 15, 10 * 60 * 1000)
-  if (!isAllowed) {
-    return { success: false, message: "คำขอมากเกินไป กรุณารอสักครู่แล้วลองใหม่ (Too Many Requests)" }
-  }
-
-  const eventId = formData.get("eventId") as string;
-  const slug = formData.get("eventSlug") as string;
-  
-  if (!eventId || !slug) {
-    return { success: false, message: "Event ID or Slug missing. Please refresh the page and try again." };
-  }
-
-  // Fetch event details and schema before processing data to allow validation
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
-    select: { 
-        title: true, 
-        startDate: true,
-        emailSubject: true,
-        emailBody: true,
-        emailAttachmentUrl: true,
-        formFields: true
-    },
-  });
-
-  if (!event) {
-      return { success: false, message: "ไม่พบข้อมูลกิจกรรม (Event not found)" };
-  }
-
-  const formFields = event.formFields as { id: string; label: string; type: string }[];
-
-  // extract dynamic fields
-  const rawData: Record<string, any> = {};
-  
-  const keys = Array.from(new Set(Array.from(formData.keys())));
-  
-  for (const key of keys) {
-    if (key.startsWith("field_") && !key.endsWith("_other")) {
-       const fieldId = key.replace("field_", "");
-       const values = formData.getAll(key) as string[];
-       
-        if (values.length > 1) {
-           // It's a checkbox with multiple selected options
-           rawData[fieldId] = values;
-       } else if (values.length === 1) {
-           let val = values[0];
-           
-           // Intercept "Other" selection and swap with the user's typed input
-           if (val === "__other__") {
-               const otherVal = formData.get(`${key}_other`);
-               if (otherVal && String(otherVal).trim() !== "") {
-                   val = String(otherVal).trim();
-               } else {
-                   val = "อื่นๆ"; // Fallback
-               }
-           }
-           
-           // Length Validation
-           const fieldDef = formFields.find(f => f.id === fieldId);
-           if (fieldDef && typeof val === "string") {
-               if (fieldDef.type === "LONG_TEXT" && val.length > 2000) {
-                   return { success: false, message: `ข้อความในช่อง "${fieldDef.label}" ยาวเกินไป (สูงสุด 2000 ตัวอักษร)` };
-               } else if (fieldDef.type !== "LONG_TEXT" && fieldDef.type !== "FILE" && val.length > 255) {
-                   return { success: false, message: `ข้อความในช่อง "${fieldDef.label}" ยาวเกินไป (สูงสุด 255 ตัวอักษร)` };
-               }
-           }
-           
-           rawData[fieldId] = val;
-       }
+export async function registerAttendee(prevState: any, formData: FormData): Promise<ActionResult> {
+  try {
+    // 1. Rate Limiting (15 requests per 10 minutes)
+    const headersList = await headers()
+    const forwarded = headersList.get("x-forwarded-for")
+    const ip = forwarded ? forwarded.split(',')[0].trim() : "unknown-ip"
+    
+    const isAllowed = await getRateLimit(ip, 15, 10 * 60 * 1000)
+    if (!isAllowed) {
+      return errorResult("TOO_MANY_REQUESTS", "คำขอมากเกินไป กรุณารอสักครู่แล้วลองใหม่");
     }
-  }
 
-  let referenceCode = "";
-  const MAX_RETRIES = 3;
+    const eventId = formData.get("eventId") as string;
+    const slug = formData.get("eventSlug") as string;
+    
+    if (!eventId || !slug) {
+      return errorResult(ErrorCodes.BAD_REQUEST, "ข้อมูลกิจกรรมไม่ครบถ้วน กรุณารีเฟรชหน้าแล้วลองใหม่");
+    }
 
-  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-    referenceCode = generateRefCode();
-    try {
-      await prisma.registration.create({
-        data: {
-          eventId,
-          formData: rawData,
-          referenceCode,
-          status: "CONFIRMED",
-        },
-      });
-      break; // Success
-    } catch (e) {
-      if (e instanceof Error && "code" in e && (e as { code: string }).code === "P2002" && attempt < MAX_RETRIES - 1) {
-        continue; 
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: { 
+          title: true, 
+          startDate: true,
+          emailSubject: true,
+          emailBody: true,
+          emailAttachmentUrl: true,
+          formFields: true
+      },
+    });
+
+    if (!event) {
+        return errorResult(ErrorCodes.NOT_FOUND, "ไม่พบข้อมูลกิจกรรม");
+    }
+
+    const formFields = event.formFields as { id: string; label: string; type: string }[];
+    const rawData: Record<string, any> = {};
+    const keys = Array.from(new Set(Array.from(formData.keys())));
+    
+    for (const key of keys) {
+      if (key.startsWith("field_") && !key.endsWith("_other")) {
+         const fieldId = key.replace("field_", "");
+         const values = formData.getAll(key) as string[];
+         
+          if (values.length > 1) {
+             rawData[fieldId] = values;
+         } else if (values.length === 1) {
+             let val = values[0];
+             
+             if (val === "__other__") {
+                 const otherVal = formData.get(`${key}_other`);
+                 if (otherVal && String(otherVal).trim() !== "") {
+                     val = String(otherVal).trim();
+                 } else {
+                     val = "อื่นๆ"; 
+                 }
+             }
+             
+             const fieldDef = formFields.find(f => f.id === fieldId);
+             if (fieldDef && typeof val === "string") {
+                 if (fieldDef.type === "LONG_TEXT" && val.length > 2000) {
+                     return errorResult(ErrorCodes.VALIDATION_FAILED, `ข้อความในช่อง "${fieldDef.label}" ยาวเกินไป (สูงสุด 2000 ตัวอักษร)`);
+                 } else if (fieldDef.type !== "LONG_TEXT" && fieldDef.type !== "FILE" && val.length > 255) {
+                     return errorResult(ErrorCodes.VALIDATION_FAILED, `ข้อความในช่อง "${fieldDef.label}" ยาวเกินไป (สูงสุด 255 ตัวอักษร)`);
+                 }
+             }
+             
+             rawData[fieldId] = val;
+         }
       }
-      console.error(e);
-      return { success: false, message: "Registration failed: " + (e instanceof Error ? e.message : "ระบบขัดข้อง กรุณาลองใหม่อีกครั้ง") };
     }
-  }
 
-  // Registration created successfully
+    let referenceCode = "";
+    const MAX_RETRIES = 3;
+    let registration = null;
 
-  // Extract email and name using formFields
-  const { name, email } = extractAttendeeInfo(rawData, event?.formFields || undefined);
-
-  // Send Confirmation Email immediately
-  if (email && process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD && event) {
-    try {
-      const { sendRegistrationEmail } = await import("@/lib/email");
-      await sendRegistrationEmail(
-          email, 
-          name, 
-          event.title, 
-          referenceCode, 
-          event.startDate, 
-          event.emailSubject, 
-          event.emailBody, 
-          event.emailAttachmentUrl
-      );
-    } catch (e) {
-      console.error("Failed to send confirmation email. Proceeding with registration anyway:", e);
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      referenceCode = generateRefCode();
+      try {
+        registration = await prisma.registration.create({
+          data: {
+            eventId,
+            formData: rawData,
+            referenceCode,
+            status: "CONFIRMED",
+          },
+        });
+        break; 
+      } catch (e) {
+        if (e instanceof Error && "code" in e && (e as { code: string }).code === "P2002" && attempt < MAX_RETRIES - 1) {
+          continue; 
+        }
+        throw e; // Let the general handler take it
+      }
     }
+
+    const { name, email } = extractAttendeeInfo(rawData, event?.formFields || undefined);
+
+    if (email && process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD && event) {
+      try {
+        const { sendRegistrationEmail } = await import("@/lib/email");
+        await sendRegistrationEmail(
+            email, 
+            name, 
+            event.title, 
+            referenceCode, 
+            event.startDate, 
+            event.emailSubject, 
+            event.emailBody, 
+            event.emailAttachmentUrl
+        );
+      } catch (e) {
+        console.error("Failed to send confirmation email:", e);
+      }
+    }
+    
+    return successResult(
+      { 
+        referenceCode, 
+        slug, 
+        redirectUrl: `/events/${slug}/success?code=${referenceCode}` 
+      }, 
+      "ลงทะเบียนสำเร็จแล้ว"
+    );
+  } catch (error) {
+    return handleActionError(error);
   }
-  
-  return { success: true, message: "Registration successful!", redirectUrl: `/events/${slug}/success?code=${referenceCode}` };
 }
 
 export async function getRegistrations(

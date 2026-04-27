@@ -231,11 +231,11 @@ export function FormBuilder({ onChange, initialFields = [] }: FormBuilderProps) 
   // Ensure default fields are always present at the top
   const mergeWithDefaults = (incoming: FormFieldConfig[]): FormFieldConfig[] => {
     const defaults = DEFAULT_FIELDS.map(df => {
-      // Check if there's a matching existing field (by locked ID)
-      const existing = incoming.find(f => f.id === df.id);
+      // Check if there's a matching existing field (by locked ID or prefixed ID)
+      const existing = incoming.find(f => f.id === df.id || f.id.startsWith(`${df.id}_`));
       return existing ? { ...existing, locked: true } : { ...df };
     });
-    const custom = incoming.filter(f => !DEFAULT_FIELDS.some(df => df.id === f.id));
+    const custom = incoming.filter(f => !DEFAULT_FIELDS.some(df => f.id === df.id || f.id.startsWith(`${df.id}_`)));
     return [...defaults, ...custom];
   }
 

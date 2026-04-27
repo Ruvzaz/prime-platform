@@ -6,9 +6,11 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { FieldType } from "@prisma/client";
+import { ActionResult, ErrorCodes, errorResult, successResult } from "@/lib/action-result";
+import { handleActionError } from "@/lib/error-utils";
 
 const eventSchema = z.object({
-  title: z.string().min(3),
+  title: z.string().min(3, "ชื่อกิจกรรมต้องมีอย่างน้อย 3 ตัวอักษร"),
   description: z.string().optional(),
   slug: z.string().min(3).regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with dashes"),
   startDate: z.string(),
@@ -34,52 +36,38 @@ const formFieldSchema = z.array(z.object({
 
 export type FormFieldData = z.infer<typeof formFieldSchema>[number];
 
-export async function createEvent(prevState: any, formData: FormData) {
-  const session = await auth();
-  if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return { success: false, message: "Unauthorized" };
-  }
-
-  const imageUrl = (formData.get("imageUrl") as string) || null;
-  const emailAttachmentUrl = (formData.get("emailAttachmentUrl") as string) || null;
-
-  const rawData = {
-    title: formData.get("title"),
-    description: formData.get("description"),
-    slug: (formData.get("slug") as string)?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
-    startDate: formData.get("startDate"),
-    endDate: formData.get("endDate"),
-    location: formData.get("location"),
-    themeColor: formData.get("themeColor"),
-    imageUrl: imageUrl,
-    emailSubject: formData.get("emailSubject"),
-    emailBody: formData.get("emailBody"),
-    emailAttachmentUrl: emailAttachmentUrl,
-    isActive: formData.get("isActive") === "on",
-  };
-
-  const parsedData = eventSchema.safeParse(rawData);
-  if (!parsedData.success) {
-    return {
-      success: false,
-      message: "Validation failed, please check the highlighted fields.",
-      errors: parsedData.error.flatten().fieldErrors,
-      data: rawData
-    };
-  }
-  const data = parsedData.data;
-
+export async function createEvent(prevState: any, formData: FormData): Promise<ActionResult> {
   try {
+    const session = await auth();
+    if (!session?.user?.id || session.user.role !== 'ADMIN') {
+        return errorResult(ErrorCodes.UNAUTHORIZED, "คุณไม่มีสิทธิ์ในการสร้างกิจกรรม");
+    }
+
+    const imageUrl = (formData.get("imageUrl") as string) || null;
+    const emailAttachmentUrl = (formData.get("emailAttachmentUrl") as string) || null;
+
+    const rawData = {
+      title: formData.get("title"),
+      description: formData.get("description"),
+      slug: (formData.get("slug") as string)?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+      startDate: formData.get("startDate"),
+      endDate: formData.get("endDate"),
+      location: formData.get("location"),
+      themeColor: formData.get("themeColor"),
+      imageUrl: imageUrl,
+      emailSubject: formData.get("emailSubject"),
+      emailBody: formData.get("emailBody"),
+      emailAttachmentUrl: emailAttachmentUrl,
+      isActive: formData.get("isActive") === "on",
+    };
+
+    const data = eventSchema.parse(rawData);
+
     const formFieldsRaw = formData.get("formFields");
     let formFields: FormFieldData[] = [];
     if (formFieldsRaw) {
-        try {
-            const parsedArray = JSON.parse(formFieldsRaw as string);
-            formFields = formFieldSchema.parse(parsedArray);
-        } catch (e) {
-            console.error("Form Fields Validation Error:", e);
-            return { success: false, message: "Invalid form fields data", data: rawData };
-        }
+        const parsedArray = JSON.parse(formFieldsRaw as string);
+        formFields = formFieldSchema.parse(parsedArray);
     }
 
     const event = await prisma.event.create({
@@ -100,24 +88,33 @@ export async function createEvent(prevState: any, formData: FormData) {
             connect: { id: session.user.id }
         },
         formFields: {
-            create: formFields.map((field, index) => ({
-                label: field.label,
-                type: field.type,
-                required: field.required,
-                options: field.options || [],
-                ...( { allowOther: field.allowOther || false } as any ),
-                order: index
-            }))
+            create: formFields.map((field, index) => {
+                let dbId = undefined;
+                if (field.id === "__name__" || field.id === "__email__") {
+                    dbId = `${field.id}_${crypto.randomUUID()}`;
+                } else if (field.id?.startsWith("__name__") || field.id?.startsWith("__email__")) {
+                    dbId = field.id;
+                }
+                
+                return {
+                    id: dbId,
+                    label: field.label,
+                    type: field.type,
+                    required: field.required,
+                    options: field.options || [],
+                    ...( { allowOther: field.allowOther || false } as any ),
+                    order: index
+                };
+            })
         }
       },
     });
-  } catch (e) {
-    console.error(e);
-    return { success: false, message: "Failed to create event: " + (e instanceof Error ? e.message : "Unknown error"), data: rawData };
-  }
 
-  revalidatePath("/events");
-  return { success: true, message: "Event created successfully!" };
+    revalidatePath("/events");
+    return successResult(event, "สร้างกิจกรรมสำเร็จแล้ว");
+  } catch (error) {
+    return handleActionError(error);
+  }
 }
 
 export async function updateEvent(prevState: any, formData: FormData) {
@@ -191,22 +188,35 @@ export async function updateEvent(prevState: any, formData: FormData) {
             }
         });
 
+        // Generate stable dbIds for the current operation
+        const processFieldId = (id: string | undefined) => {
+             if (!id) return undefined;
+             // ONLY append if it is exactly the raw string
+             if (id === "__name__" || id === "__email__") return `${id}_${crypto.randomUUID()}`;
+             return id;
+        };
+
+        const processedFields = formFields.map(f => ({
+            ...f,
+            dbId: processFieldId(f.id)
+        }));
+
         // 2. Smart Update for FormFields to preserve IDs (and thus data associations)
         // Delete fields NOT in the submitted list.
-        const currentFieldIds = formFields.map(f => f.id).filter(Boolean) as string[];
+        const currentFieldIdsToKeep = processedFields.map(f => f.dbId).filter(Boolean) as string[];
         
         await tx.formField.deleteMany({
             where: {
                 eventId: eventId,
-                id: { notIn: currentFieldIds }
+                id: { notIn: currentFieldIdsToKeep }
             }
         });
 
         // Upsert each field
-        for (const [index, field] of formFields.entries()) {
-            if (field.id && !field.id.startsWith("temp_")) {
+        for (const [index, field] of processedFields.entries()) {
+            if (field.dbId && !field.dbId.startsWith("temp_") && !field.dbId.startsWith("field-")) {
                 await tx.formField.upsert({
-                    where: { id: field.id },
+                    where: { id: field.dbId },
                     update: {
                         label: field.label,
                         type: field.type,
@@ -216,7 +226,7 @@ export async function updateEvent(prevState: any, formData: FormData) {
                         order: index
                     },
                     create: {
-                        id: field.id, // Use the ID generated by client if possible
+                        id: field.dbId, // Use the ID generated by client or our suffixed ID
                         eventId: eventId,
                         label: field.label,
                         type: field.type,
