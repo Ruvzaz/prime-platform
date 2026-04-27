@@ -12,10 +12,26 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  Cell as RechartsCell
 } from "recharts"
 import { FieldStat } from "@/app/actions/dashboard"
 
-const COLORS = ["#09090b", "#3f3f46", "#71717a", "#a1a1aa", "#d4d4d8", "#f4f4f5"]
+// Modern Premium Palette
+const COLORS = [
+  "#4f46e5", // Indigo
+  "#06b6d4", // Cyan
+  "#10b981", // Emerald
+  "#f59e0b", // Amber
+  "#ec4899", // Pink
+  "#8b5cf6", // Violet
+  "#f43f5e", // Rose
+]
+
+const GRADIENTS = [
+    { start: "#4f46e5", end: "#818cf8" },
+    { start: "#06b6d4", end: "#67e8f9" },
+    { start: "#10b981", end: "#34d399" }
+]
 
 export function CheckInPieChart({
   checkedIn,
@@ -37,19 +53,25 @@ export function CheckInPieChart({
           data={data}
           cx="50%"
           cy="50%"
-          labelLine={false}
-          label={({ percent }: { percent?: number }) =>
-            `${((percent || 0) * 100).toFixed(0)}%`
-          }
-          outerRadius={80}
-          fill="#8884d8"
+          innerRadius={60} // Donut style
+          outerRadius={100}
+          paddingAngle={5}
           dataKey="value"
+          animationDuration={1500}
         >
-          <Cell key="cell-0" fill="#09090b" /> {/* Foreground (Dark) for Checked In */}
-          <Cell key="cell-1" fill="#e4e4e7" /> {/* Muted (Light) for Not Arrived */}
+          <Cell key="cell-0" fill="#4f46e5" stroke="rgba(255,255,255,0.2)" /> {/* Indigo for Checked In */}
+          <Cell key="cell-1" fill="#e2e8f0" stroke="rgba(255,255,255,0.2)" /> {/* Muted for Not Arrived */}
         </Pie>
-        <Tooltip formatter={(value: any) => [value, "Attendees"]} />
-        <Legend verticalAlign="bottom" height={36} />
+        <Tooltip 
+            contentStyle={{ 
+                borderRadius: '12px', 
+                border: 'none', 
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(4px)'
+            }} 
+        />
+        <Legend verticalAlign="bottom" height={36} iconType="circle" />
       </PieChart>
     </ResponsiveContainer>
   )
@@ -58,20 +80,39 @@ export function CheckInPieChart({
 export function FieldBarChart({ field }: { field: FieldStat }) {
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={field.answers} margin={{ bottom: 20 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" />
+      <BarChart data={field.answers} margin={{ bottom: 40, top: 20 }}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
         <XAxis 
           dataKey="name" 
-          tick={false} // Hide X tick labels if too long, relying on tooltip or legend
           axisLine={false}
+          tickLine={false}
+          tick={{ fill: '#64748b', fontSize: 12 }}
+          interval={0}
+          angle={field.answers.length > 4 ? -25 : 0}
+          textAnchor={field.answers.length > 4 ? "end" : "middle"}
         />
-        <YAxis allowDecimals={false} axisLine={false} tickLine={false} />
+        <YAxis 
+            allowDecimals={false} 
+            axisLine={false} 
+            tickLine={false} 
+            tick={{ fill: '#94a3b8', fontSize: 11 }}
+        />
         <Tooltip 
-          cursor={{ fill: 'transparent' }}
-          contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7' }}
+          cursor={{ fill: '#f8fafc' }}
+          contentStyle={{ 
+            borderRadius: '12px', 
+            border: 'none', 
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+            padding: '10px 14px'
+          }}
         />
-        <Legend />
-        <Bar dataKey="value" name="Count" fill="#09090b" radius={[4, 4, 0, 0]}>
+        <Bar 
+            dataKey="value" 
+            name="Total" 
+            radius={[6, 6, 0, 0]}
+            barSize={field.answers.length > 5 ? 30 : 45}
+            animationDuration={1500}
+        >
           {field.answers.map((entry, index) => (
              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}

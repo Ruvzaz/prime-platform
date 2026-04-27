@@ -2,9 +2,10 @@
 import { getEventDashboardStats } from "@/app/actions/dashboard"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { CheckInPieChart, FieldBarChart } from "@/components/admin/event-dashboard-charts"
-import { ArrowLeft, Users, UserCheck, Percent } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { DashboardRefresher } from "@/components/admin/dashboard-refresher"
+import { Activity, ArrowLeft, Users, UserCheck, Percent } from "lucide-react"
 
 export default async function EventDashboardPage({
     params,
@@ -26,7 +27,8 @@ export default async function EventDashboardPage({
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
+            <DashboardRefresher />
             <div className="flex items-center gap-4">
                 <Link href="/events">
                     <Button variant="ghost" size="icon">
@@ -39,46 +41,49 @@ export default async function EventDashboardPage({
                         Real-time analytics for <strong>{stats.eventTitle}</strong>
                     </p>
                 </div>
+                <div className="ml-auto hidden md:flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1 rounded-full border">
+                    <Activity className="w-4 h-4 text-green-500 animate-pulse" />
+                    <span>Live Tracking</span>
+                </div>
             </div>
 
-            {/* TOP STATS ROW */}
-            <div className="grid gap-4 md:grid-cols-3">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Registrations</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.totalRegistrations}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Checked In</CardTitle>
-                        <UserCheck className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.totalCheckedIn}</div>
-                        <p className="text-xs text-muted-foreground">
-                            Attendees present
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Check-in Rate</CardTitle>
-                        <Percent className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.checkInRate.toFixed(1)}%</div>
-                        <div className="h-2 w-full bg-secondary mt-2 rounded-full overflow-hidden">
+            {/* TOP STATS ROW - PREMIUM THEME */}
+            <div className="grid gap-6 md:grid-cols-3">
+                {/* Registrations - Blue Card */}
+                <div className="bg-[#4a89c8] text-white p-6 rounded-[1.5rem] shadow-sm relative overflow-hidden group">
+                    <div className="w-10 h-10 rounded-xl bg-[#fae29c] flex items-center justify-center mb-4">
+                        <Users className="h-5 w-5 text-[#2c4059]" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Total Registrations</h3>
+                    <div className="text-4xl font-black">{stats.totalRegistrations}</div>
+                </div>
+
+                {/* Checked In - Blue Card */}
+                <div className="bg-[#4a89c8] text-white p-6 rounded-[1.5rem] shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-[#fae29c] flex items-center justify-center mb-4">
+                        <UserCheck className="h-5 w-5 text-[#2c4059]" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-white/90 mb-1">Checked In</h3>
+                    <div className="text-4xl font-black">{stats.totalCheckedIn}</div>
+                    <p className="text-xs text-white/70 mt-2">Active attendees</p>
+                </div>
+
+                {/* Check-in Rate - White/Ring Card */}
+                <div className="bg-white dark:bg-zinc-900 border border-border p-6 rounded-[1.5rem] shadow-sm flex flex-col justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-[#2c4059] flex items-center justify-center mb-4">
+                        <Percent className="h-5 w-5 text-[#fae29c]" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-semibold text-muted-foreground mb-1">Check-in Rate</h3>
+                        <div className="text-4xl font-black text-foreground">{stats.checkInRate.toFixed(1)}%</div>
+                        <div className="h-2 w-full bg-secondary mt-3 rounded-full overflow-hidden">
                             <div 
-                                className="h-full bg-primary transition-all duration-500" 
+                                className="h-full bg-primary transition-all duration-1000" 
                                 style={{ width: `${stats.checkInRate}%` }}
                             />
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">

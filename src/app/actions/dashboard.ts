@@ -59,7 +59,7 @@ export async function getEventDashboardStats(slug: string): Promise<EventDashboa
 
         registrations.forEach((reg) => {
           const data = reg.formData as Record<string, any>
-          const value = data[field.label] // Form builder uses label as key currently? Or ID? 
+          const value = data[field.id] || data[field.label]
           // *Correction*: In form-builder, we usually use ID or Label. 
           // Examining registration.ts/submit logic might be needed to confirm Key.
           // Assuming Label for now based on previous knowledge ("name", "email" are keys).
