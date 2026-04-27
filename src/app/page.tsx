@@ -1,6 +1,4 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Lock, Users, QrCode, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 export default function Home() {
   return (
