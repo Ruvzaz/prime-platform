@@ -149,7 +149,9 @@ export async function getRegistrations(
   eventId?: string, 
   page: number = 1, 
   pageSize: number = 10,
-  query: string = ""
+  query: string = "",
+  sortBy: string = "createdAt",
+  sortOrder: "asc" | "desc" = "desc"
 ) {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== 'ADMIN') {
@@ -191,7 +193,7 @@ export async function getRegistrations(
         where,
         skip: (page - 1) * pageSize,
         take: pageSize,
-        orderBy: { createdAt: "desc" },
+        orderBy: { [sortBy]: sortOrder },
         select: {
           id: true,
           referenceCode: true,

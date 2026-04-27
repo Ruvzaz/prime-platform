@@ -102,10 +102,12 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
   const currentEventId = searchParams.get("eventId") || "all"
   const currentPage = Number(searchParams.get("page")) || 1
   const currentQuery = searchParams.get("q") || ""
+  const currentSortBy = searchParams.get("sortBy") || "createdAt"
+  const currentSortOrder = searchParams.get("sortOrder") || "desc"
 
   // Local State for input (debounced update)
   const [searchTerm, setSearchTerm] = useState(currentQuery)
-  const debouncedSearchTerm = useDebounceValue(searchTerm, 500)
+  const debouncedSearchTerm = useDebounceValue(searchTerm, 2000)
 
   // Edit State
   const [editingRegistration, setEditingRegistration] = useState<any>(null)
@@ -175,6 +177,21 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
 
   const handlePageChange = (newPage: number) => {
       updateUrl({ page: newPage })
+  }
+
+  const toggleSort = (field: string) => {
+    if (currentSortBy === field) {
+        updateUrl({ sortOrder: currentSortOrder === "asc" ? "desc" : "asc", page: 1 })
+    } else {
+        updateUrl({ sortBy: field, sortOrder: "asc", page: 1 })
+    }
+  }
+
+  const SortIcon = ({ field }: { field: string }) => {
+    if (currentSortBy !== field) return <MoreHorizontal className="w-3 h-3 ml-1 opacity-20" />;
+    return currentSortOrder === "asc" 
+        ? <ChevronLeft className="w-3 h-3 ml-1 rotate-90" /> 
+        : <ChevronLeft className="w-3 h-3 ml-1 -rotate-90" />;
   }
 
   const [isExporting, setIsExporting] = useState(false)
@@ -341,11 +358,32 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                                 aria-label="Select all"
                             />
                         </TableHead>
-                        <TableHead>Ref Code</TableHead>
+                        <TableHead 
+                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                            onClick={() => toggleSort("referenceCode")}
+                        >
+                            <div className="flex items-center">
+                                Ref Code <SortIcon field="referenceCode" />
+                            </div>
+                        </TableHead>
                         <TableHead>Attendee</TableHead>
                         <TableHead>Event</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Reg. Status</TableHead>
+                        <TableHead 
+                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                            onClick={() => toggleSort("createdAt")}
+                        >
+                            <div className="flex items-center">
+                                Date <SortIcon field="createdAt" />
+                            </div>
+                        </TableHead>
+                        <TableHead 
+                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                            onClick={() => toggleSort("status")}
+                        >
+                            <div className="flex items-center">
+                                Reg. Status <SortIcon field="status" />
+                            </div>
+                        </TableHead>
                         <TableHead>Check-in</TableHead>
                         {/* Dynamic Headers for Display (if filtering to single event, otherwise might be empty) */}
                         {initialData[0]?.event.formFields && (

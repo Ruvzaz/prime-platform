@@ -8,17 +8,19 @@ import { Loader2 } from "lucide-react"
 export default async function RegistrationsPage({
     searchParams,
 }: {
-    searchParams: Promise<{ eventId?: string; page?: string; q?: string }>
+    searchParams: Promise<{ eventId?: string; page?: string; q?: string; sortBy?: string; sortOrder?: string }>
 }) {
     // Await search params in Next.js 15+ convention
     const params = await searchParams;
     const eventId = params.eventId || "all";
     const page = Number(params.page) || 1;
     const query = params.q || "";
+    const sortBy = params.sortBy || "createdAt";
+    const sortOrder = (params.sortOrder as "asc" | "desc") || "desc";
 
     // Fetch data in parallel
     const [registrationsData, events] = await Promise.all([
-        getRegistrations(eventId, page, 20, query), // Page size 20
+        getRegistrations(eventId, page, 20, query, sortBy, sortOrder), // Page size 20
         getEvents()
     ])
 

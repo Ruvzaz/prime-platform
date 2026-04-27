@@ -36,12 +36,30 @@ interface ResponseDataTableProps {
     initialEvents: Event[]
 }
 
+// Debounce hook
+function useDebounceValue<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+    return debouncedValue;
+}
+
 export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
     const [selectedEventId, setSelectedEventId] = useState<string>(initialEvents[0]?.id || "")
 
     const [isLoading, setIsLoading] = useState(false)
     const [registrations, setRegistrations] = useState<any[]>([])
     const [searchTerm, setSearchTerm] = useState("")
+    const [sortBy, setSortBy] = useState("createdAt")
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+    
+    const debouncedSearchTerm = useDebounceValue(searchTerm, 2000)
     
     // Edit Sheet State
     const [editingRegistration, setEditingRegistration] = useState<any>(null)
@@ -53,17 +71,13 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
         if (selectedEventId) {
             fetchData()
         }
-    }, [selectedEventId, searchTerm]) // Debounce search in real app, simplistic for now
+    }, [selectedEventId, debouncedSearchTerm, sortBy, sortOrder])
 
     const fetchData = async () => {
         setIsLoading(true)
         try {
-            // Reusing existing action, might need modification if we need strict all data?
-            // getRegistrations supports searching and event filtering.
-            // Note: it uses pagination by default (10 items). 
-            // For a data grid, we might want more, or implement pagination control. 
             // For now, let's fetch 50 items to fill the screen.
-            const result = await getRegistrations(selectedEventId, 1, 50, searchTerm)
+            const result = await getRegistrations(selectedEventId, 1, 50, debouncedSearchTerm, sortBy, sortOrder)
             setRegistrations(result.data)
         } catch (error) {
             console.error(error)
@@ -127,9 +141,30 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-muted/50 hover:bg-muted/50">
-                            <TableHead className="w-[100px]">Ref Code</TableHead>
+                            <TableHead 
+                                className="w-[100px] cursor-pointer hover:text-foreground transition-colors"
+                                onClick={() => {
+                                    if (sortBy === "referenceCode") setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                                    else { setSortBy("referenceCode"); setSortOrder("asc"); }
+                                }}
+                            >
+                                <div className="flex items-center gap-1">
+                                    Ref Code {sortBy === "referenceCode" && (sortOrder === "asc" ? "↑" : "↓")}
+                                </div>
+                            </TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead>Email</TableHead>
+                            <TableHead 
+                                className="cursor-pointer hover:text-foreground transition-colors"
+                                onClick={() => {
+                                    if (sortBy === "createdAt") setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                                    else { setSortBy("createdAt"); setSortOrder("desc"); }
+                                }}
+                            >
+                                <div className="flex items-center gap-1">
+                                    Date {sortBy === "createdAt" && (sortOrder === "asc" ? "↑" : "↓")}
+                                </div>
+                            </TableHead>
                             <TableHead>Check-in</TableHead>
                             {/* Dynamic Headers */}
                             {customFields.map((field: any) => (
