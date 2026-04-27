@@ -40,9 +40,11 @@ export function handleDatabaseError(error: unknown) {
  */
 export function handleActionError(error: unknown) {
   if (error instanceof z.ZodError) return handleValidationError(error);
+  if (error instanceof Prisma.PrismaClientKnownRequestError) return handleDatabaseError(error);
   
+  console.error("Unhandled Action Error:", error);
   return errorResult(
     ErrorCodes.INTERNAL_ERROR,
-    error instanceof Error ? error.message : "เกิดข้อผิดพลาดที่ไม่รู้จัก"
+    "เกิดข้อผิดพลาดภายในระบบ กรุณาลองใหม่อีกครั้ง"
   );
 }
