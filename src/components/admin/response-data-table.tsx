@@ -90,27 +90,10 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
 
     return (
         <div className="space-y-4">
-            {/* TOOLBAR */}
-            <div className="flex flex-col sm:flex-row justify-between gap-4">
-                <div className="flex flex-1 gap-2">
-                    {/* Event Selector */}
-                    <div className="w-[300px]">
-                        <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select event..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {initialEvents.map((event) => (
-                                    <SelectItem key={event.id} value={event.id}>
-                                        {event.title}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Search */}
-                    <div className="relative flex-1 max-w-sm">
+            {/* TOOLBAR (Matched with Registrations UI) */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-between transition-all">
+                 <div className="flex gap-2 items-center flex-1">
+                     <div className="relative flex-1 max-w-sm">
                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input 
                             placeholder="Search data..." 
@@ -118,10 +101,22 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                    </div>
+                     </div>
+                     <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+                        <SelectTrigger className="w-[200px]">
+                            <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
+                            <SelectValue placeholder="Filter by Event" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {initialEvents.map((event) => (
+                                <SelectItem key={event.id} value={event.id}>
+                                    {event.title}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
                 
-                {/* Actions */}
                 <Button variant="outline" disabled={isLoading} onClick={fetchData}>
                     Refresh
                 </Button>

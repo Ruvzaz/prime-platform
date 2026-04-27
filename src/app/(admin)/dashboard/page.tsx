@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { Button } from "@/components/ui/button"
 import { unstable_cache } from "next/cache"
 import { extractAttendeeInfo } from "@/lib/attendee-utils"
+import { DashboardRefresher } from "@/components/admin/dashboard-refresher"
 
 const getCachedCounts = unstable_cache(
   async () => {
@@ -15,7 +16,7 @@ const getCachedCounts = unstable_cache(
     return { eventCount, registrationCount, checkInCount }
   },
   ['dashboard-counts'],
-  { revalidate: 60 }
+  { revalidate: 5 }
 )
 
 async function getDashboardStats() {
@@ -36,6 +37,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
+      <DashboardRefresher />
       
       {/* HEADER */}
       <div className="flex items-center justify-between">
