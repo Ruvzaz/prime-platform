@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -19,9 +18,6 @@ export default async function EventsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Events</h2>
-          <p className="text-muted-foreground">
-            Manage your upcoming events and registrations.
-          </p>
         </div>
         <Button asChild>
           <Link href="/events/new">
@@ -33,9 +29,6 @@ export default async function EventsPage() {
       <Card>
         <CardHeader>
           <CardTitle>All Events</CardTitle>
-          <CardDescription>
-            A list of all events managed by Prime Digital.
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <EventsTable initialEvents={events} />
