@@ -43,7 +43,6 @@ export default async function DashboardPage() {
       <div className="flex items-center justify-between">
          <div>
             <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
-             <p className="text-muted-foreground mt-1">Real-time insights and performance metrics.</p>
          </div>
          <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1 rounded-full border">
             <Activity className="w-4 h-4 text-green-500 animate-pulse" />
