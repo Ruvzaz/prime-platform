@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { logout } from "@/app/actions/auth"
 import { auth } from "@/auth"
-import { LayoutDashboard, Calendar, Users, Settings, LogOut, QrCode, Table } from "lucide-react"
+import { LayoutDashboard, Calendar, Users, LogOut, QrCode, Table } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"

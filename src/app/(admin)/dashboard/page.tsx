@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Users, CalendarCheck, UserCheck, ArrowUpRight, TrendingUp, Activity } from "lucide-react"
+import { Users, CalendarCheck, UserCheck, Activity } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 import { Button } from "@/components/ui/button"
 import { unstable_cache } from "next/cache"

@@ -4,7 +4,6 @@ import { useState } from "react"
 import Link from "next/link"
 import { Calendar, MapPin, Users, Trash2, MoreHorizontal, BarChart3, Radio, Pencil, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DeleteConfirmDialog } from "@/components/admin/delete-confirm-dialog"
 import {
