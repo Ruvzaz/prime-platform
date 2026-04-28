@@ -163,7 +163,7 @@ export function EventForm({ action, initialData }: EventFormProps) {
 
             <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-background/50">
               <div className="space-y-0.5">
-                <Label htmlFor="isActive" className="text-base font-semibold">สถานะเปิดรับสมัคร (Registration Status)</Label>
+                <Label htmlFor="isActive" className="text-sm font-semibold">สถานะเปิดรับสมัคร (Registration Status)</Label>
                 <p className="text-sm text-muted-foreground">
                   เลื่อนปิดเพื่อหยุดรับการเชื่อมต่อใหม่และแสดงหน้าประกาศ "ปิดรับสมัคร"
                 </p>

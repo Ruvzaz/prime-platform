@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import { Noto_Sans_Thai } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 
-const notoSansThai = Noto_Sans_Thai({
-  subsets: ["latin", "thai"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-sans",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-plus-jakarta",
   display: "swap",
 });
 
@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="th" suppressHydrationWarning>
       <body
-        className={`${notoSansThai.variable} font-sans antialiased`}
+        className={`${plusJakartaSans.variable} font-sans antialiased`}
       >
         <ThemeProvider
           attribute="class"

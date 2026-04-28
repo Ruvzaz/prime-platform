@@ -196,11 +196,11 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
           <SheetHeader className="p-6 border-b bg-muted/10 space-y-4 text-left">
              <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-base">
                         {initials}
                     </div>
                     <div>
-                        <SheetTitle className="text-lg font-semibold leading-tight">{name}</SheetTitle>
+                        <SheetTitle className="text-base font-semibold leading-tight">{name}</SheetTitle>
                         <p className="text-sm text-muted-foreground">{email}</p>
                     </div>
                 </div>

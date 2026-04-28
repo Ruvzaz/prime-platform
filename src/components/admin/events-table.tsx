@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Calendar, MapPin, Users, Trash2, MoreHorizontal, BarChart3, Radio, Pencil, Globe } from "lucide-react"
+import { Calendar, MapPin, Users, Trash2, MoreHorizontal, BarChart3, Radio, Pencil, Globe, AlertCircle, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
 import { DeleteConfirmDialog } from "@/components/admin/delete-confirm-dialog"
 import {
   Table,
@@ -90,37 +91,40 @@ export function EventsTable({ initialEvents }: EventsTableProps) {
     <div className="relative">
       {/* FLOATING ACTION BAR */}
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-foreground text-background px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 z-50 animate-in slide-in-from-bottom-5">
-            <span className="font-medium text-sm">{selectedIds.length} selected</span>
-            <div className="h-4 w-px bg-background/20" />
-            <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={() => openDeleteDialog(selectedIds)} 
-                disabled={isDeleting}
-                className="hover:bg-red-600"
-            >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Selected
-            </Button>
-            <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setSelectedIds([])}
-                className="text-background hover:bg-background/20 hover:text-white"
-            >
-                Cancel
-            </Button>
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-6 z-50 animate-in slide-in-from-bottom-10 duration-500 border border-white/10 backdrop-blur-xl bg-opacity-90">
+            <span className="font-bold text-sm tracking-wide">{selectedIds.length} items selected</span>
+            <div className="h-6 w-px bg-white/20" />
+            <div className="flex gap-2">
+                <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    onClick={() => openDeleteDialog(selectedIds)} 
+                    disabled={isDeleting}
+                    className="rounded-xl h-10 px-6 font-bold shadow-lg shadow-destructive/20"
+                >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                </Button>
+                <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setSelectedIds([])}
+                    className="text-white hover:bg-white/10 rounded-xl h-10 px-6 font-bold"
+                >
+                    Cancel
+                </Button>
+            </div>
         </div>
       )}
 
       <Table>
         <TableHeader>
-          <TableRow>
-            <TableHead className="w-[50px]">
+          <TableRow className="bg-slate-50/30 hover:bg-slate-50/30 border-b-border/40">
+            <TableHead className="w-[60px] px-8">
                 <Checkbox 
                     checked={selectedIds.length === initialEvents.length && initialEvents.length > 0}
                     onCheckedChange={toggleSelectAll}
+                    className="rounded-md"
                 />
             </TableHead>
             <TableHead>Event Name</TableHead>
@@ -128,100 +132,106 @@ export function EventsTable({ initialEvents }: EventsTableProps) {
             <TableHead>Date</TableHead>
             <TableHead>Location</TableHead>
             <TableHead className="text-right">Registrations</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="text-right px-8">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {initialEvents.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-                No events found. Create your first one.
+              <TableCell colSpan={7} className="text-center py-32 text-muted-foreground bg-slate-50/10">
+                <div className="flex flex-col items-center gap-3">
+                    <Calendar className="w-12 h-12 opacity-10" />
+                    <p className="text-base font-medium">No events found</p>
+                    <p className="text-sm opacity-70">Get started by creating your first event.</p>
+                </div>
               </TableCell>
             </TableRow>
           ) : (
             initialEvents.map((event) => (
-              <TableRow key={event.id} data-state={selectedIds.includes(event.id) ? "selected" : undefined}>
-                <TableCell>
+              <TableRow key={event.id} className="group hover:bg-slate-50/50 border-b-border/30" data-state={selectedIds.includes(event.id) ? "selected" : undefined}>
+                <TableCell className="px-8">
                     <Checkbox 
                         checked={selectedIds.includes(event.id)}
                         onCheckedChange={() => toggleSelect(event.id)}
+                        className="rounded-md"
                     />
                 </TableCell>
-                <TableCell className="font-medium">
+                <TableCell className="font-bold text-slate-900 dark:text-white">
                   <div className="flex flex-col">
-                    <span>{event.title}</span>
-                    <span className="text-xs text-muted-foreground">/{event.slug}</span>
+                    <span className="text-sm">{event.title}</span>
+                    <span className="text-[10px] font-black text-primary/50 uppercase tracking-tighter">/{event.slug}</span>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <Switch 
                       checked={event.isActive}
                       disabled={togglingId === event.id}
                       onCheckedChange={() => handleToggleStatus(event.id, event.isActive)}
+                      className="data-[state=checked]:bg-emerald-500 shadow-sm"
                     />
-                    {event.isActive ? (
-                      <span className="text-sm text-muted-foreground mr-1">Active</span>
-                    ) : (
-                      <span className="text-sm text-muted-foreground mr-1">Closed</span>
-                    )}
+                    <Badge variant="outline" className={`
+                        rounded-full px-3 py-0.5 border-none shadow-sm font-bold text-[10px]
+                        ${event.isActive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}
+                    `}>
+                        {event.isActive ? 'Active' : 'Closed'}
+                    </Badge>
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <Calendar className="mr-2 h-4 w-4" />
+                <TableCell className="text-slate-600 dark:text-slate-400 font-medium">
+                  <div className="flex items-center">
+                    <Calendar className="mr-2 h-4 w-4 opacity-40" />
                     {new Date(event.startDate).toLocaleDateString()}
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <MapPin className="mr-2 h-4 w-4" />
+                <TableCell className="text-slate-600 dark:text-slate-400 font-medium">
+                  <div className="flex items-center">
+                    <MapPin className="mr-2 h-4 w-4 opacity-40" />
                     {event.location || "Online"}
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex items-center justify-end text-sm">
-                    <Users className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-center justify-end font-bold text-slate-900 dark:text-white">
+                    <Users className="mr-2 h-4 w-4 text-primary opacity-50" />
                     {event._count?.registrations || 0}
                   </div>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right px-8">
                    <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
+                        <Button variant="ghost" className="h-9 w-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                          <MoreHorizontal className="h-5 w-5 text-slate-400" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="rounded-xl shadow-xl border-border/50">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem asChild>
+                        <DropdownMenuItem className="rounded-lg" asChild>
                           <Link href={`/events/${event.slug}/dashboard`}>
                             <BarChart3 className="mr-2 h-4 w-4" />
                             Dashboard
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
+                        <DropdownMenuItem className="rounded-lg" asChild>
                             <Link href={`/live/${event.slug}`} target="_blank">
                                 <Radio className="mr-2 h-4 w-4" />
                                 Live View
                             </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
+                        <DropdownMenuItem className="rounded-lg" asChild>
                             <Link href={`/events/${event.id}/edit`}>
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Edit Event
                             </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
+                        <DropdownMenuItem className="rounded-lg" asChild>
                              <Link href={`/events/${event.slug}`}>
                                 <Globe className="mr-2 h-4 w-4" />
-                                View Public Page
+                                Public Page
                              </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
-                            className="text-red-600 focus:text-red-600"
+                            className="text-rose-600 focus:text-rose-600 rounded-lg"
                             onClick={() => openDeleteDialog([event.id])}
                         >
                             <Trash2 className="mr-2 h-4 w-4" />
