@@ -44,7 +44,7 @@ export default async function EventRegistrationPage({
         
         {/* Banner Block */}
         {event.imageUrl && (
-          <div className="w-full aspect-[212/100] relative bg-muted/20 border-b border-border/40 overflow-hidden shrink-0">
+          <div className="w-full aspect-[177/100] relative bg-muted/20 border-b border-border/40 overflow-hidden shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
               src={event.imageUrl} 
