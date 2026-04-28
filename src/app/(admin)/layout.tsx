@@ -34,7 +34,7 @@ export default async function AdminLayout({
     <SidebarProvider defaultOpen={defaultOpen}>
       <div className="flex min-h-screen w-full font-sans text-sm">
         <AppSidebar userName={session?.user?.name} userRole={session?.user?.role} />
-        <SidebarInset className="bg-[#F8FAFC] dark:bg-background">
+        <SidebarInset className="bg-[#F8FAFC] dark:bg-background min-w-0 overflow-hidden">
           {/* Neo-Minimalist Top Bar */}
           <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear glass border-b border-border/40 px-6">
             <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-primary transition-colors" />
@@ -60,7 +60,7 @@ export default async function AdminLayout({
             </div>
           </header>
           
-          <main className="p-6 md:p-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <main className="p-6 md:p-8 animate-in fade-in slide-in-from-bottom-2 duration-500 min-w-0 w-full overflow-hidden">
             {children}
           </main>
         </SidebarInset>

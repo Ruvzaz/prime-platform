@@ -14,7 +14,7 @@ export default async function EventsPage() {
   const events = await getEvents()
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500 max-w-[1600px] mx-auto">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-1">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Events</h1>

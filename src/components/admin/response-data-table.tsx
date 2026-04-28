@@ -142,7 +142,7 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
             </div>
 
             {/* DATA TABLE */}
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto w-full max-w-full">
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-slate-50/30 hover:bg-slate-50/30 border-b-border/40">
@@ -171,7 +171,7 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                             </TableHead>
                             <TableHead className="w-[120px]">Check-in</TableHead>
                             {customFields.map((field: any) => (
-                                <TableHead key={field.id} className="min-w-[150px] w-[200px]">
+                                <TableHead key={field.id} className="min-w-[150px] max-w-[250px] truncate" title={field.label}>
                                     {field.label}
                                 </TableHead>
                             ))}
