@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { ResponseDataTable } from "../../../components/admin/response-data-table"
 import { Users } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
 
 export const dynamic = 'force-dynamic'
 
@@ -33,21 +34,23 @@ export default async function ResponsesPage() {
         </div>
       </div>
       
-      <div className="w-full max-w-full bg-white dark:bg-slate-900/50 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-border/50 overflow-hidden">
-          {events.length > 0 ? (
-             <ResponseDataTable 
-                initialEvents={events} 
-             />
-          ) : (
-             <div className="flex flex-col items-center justify-center py-32 text-muted-foreground">
-                 <div className="w-20 h-20 rounded-3xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-6 shadow-inner">
-                    <Users className="w-10 h-10 opacity-30" />
+      <Card className="border-none shadow-2xl shadow-slate-200/60 dark:shadow-none dark:bg-slate-900/50 rounded-[2rem] overflow-hidden">
+          <CardContent className="p-0">
+              {events.length > 0 ? (
+                 <ResponseDataTable 
+                    initialEvents={events} 
+                 />
+              ) : (
+                 <div className="flex flex-col items-center justify-center py-32 text-muted-foreground">
+                     <div className="w-20 h-20 rounded-3xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-6 shadow-inner">
+                        <Users className="w-10 h-10 opacity-30" />
+                     </div>
+                     <p className="text-lg font-medium">No events found.</p>
+                     <p className="text-sm opacity-70 mt-1">Create an event to begin collecting and viewing responses.</p>
                  </div>
-                 <p className="text-lg font-medium">No events found.</p>
-                 <p className="text-sm opacity-70 mt-1">Create an event to begin collecting and viewing responses.</p>
-             </div>
-          )}
-      </div>
+              )}
+          </CardContent>
+      </Card>
     </div>
   )
 }
