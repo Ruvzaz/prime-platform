@@ -210,6 +210,9 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                                     <TableCell className="text-muted-foreground">
                                         {email}
                                     </TableCell>
+                                    <TableCell className="text-xs text-muted-foreground">
+                                        {new Date(reg.createdAt).toLocaleDateString()}
+                                    </TableCell>
                                     <TableCell>
                                         {reg.checkIn ? (
                                             <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
