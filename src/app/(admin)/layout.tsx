@@ -36,24 +36,26 @@ export default async function AdminLayout({
         <AppSidebar userName={session?.user?.name} userRole={session?.user?.role} />
         <SidebarInset className="bg-[#F8FAFC] dark:bg-background">
           {/* Neo-Minimalist Top Bar */}
-          <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear glass border-b border-border/50 px-6">
-            <SidebarTrigger className="-ml-1" />
-            <div className="flex-1 ml-4 hidden md:flex max-w-sm relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear glass border-b border-border/40 px-6">
+            <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-primary transition-colors" />
+            <div className="w-px h-6 bg-border/40 mx-2 hidden md:block" />
+            
+            <div className="flex-1 ml-2 hidden md:flex max-w-md relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input 
                 placeholder="Search everything..." 
-                className="pl-10 bg-white/50 border-none shadow-none ring-1 ring-border/50 focus-visible:ring-primary/20 focus-visible:bg-white transition-all w-full h-10 rounded-xl"
+                className="pl-10 bg-slate-100/50 dark:bg-slate-800/50 border-none shadow-none ring-1 ring-border/50 focus-visible:ring-primary/20 focus-visible:bg-white dark:focus-visible:bg-slate-900 transition-all w-full h-10 rounded-xl"
               />
             </div>
             
             <div className="ml-auto flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all">
                 <Bell className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all">
                 <Settings className="h-5 w-5" />
               </Button>
-              <div className="w-px h-6 bg-border/50 mx-2" />
+              <div className="w-px h-6 bg-border/40 mx-2" />
               <ThemeToggle />
             </div>
           </header>
@@ -73,15 +75,21 @@ function AppSidebar({ userName, userRole }: { userName?: string | null; userRole
   const initials = displayName.substring(0, 1).toUpperCase()
 
   return (
-    <Sidebar className="border-r border-border/50">
-      <SidebarHeader className="h-16 flex items-center px-6">
-        <Link href="/dashboard" className="flex items-center gap-2 group">
-          <div className="size-8 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
-            <Calendar className="size-4" />
+    <Sidebar className="border-r border-border/40" collapsible="icon">
+      <SidebarHeader className="h-20 flex items-center px-6 group-data-[state=collapsed]:px-2 transition-[padding] duration-300">
+        <Link href="/dashboard" className="flex items-center gap-3">
+          <div className="relative flex items-center transition-transform duration-300 hover:scale-[1.02]">
+            <img 
+              src="/logo.svg" 
+              alt="Prime Digital Consultant" 
+              className="h-10 w-auto object-contain dark:brightness-200 group-data-[state=collapsed]:hidden" 
+            />
+            <img 
+              src="/logo-icon.svg" 
+              alt="P" 
+              className="h-8 w-8 object-contain dark:brightness-200 hidden group-data-[state=collapsed]:block mx-auto" 
+            />
           </div>
-          <span className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/70">
-            Prime<span className="text-primary">Admin</span>
-          </span>
         </Link>
       </SidebarHeader>
       <SidebarContent className="px-3">
