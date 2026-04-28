@@ -76,18 +76,18 @@ function AppSidebar({ userName, userRole }: { userName?: string | null; userRole
 
   return (
     <Sidebar className="border-r border-border/40" collapsible="icon">
-      <SidebarHeader className="h-20 flex items-center px-6 group-data-[state=collapsed]:px-2 transition-[padding] duration-300">
+      <SidebarHeader className="h-16 group-data-[state=expanded]:h-20 flex items-center px-6 group-data-[state=collapsed]:px-0 group-data-[state=collapsed]:justify-center transition-all duration-300">
         <Link href="/dashboard" className="flex items-center gap-3">
           <div className="relative flex items-center transition-transform duration-300 hover:scale-[1.02]">
             <img 
               src="/logo.svg" 
               alt="Prime Digital Consultant" 
-              className="h-10 w-auto object-contain dark:brightness-200 group-data-[state=collapsed]:hidden" 
+              className="h-9 w-auto object-contain dark:brightness-200 group-data-[state=collapsed]:hidden" 
             />
             <img 
               src="/logo-icon.svg" 
               alt="P" 
-              className="h-8 w-8 object-contain dark:brightness-200 hidden group-data-[state=collapsed]:block mx-auto" 
+              className="h-6 w-6 object-contain dark:brightness-200 hidden group-data-[state=collapsed]:block" 
             />
           </div>
         </Link>
@@ -138,21 +138,21 @@ function AppSidebar({ userName, userRole }: { userName?: string | null; userRole
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="p-4">
-        <div className="p-4 rounded-2xl bg-secondary/50 border border-border/50 backdrop-blur-sm">
-            <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold shadow-inner">
+      <SidebarFooter className="p-3 group-data-[state=collapsed]:p-1.5 transition-all duration-300">
+        <div className="p-3 group-data-[state=collapsed]:p-1 rounded-2xl bg-secondary/50 border border-border/50 backdrop-blur-sm transition-all duration-300">
+            <div className="flex items-center gap-3 group-data-[state=collapsed]:gap-0 mb-4 group-data-[state=collapsed]:mb-1">
+                <div className="w-10 h-10 group-data-[state=collapsed]:w-8 group-data-[state=collapsed]:h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold shadow-inner shrink-0 transition-all">
                     {initials}
                 </div>
-                <div className="overflow-hidden">
+                <div className="overflow-hidden group-data-[state=collapsed]:w-0 group-data-[state=collapsed]:opacity-0 transition-all duration-300">
                     <p className="text-sm font-semibold truncate">{displayName}</p>
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">{displayRole}</p>
                 </div>
             </div>
             <form action={logout}>
-                <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 h-9 rounded-xl" size="sm">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
+                <Button variant="ghost" className="w-full justify-start group-data-[state=collapsed]:justify-center text-destructive hover:text-destructive hover:bg-destructive/10 h-9 group-data-[state=collapsed]:h-8 rounded-xl transition-all" size="sm">
+                    <LogOut className="mr-2 group-data-[state=collapsed]:mr-0 h-4 w-4" />
+                    <span className="group-data-[state=collapsed]:hidden">Sign Out</span>
                 </Button>
             </form>
         </div>
