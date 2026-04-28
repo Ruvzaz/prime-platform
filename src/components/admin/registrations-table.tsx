@@ -288,25 +288,25 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-0">
         {/* FILTERS & EXPORT */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-between transition-all">
-             <div className="flex gap-2 items-center flex-1">
-                 <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <div className="flex flex-col md:flex-row gap-4 justify-between md:items-center transition-all p-6 px-8 bg-white dark:bg-slate-900 border-b border-border/50">
+             <div className="flex flex-col sm:flex-row gap-3 sm:items-center flex-1">
+                 <div className="relative w-full sm:max-w-md">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input 
-                        placeholder="Search ref code..." 
-                        className="pl-8" 
+                        placeholder="Search by reference code..." 
+                        className="pl-10 h-11 w-full rounded-xl bg-slate-50 border-none shadow-none focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-primary/20 transition-all" 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                  </div>
                  <Select value={currentEventId} onValueChange={handleEventChange}>
-                    <SelectTrigger className="w-[200px]">
+                    <SelectTrigger className="w-full sm:w-[240px] h-11 rounded-xl bg-slate-50 border-none shadow-none focus:ring-1 focus:ring-primary/20 transition-all">
                         <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
                         <SelectValue placeholder="Filter by Event" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-xl border-border/50 shadow-xl">
                         <SelectItem value="all">All Events</SelectItem>
                         {events.map(e => (
                             <SelectItem key={e.id} value={e.id}>{e.title}</SelectItem>
@@ -314,32 +314,37 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                     </SelectContent>
                  </Select>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
                 {selectedIds.length > 0 && (
                      <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
+                            <Button variant="destructive" size="default" className="rounded-xl h-11 px-6 shadow-lg shadow-destructive/10">
                                 <Trash2 className="w-4 h-4 mr-2" />
-                                Delete Selected ({selectedIds.length})
+                                Delete ({selectedIds.length})
                             </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl p-8">
                             <AlertDialogHeader>
-                                <AlertDialogTitle>คุณแน่ใจหรือไม่?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    การกระทำนี้จะลบข้อมูลผู้ลงทะเบียน <b>{selectedIds.length} รายการ</b> ออกจากระบบอย่างถาวร (Hard Delete) ไม่สามารถกู้คืนได้
+                                <AlertDialogTitle className="text-xl font-bold">ยืนยันการลบข้อมูล</AlertDialogTitle>
+                                <AlertDialogDescription className="text-sm mt-2">
+                                    การกระทำนี้จะลบข้อมูลผู้ลงทะเบียน <span className="text-destructive font-bold">{selectedIds.length} รายการ</span> ออกจากระบบอย่างถาวร ไม่สามารถกู้คืนได้
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDeleteSelected} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
-                                    {isDeleting ? "กำลังลบ..." : "ลบข้อมูลอย่างถาวร"}
+                            <AlertDialogFooter className="mt-6 gap-3">
+                                <AlertDialogCancel className="rounded-xl h-11 px-6">ยกเลิก</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteSelected} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-xl h-11 px-6 shadow-lg shadow-destructive/10">
+                                    {isDeleting ? "กำลังลบ..." : "ลบข้อมูลถาวร"}
                                 </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
                      </AlertDialog>
                 )}
-                <Button variant="outline" onClick={exportCSV} disabled={isExporting}>
+                
+                <div className="hidden sm:flex items-center justify-center text-sm font-bold bg-white dark:bg-slate-800 px-5 h-11 rounded-xl border border-border/50 shadow-sm">
+                    Total: <span className="text-primary ml-1.5">{metadata.total.toLocaleString()}</span>
+                </div>
+
+                <Button variant="outline" className="rounded-xl h-11 px-6 border-border/60 hover:bg-slate-50 shadow-sm" onClick={exportCSV} disabled={isExporting}>
                     <Download className={`mr-2 h-4 w-4 ${isExporting ? 'animate-bounce' : ''}`} />
                     {isExporting ? "Exporting..." : "Export CSV"}
                 </Button>
@@ -347,29 +352,30 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
         </div>
 
         {/* TABLE */}
-        <div className="rounded-md border">
+        <div className="overflow-x-auto">
             <Table>
                 <TableHeader>
-                    <TableRow>
-                        <TableHead className="w-[50px]">
+                    <TableRow className="bg-slate-50/30 hover:bg-slate-50/30 border-b-border/40">
+                        <TableHead className="w-[60px] px-8">
                             <Checkbox 
                                 checked={initialData.length > 0 && selectedIds.length === initialData.length}
                                 onCheckedChange={toggleSelectAll}
                                 aria-label="Select all"
+                                className="rounded-md"
                             />
                         </TableHead>
                         <TableHead 
-                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                            className="min-w-[150px] cursor-pointer hover:bg-slate-100/50 transition-colors"
                             onClick={() => toggleSort("referenceCode")}
                         >
                             <div className="flex items-center">
                                 Ref Code <SortIcon field="referenceCode" />
                             </div>
                         </TableHead>
-                        <TableHead>Attendee</TableHead>
-                        <TableHead>Event</TableHead>
+                        <TableHead className="min-w-[200px]">Attendee</TableHead>
+                        <TableHead className="min-w-[200px]">Event</TableHead>
                         <TableHead 
-                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                            className="min-w-[140px] cursor-pointer hover:bg-slate-100/50 transition-colors"
                             onClick={() => toggleSort("createdAt")}
                         >
                             <div className="flex items-center">
@@ -377,109 +383,88 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                             </div>
                         </TableHead>
                         <TableHead 
-                            className="cursor-pointer hover:bg-muted/50 transition-colors"
+                            className="w-[120px] cursor-pointer hover:bg-slate-100/50 transition-colors"
                             onClick={() => toggleSort("status")}
                         >
                             <div className="flex items-center">
-                                Reg. Status <SortIcon field="status" />
+                                Status <SortIcon field="status" />
                             </div>
                         </TableHead>
-                        <TableHead>Check-in</TableHead>
-                        {/* Dynamic Headers for Display (if filtering to single event, otherwise might be empty) */}
-                        {initialData[0]?.event.formFields && (
-                            getStandardFieldIds(initialData[0].event.formFields).length > 0 && 
-                            currentEventId !== "all" 
-                            ? initialData[0].event.formFields
-                                .filter(f => !getStandardFieldIds(initialData[0].event.formFields).includes(f.id))
-                                .map(field => (
-                                    <TableHead key={field.id}>{field.label}</TableHead>
-                                ))
-                            : null
-                        )}
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="w-[120px]">Check-in</TableHead>
+
+                        <TableHead className="text-right px-8 w-[100px]">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {initialData.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={8} className="text-center h-24 text-muted-foreground">
-                                No registrations found.
+                            <TableCell colSpan={10} className="text-center h-64 text-muted-foreground bg-slate-50/10">
+                                <div className="flex flex-col items-center gap-3">
+                                    <AlertCircle className="w-10 h-10 opacity-20" />
+                                    <p className="text-lg font-medium">No registrations found</p>
+                                    <p className="text-sm opacity-70">Try adjusting your filters or search terms.</p>
+                                </div>
                             </TableCell>
                         </TableRow>
                     ) : (
                         initialData.map((reg) => {
                             const { name, email } = extractAttendeeInfo(reg.formData as Record<string, unknown>, reg.event.formFields)
                             return (
-                                <TableRow key={reg.id} data-state={selectedIds.includes(reg.id) && "selected"}>
-                                    <TableCell>
+                                <TableRow key={reg.id} className="group hover:bg-slate-50/50 border-b-border/30" data-state={selectedIds.includes(reg.id) && "selected"}>
+                                    <TableCell className="px-8">
                                         <Checkbox 
                                             checked={selectedIds.includes(reg.id)}
                                             onCheckedChange={() => toggleSelect(reg.id)}
                                             aria-label="Select row"
+                                            className="rounded-md"
                                         />
                                     </TableCell>
-                                    <TableCell className="font-mono text-xs">{reg.referenceCode}</TableCell>
+                                    <TableCell className="font-mono text-xs font-bold text-slate-500">{reg.referenceCode}</TableCell>
                                     <TableCell>
                                         <div className="flex flex-col">
-                                            <span className="font-medium">{name}</span>
-                                            <span className="text-xs text-muted-foreground">{email}</span>
+                                            <span className="font-bold text-slate-900 dark:text-white">{name}</span>
+                                            <span className="text-xs text-muted-foreground font-medium">{email}</span>
                                         </div>
                                     </TableCell>
-                                    <TableCell>{reg.event.title}</TableCell>
-                                    <TableCell>{new Date(reg.createdAt).toLocaleDateString()}</TableCell>
+                                    <TableCell className="font-semibold text-slate-700 dark:text-slate-300">{reg.event.title}</TableCell>
+                                    <TableCell className="text-slate-600 dark:text-slate-400 font-medium">{new Date(reg.createdAt).toLocaleDateString()}</TableCell>
                                     <TableCell>
                                         <Badge variant="outline" className={`
-                                            ${reg.status === 'CONFIRMED' ? 'bg-green-50 text-green-700 border-green-200' : ''}
-                                            ${reg.status === 'PENDING' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : ''}
-                                            ${reg.status === 'CANCELLED' ? 'bg-red-50 text-red-700 border-red-200' : ''}
+                                            rounded-full px-3 py-0.5 border-none shadow-sm font-bold text-[10px]
+                                            ${reg.status === 'CONFIRMED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' : ''}
+                                            ${reg.status === 'PENDING' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : ''}
+                                            ${reg.status === 'CANCELLED' ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : ''}
                                         `}>
                                             {reg.status}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
                                         {reg.checkIn ? (
-                                            <div className="flex flex-col">
-                                                <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200 w-fit">
+                                            <div className="flex flex-col gap-1">
+                                                <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400 hover:bg-indigo-100 border-none shadow-sm rounded-full px-3 py-0.5 font-bold text-[10px] w-fit">
                                                     Checked In
                                                 </Badge>
-                                                <span className="text-[10px] text-muted-foreground mt-1">
+                                                <span className="text-[10px] text-muted-foreground font-bold tracking-tight px-1">
                                                     {new Date(reg.checkIn.scannedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                                 </span>
                                             </div>
                                         ) : (
-                                            <span className="text-muted-foreground text-sm">-</span>
+                                            <span className="text-muted-foreground/40 font-bold ml-4">—</span>
                                         )}
                                     </TableCell>
                                     
-                                    {/* Dynamic Cells (matched with above headers) */}
-                                    {currentEventId !== "all" && reg.event.formFields && (
-                                        reg.event.formFields
-                                            .filter(f => !getStandardFieldIds(reg.event.formFields).includes(f.id))
-                                            .map(field => {
-                                                const val = (reg.formData as any)?.[field.label] || (reg.formData as any)?.[field.id]
-                                                const displayVal = Array.isArray(val) ? val.join(", ") : val
-                                                return (
-                                                    <TableCell 
-                                                        key={field.id} 
-                                                        className="text-sm max-w-[200px] truncate"
-                                                        title={typeof displayVal === 'string' ? displayVal : ''}
-                                                    >
-                                                        {displayVal || <span className="text-muted-foreground/30">-</span>}
-                                                    </TableCell>
-                                                )
-                                            })
-                                    )}
-                                    <TableCell className="text-right">
+
+                                    <TableCell className="text-right px-8">
                                       <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                          <Button variant="ghost" className="h-8 w-8 p-0">
-                                            <span className="sr-only">Open menu</span>
-                                            <MoreHorizontal className="h-4 w-4" />
+                                          <Button variant="ghost" className="h-9 w-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                            <MoreHorizontal className="h-5 w-5 text-slate-400" />
                                           </Button>
                                         </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
+                                        <DropdownMenuContent align="end" className="rounded-xl shadow-xl border-border/50">
                                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                           <DropdownMenuItem
+                                            className="rounded-lg"
                                             onClick={() => {
                                               navigator.clipboard.writeText(reg.referenceCode)
                                             }}
@@ -487,7 +472,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                                             <Copy className="mr-2 h-4 w-4" />
                                             Copy Ref Code
                                           </DropdownMenuItem>
-                                          <DropdownMenuItem onClick={() => {
+                                          <DropdownMenuItem className="rounded-lg" onClick={() => {
                                               setEditingRegistration(reg)
                                               setIsEditOpen(true)
                                           }}>
@@ -506,26 +491,28 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
         </div>
 
         {/* PAGINATION CONTROLS */}
-        <div className="flex items-center justify-between px-2">
-            <div className="text-sm text-muted-foreground">
-                Page {metadata.page} of {metadata.totalPages} ({metadata.total} total)
+        <div className="flex items-center justify-between p-6 px-8 bg-slate-50/50 dark:bg-slate-800/20 border-t border-border/40">
+            <div className="text-sm font-bold text-muted-foreground bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-border/40">
+                Page <span className="text-primary">{metadata.page}</span> of <span className="text-primary">{metadata.totalPages}</span>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
                 <Button 
                     variant="outline" 
-                    size="sm" 
+                    size="default" 
+                    className="rounded-xl h-10 px-6 border-border/50 bg-white hover:bg-slate-50 transition-all font-bold shadow-sm"
                     onClick={() => handlePageChange(Math.max(1, metadata.page - 1))}
                     disabled={metadata.page <= 1}
                 >
-                    <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+                    <ChevronLeft className="h-4 w-4 mr-2" /> Previous
                 </Button>
                 <Button 
                     variant="outline" 
-                    size="sm" 
+                    size="default" 
+                    className="rounded-xl h-10 px-6 border-border/50 bg-white hover:bg-slate-50 transition-all font-bold shadow-sm"
                     onClick={() => handlePageChange(Math.min(metadata.totalPages, metadata.page + 1))}
                     disabled={metadata.page >= metadata.totalPages}
                 >
-                    Next <ChevronRight className="h-4 w-4 ml-1" />
+                    Next <ChevronRight className="h-4 w-4 ml-2" />
                 </Button>
             </div>
         </div>

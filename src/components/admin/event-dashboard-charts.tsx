@@ -11,8 +11,7 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
-  YAxis,
-  Cell as RechartsCell
+  YAxis
 } from "recharts"
 import { FieldStat } from "@/app/actions/dashboard"
 

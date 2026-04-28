@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Users, CalendarCheck, UserCheck, ArrowUpRight, TrendingUp, Activity } from "lucide-react"
+import { Users, CalendarCheck, UserCheck, Activity } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 import { Button } from "@/components/ui/button"
 import { unstable_cache } from "next/cache"
@@ -36,64 +36,80 @@ export default async function DashboardPage() {
   const stats = await getDashboardStats()
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-700">
       <DashboardRefresher />
       
       {/* HEADER */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Dashboard Overview</h2>
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Dashboard</h1>
+            <p className="text-muted-foreground mt-1 text-base">Welcome back to Prime Digital.</p>
          </div>
-         <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1 rounded-full border">
-            <Activity className="w-4 h-4 text-green-500 animate-pulse" />
-            <span>System Operational</span>
+         <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-100 dark:border-emerald-500/20 uppercase tracking-wider">
+                <Activity className="w-3.5 h-3.5 animate-pulse" />
+                <span>System Operational</span>
+            </div>
+            <Button className="rounded-xl shadow-lg shadow-primary/20 h-10 px-5 font-bold text-sm">
+                Generate Report
+            </Button>
          </div>
       </div>
       
-      {/* STATS GRID - DASHBOARD THEME */}
+      {/* STATS GRID - NEO-MINIMALIST */}
       <div className="grid gap-6 md:grid-cols-3">
         
-        {/* Card 1: Blue Background */}
-        <div className="bg-[#4a89c8] text-white p-7 rounded-[1.5rem] shadow-[0_15px_30px_rgba(74,137,200,0.15)] transition-all">
-          <div className="w-10 h-10 rounded-xl bg-[#fae29c] flex items-center justify-center mb-6 shadow-sm">
-             <CalendarCheck className="h-5 w-5 text-[#2c4059]" />
+        {/* Card 1: Indigo Hero */}
+        <div className="bg-primary text-primary-foreground p-7 rounded-3xl shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] duration-300 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform duration-500">
+             <CalendarCheck className="h-24 w-24 -mr-6 -mt-6" />
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-white/90 mb-1 tracking-wide">Total Events</h3>
-            <div className="text-4xl font-black tracking-tight">{stats.eventCount}</div>
-            <p className="text-xs text-white/70 mt-2 flex items-center gap-1 font-medium">
-                on track
-            </p>
-          </div>
-        </div>
-        
-        {/* Card 2: Blue Background */}
-        <div className="bg-[#4a89c8] text-white p-7 rounded-[1.5rem] shadow-[0_15px_30px_rgba(74,137,200,0.15)] transition-all">
-          <div className="w-10 h-10 rounded-xl bg-[#fae29c] flex items-center justify-center mb-6 shadow-sm">
-             <Users className="h-5 w-5 text-[#2c4059]" />
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-white/90 mb-1 tracking-wide">Registrations</h3>
-            <div className="text-4xl font-black tracking-tight">
-               +{stats.registrationCount}
+          <div className="relative z-10">
+            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-6">
+               <CalendarCheck className="h-5 w-5 text-white" />
             </div>
-            <p className="text-xs text-white/70 mt-2 font-medium">projected growth</p>
+            <h3 className="text-[10px] font-black text-white/70 mb-1 tracking-widest uppercase">Active Events</h3>
+            <div className="text-4xl font-black tracking-tight">{stats.eventCount}</div>
+            <p className="text-xs text-white/60 mt-4 font-bold uppercase tracking-wide">
+                Live & Upcoming
+            </p>
           </div>
         </div>
         
-        {/* Card 3: White Background / Ring Chart */}
-        <div className="bg-white dark:bg-zinc-900 border border-border p-7 rounded-[1.5rem] shadow-sm transition-all flex flex-col justify-between relative overflow-hidden">
-          <div className="w-10 h-10 rounded-xl bg-[#2c4059] flex items-center justify-center mb-6 shadow-sm">
-             <UserCheck className="h-5 w-5 text-[#fae29c]" />
+        {/* Card 2: Clean White */}
+        <div className="bg-white dark:bg-slate-900 border border-border/50 p-7 rounded-3xl shadow-sm transition-all hover:shadow-md hover:scale-[1.02] duration-300 group">
+          <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center mb-6 group-hover:bg-indigo-100 transition-colors">
+             <Users className="h-5 w-5 text-primary" />
           </div>
-          <div className="flex flex-col h-full z-10">
-            <h3 className="text-sm font-semibold text-muted-foreground mb-1 tracking-wide">Checked In</h3>
-            <div className="text-4xl font-black text-foreground tracking-tight">{stats.checkInCount}</div>
-            <p className="text-xs text-muted-foreground mt-2 font-medium">
-              {stats.registrationCount > 0 
-                ? `${Math.round((stats.checkInCount / stats.registrationCount) * 100)}% achieved`
-                : "No data yet"}
+          <div>
+            <h3 className="text-[10px] font-black text-muted-foreground mb-1 tracking-widest uppercase">Total Registrations</h3>
+            <div className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+               {stats.registrationCount.toLocaleString()}
+            </div>
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-4 font-black flex items-center gap-1 uppercase tracking-wide">
+                +12% <span className="text-muted-foreground font-bold">vs last month</span>
             </p>
+          </div>
+        </div>
+        
+        {/* Card 3: Soft Slate/Gray */}
+        <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 p-7 rounded-3xl shadow-sm transition-all hover:scale-[1.02] duration-300 group">
+          <div className="w-10 h-10 rounded-xl bg-slate-900 dark:bg-white flex items-center justify-center mb-6">
+             <UserCheck className="h-5 w-5 text-white dark:text-slate-900" />
+          </div>
+          <div>
+            <h3 className="text-[10px] font-black text-muted-foreground mb-1 tracking-widest uppercase">Check-in Rate</h3>
+            <div className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+              {stats.registrationCount > 0 
+                ? `${Math.round((stats.checkInCount / stats.registrationCount) * 100)}%`
+                : "0%"}
+            </div>
+            <div className="mt-4 w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                <div 
+                    className="bg-primary h-full transition-all duration-1000" 
+                    style={{ width: `${stats.registrationCount > 0 ? (stats.checkInCount / stats.registrationCount) * 100 : 0}%` }}
+                />
+            </div>
           </div>
         </div>
       </div>

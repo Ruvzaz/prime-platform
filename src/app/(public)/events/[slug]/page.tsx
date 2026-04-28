@@ -1,8 +1,5 @@
 import { notFound } from "next/navigation"
 import { Calendar, MapPin, Clock, Sparkles } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { SubmitButton } from "@/components/submit-button"
-import { Input } from "@/components/ui/input"
 import { prisma } from "@/lib/prisma"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { RegistrationForm } from "@/components/public/registration-form"

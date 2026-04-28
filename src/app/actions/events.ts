@@ -2,10 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "@/auth";
-import { FieldType } from "@prisma/client";
 import { ActionResult, ErrorCodes, errorResult, successResult } from "@/lib/action-result";
 import { handleActionError } from "@/lib/error-utils";
 
