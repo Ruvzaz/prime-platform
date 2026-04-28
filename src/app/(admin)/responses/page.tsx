@@ -33,7 +33,7 @@ export default async function ResponsesPage() {
         </div>
       </div>
       
-      <div className="bg-white dark:bg-slate-900/50 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-border/50 overflow-hidden">
+      <div className="w-full max-w-full bg-white dark:bg-slate-900/50 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none border border-border/50 overflow-hidden">
           {events.length > 0 ? (
              <ResponseDataTable 
                 initialEvents={events} 

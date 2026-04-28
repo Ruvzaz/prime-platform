@@ -171,7 +171,7 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                             </TableHead>
                             <TableHead className="w-[120px]">Check-in</TableHead>
                             {customFields.map((field: any) => (
-                                <TableHead key={field.id} className="min-w-[180px]">
+                                <TableHead key={field.id} className="min-w-[150px] w-[200px]">
                                     {field.label}
                                 </TableHead>
                             ))}
@@ -250,7 +250,11 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                                             }
                                         }
                                         return (
-                                            <TableCell key={`${reg.id}-${field.id}`} className="max-w-[250px] truncate" title={typeof val === 'string' ? val : ''}>
+                                            <TableCell 
+                                                key={`${reg.id}-${field.id}`} 
+                                                className="max-w-[200px] truncate" 
+                                                title={typeof val === 'string' ? val : ''}
+                                            >
                                                 {displayContent}
                                             </TableCell>
                                         )
