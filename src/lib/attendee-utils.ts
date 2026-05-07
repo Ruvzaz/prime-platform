@@ -190,3 +190,50 @@ export function getStandardFieldIds(formFields?: { id: string; label: string; ty
 
     return Array.from(new Set(ids));
 }
+
+/**
+ * Mask name for privacy (e.g., "John Doe" -> "J*** D***")
+ */
+export function maskName(name: string): string {
+  if (!name || name === "Unknown") return name;
+  
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) {
+    const word = parts[0];
+    if (word.length <= 1) return word;
+    if (word.length === 2) return word[0] + "*";
+    return word[0] + "*".repeat(word.length - 2) + word[word.length - 1];
+  }
+  
+  // For multiple words, mask each except first and last character of each word if long enough
+  return parts.map(part => {
+    if (part.length <= 1) return part;
+    if (part.length === 2) return part[0] + "*";
+    return part[0] + "*".repeat(Math.min(part.length - 2, 3)) + part[part.length - 1];
+  }).join(" ");
+}
+
+/**
+ * Mask email for privacy (e.g., "john.doe@example.com" -> "jo***@ex***.com")
+ */
+export function maskEmail(email: string): string {
+  if (!email || email === "N/A" || !email.includes("@")) return email;
+  
+  const [user, domain] = email.split("@");
+  if (!domain) return email;
+  
+  const maskedUser = user.length <= 2 
+    ? user + "***" 
+    : user.substring(0, 2) + "***";
+    
+  const domainParts = domain.split(".");
+  const domainName = domainParts[0];
+  const tld = domainParts.slice(1).join(".");
+  
+  const maskedDomain = domainName.length <= 2
+    ? domainName + "**"
+    : domainName.substring(0, 2) + "**";
+    
+  return `${maskedUser}@${maskedDomain}${tld ? "." + tld : ""}`;
+}
+

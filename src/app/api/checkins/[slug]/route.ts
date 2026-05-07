@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { extractAttendeeInfo } from "@/lib/attendee-utils";
+import { extractAttendeeInfo, maskName, maskEmail } from "@/lib/attendee-utils";
 
 export async function GET(
   request: NextRequest,
@@ -46,13 +46,30 @@ export async function GET(
     });
 
     const data = checkIns.map((ci) => {
-      const { name } = extractAttendeeInfo(ci.registration.formData as Record<string, unknown>, event.formFields);
+      const { name, email } = extractAttendeeInfo(ci.registration.formData as Record<string, unknown>, event.formFields);
       return {
         id: ci.id,
         referenceCode: ci.registration.referenceCode,
-        name,
+        name: maskName(name),
+        email: maskEmail(email),
         scannedAt: ci.scannedAt.toISOString(),
       };
+    });
+
+    // Get actual total check-ins count for the whole event
+    const totalCheckIns = await prisma.checkIn.count({
+      where: {
+        registration: {
+          eventId: event.id
+        }
+      }
+    });
+
+    // Get total registrations count
+    const totalRegistrations = await prisma.registration.count({
+      where: {
+        eventId: event.id
+      }
     });
 
     return NextResponse.json({
@@ -63,7 +80,8 @@ export async function GET(
         startDate: event.startDate.toISOString(),
       },
       checkIns: data,
-      total: data.length,
+      total: totalCheckIns,
+      totalRegistrations: totalRegistrations
     });
   } catch (error) {
     console.error("Failed to fetch check-ins:", error);
