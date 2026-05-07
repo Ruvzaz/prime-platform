@@ -292,6 +292,13 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
   return (
     <div className="h-screen w-screen bg-white text-slate-900 relative flex flex-col overflow-hidden live-root select-none">
       
+      {/* Background Highlight Blobs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute -top-[30%] -left-[40%] w-[60%] h-[60%] bg-blue-100/60 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute top-[40%] -right-[25%] w-[55%] h-[55%] bg-indigo-50/60 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '12s' }} />
+        <div className="absolute -bottom-[30%] left-[40%] w-[65%] h-[65%] bg-cyan-50/60 rounded-full blur-[140px] animate-pulse" style={{ animationDuration: '10s' }} />
+      </div>
+
       <Header title={data.event.title} imageUrl={data.event.imageUrl} total={data.total} />
 
       <main className="relative z-20 max-w-[95rem] mx-auto w-full px-14 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-24 items-center overflow-hidden">
