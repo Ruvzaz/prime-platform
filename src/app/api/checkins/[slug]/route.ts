@@ -18,6 +18,7 @@ export async function GET(
         themeColor: true,
         startDate: true,
         formFields: true,
+        liveConfig: true,
       },
     });
 
@@ -77,6 +78,7 @@ export async function GET(
         imageUrl: event.imageUrl,
         themeColor: event.themeColor,
         startDate: event.startDate.toISOString(),
+        liveConfig: event.liveConfig,
       },
       checkIns: data,
       total: totalUniqueCheckIns,

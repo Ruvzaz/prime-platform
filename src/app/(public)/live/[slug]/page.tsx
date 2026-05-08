@@ -14,11 +14,19 @@ interface CheckInEntry {
 interface EventInfo {
   title: string
   imageUrl: string | null
+  liveConfig?: {
+    logoUrl?: string | null;
+    bannerUrl?: string | null;
+    welcomeMessage?: string | null;
+    themeColor?: string | null;
+    showStats?: boolean;
+    showLog?: boolean;
+  } | null
 }
 
 // --- Memoized Sub-components for absolute stability ---
 
-const Header = memo(({ title, imageUrl, total }: { title: string, imageUrl: string | null, total: number }) => {
+const Header = memo(({ title, imageUrl, total, liveConfig }: { title: string, imageUrl: string | null, total: number, liveConfig?: EventInfo['liveConfig'] }) => {
   const springTotal = useSpring(total, { stiffness: 10, damping: 20 })
   const displayTotal = useTransform(springTotal, (value) => Math.floor(value))
 
@@ -26,19 +34,22 @@ const Header = memo(({ title, imageUrl, total }: { title: string, imageUrl: stri
     springTotal.set(total)
   }, [total, springTotal])
 
+  const logoToUse = liveConfig?.logoUrl || imageUrl;
+  const showStats = liveConfig?.showStats !== false;
+
   return (
     <header className="relative z-30 pt-14 px-14 pb-10 flex-shrink-0">
       <div className="max-w-[85rem] mx-auto flex items-center justify-between">
         <div className="flex items-center gap-7">
           <div className="w-14 h-14 rounded-[1.25rem] bg-white shadow-sm border border-slate-100 flex items-center justify-center overflow-hidden p-0.5">
-            {imageUrl ? (
-              <img src={imageUrl} alt="" className="w-full h-full object-cover rounded-[1rem]" />
+            {logoToUse ? (
+              <img src={logoToUse} alt="" className="w-full h-full object-cover rounded-[1rem]" />
             ) : (
               <Sparkles className="w-6 h-6 text-indigo-500" />
             )}
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{title}</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{liveConfig?.welcomeMessage || title}</h1>
             <div className="flex items-center gap-3 mt-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
               <span className="text-[11px] font-bold text-slate-600 uppercase tracking-[0.25em]">Live Monitoring</span>
@@ -46,20 +57,24 @@ const Header = memo(({ title, imageUrl, total }: { title: string, imageUrl: stri
           </div>
         </div>
 
-        <div className="flex flex-col items-end">
-          <span className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.4em] mb-2">Total Presence</span>
-          <div className="flex items-baseline gap-2">
-            <motion.span className="text-6xl font-bold text-indigo-600 tracking-tighter tabular-nums leading-none">
-              {displayTotal}
-            </motion.span>
+        {showStats && (
+          <div className="flex flex-col items-end">
+            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.4em] mb-2">Total Presence</span>
+            <div className="flex items-baseline gap-2">
+              <motion.span className="text-6xl font-bold text-indigo-600 tracking-tighter tabular-nums leading-none" style={{ color: liveConfig?.themeColor || undefined }}>
+                {displayTotal}
+              </motion.span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </header>
   )
 })
 
-const Spotlight = memo(({ latest, imageUrl }: { latest: CheckInEntry | null, imageUrl: string | null }) => {
+const Spotlight = memo(({ latest, imageUrl, liveConfig }: { latest: CheckInEntry | null, imageUrl: string | null, liveConfig?: EventInfo['liveConfig'] }) => {
+  const themeColor = liveConfig?.themeColor || '#4f46e5'; // indigo-600
+
   return (
     <div className="lg:col-span-6 h-full flex items-center justify-center relative py-10">
       <AnimatePresence mode="popLayout">
@@ -74,21 +89,21 @@ const Spotlight = memo(({ latest, imageUrl }: { latest: CheckInEntry | null, ima
           >
             <div className="spotlight-card rounded-[3.5rem] p-14 text-center shadow-[0_50px_120px_-20px_rgba(30,58,138,0.1)] border border-indigo-100/50 relative overflow-hidden">
               <div className="relative z-10">
-                <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-indigo-500/5 border border-indigo-200/50 text-[10px] font-bold text-indigo-500 uppercase tracking-[0.5em] mb-12">
+                <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-indigo-500/5 border border-indigo-200/50 text-[10px] font-bold uppercase tracking-[0.5em] mb-12" style={{ color: themeColor }}>
                   <RefreshCw className="w-4 h-4 animate-spin-slow opacity-60" />
                   Now Arriving
                 </div>
 
                 <div className="relative w-44 h-44 mx-auto mb-12">
-                  <div className="absolute inset-0 bg-indigo-500/20 rounded-full blur-[90px]" />
-                  <div className="relative w-full h-full rounded-full bg-white flex items-center justify-center text-7xl font-bold text-indigo-600 border-[10px] border-indigo-100/50 overflow-hidden shadow-2xl">
+                  <div className="absolute inset-0 rounded-full blur-[90px]" style={{ backgroundColor: `${themeColor}33` }} />
+                  <div className="relative w-full h-full rounded-full bg-white flex items-center justify-center text-7xl font-bold border-[10px] border-indigo-100/50 overflow-hidden shadow-2xl" style={{ color: themeColor }}>
                     {imageUrl ? (
                       <img src={imageUrl} alt="" className="w-full h-full object-cover opacity-90" />
                     ) : (
                       latest.name.substring(0, 1)
                     )}
                   </div>
-                  <div className="absolute bottom-3 right-3 w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl text-white border-4 border-white">
+                  <div className="absolute bottom-3 right-3 w-12 h-12 rounded-2xl flex items-center justify-center shadow-2xl text-white border-4 border-white" style={{ backgroundColor: themeColor }}>
                      <CheckCircle2 className="w-6 h-6" />
                   </div>
                 </div>
@@ -102,7 +117,7 @@ const Spotlight = memo(({ latest, imageUrl }: { latest: CheckInEntry | null, ima
                   <span className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.6em]">
                     Registry {latest.referenceCode}
                   </span>
-                  <span className="text-indigo-600 text-3xl font-medium mt-1">
+                  <span className="text-3xl font-medium mt-1" style={{ color: themeColor }}>
                     {new Date(latest.scannedAt).toLocaleTimeString("th-TH", { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -120,8 +135,9 @@ const Spotlight = memo(({ latest, imageUrl }: { latest: CheckInEntry | null, ima
   )
 })
 
-const FeedList = memo(({ items, highlightId }: { items: CheckInEntry[], highlightId: string | null }) => {
+const FeedList = memo(({ items, highlightId, themeColor }: { items: CheckInEntry[], highlightId: string | null, themeColor?: string | null }) => {
   const displayItems = items.slice(0, 7);
+  const color = themeColor || '#4f46e5';
   
   return (
     <div className="lg:col-span-6 h-full flex flex-col overflow-hidden">
@@ -159,13 +175,16 @@ const FeedList = memo(({ items, highlightId }: { items: CheckInEntry[], highligh
               >
                 <div className="flex items-center gap-5">
                    <div className={`
-                     w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 transition-colors
-                     ${isNew ? "bg-indigo-600 text-white shadow-md" : "bg-white text-slate-600 border border-slate-100"}
-                   `}>
+                     w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 transition-colors shadow-sm
+                   `} style={{ 
+                     backgroundColor: isNew ? color : 'white', 
+                     color: isNew ? 'white' : '#475569',
+                     border: isNew ? 'none' : '1px solid #f1f5f9'
+                   }}>
                      {ci.name.substring(0, 1).toUpperCase()}
                    </div>
                    <div className="flex-1 min-w-0">
-                     <h4 className={`text-base font-bold tracking-tight transition-colors ${isNew ? "text-indigo-600" : "text-slate-900"}`}>
+                     <h4 className="text-base font-bold tracking-tight transition-colors" style={{ color: isNew ? color : '#0f172a' }}>
                        {ci.name}
                      </h4>
                      <p className="text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-0.5">
@@ -173,7 +192,7 @@ const FeedList = memo(({ items, highlightId }: { items: CheckInEntry[], highligh
                      </p>
                    </div>
                    <div className="text-right shrink-0">
-                     <span className={`text-base font-bold tabular-nums transition-colors ${isNew ? "text-indigo-600" : "text-slate-600"}`}>
+                     <span className="text-base font-bold tabular-nums transition-colors" style={{ color: isNew ? color : '#475569' }}>
                        {new Date(ci.scannedAt).toLocaleTimeString("th-TH", {
                          hour: "2-digit",
                          minute: "2-digit",
@@ -299,13 +318,23 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
         <div className="absolute -bottom-[10%] left-[20%] w-[45%] h-[45%] bg-cyan-50/30 rounded-full blur-[140px] animate-pulse" style={{ animationDuration: '10s' }} />
       </div>
 
-      <Header title={data.event.title} imageUrl={data.event.imageUrl} total={data.total} />
+      {/* Custom Banner Implementation */}
+      {data.event.liveConfig?.bannerUrl && (
+        <div className="absolute inset-0 z-0 opacity-10 pointer-events-none">
+           <img src={data.event.liveConfig.bannerUrl} alt="" className="w-full h-full object-cover" />
+           <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white" />
+        </div>
+      )}
+
+      <Header title={data.event.title} imageUrl={data.event.imageUrl} total={data.total} liveConfig={data.event.liveConfig} />
 
       <main className="relative z-20 max-w-[85rem] mx-auto w-full px-14 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-20 items-center overflow-hidden">
         
-        <Spotlight latest={data.checkIns[0] || null} imageUrl={data.event.imageUrl} />
+        <Spotlight latest={data.checkIns[0] || null} imageUrl={data.event.imageUrl} liveConfig={data.event.liveConfig} />
 
-        <FeedList items={data.checkIns} highlightId={highlightId} />
+        {data.event.liveConfig?.showLog !== false && (
+          <FeedList items={data.checkIns} highlightId={highlightId} themeColor={data.event.liveConfig?.themeColor} />
+        )}
         
       </main>
 
