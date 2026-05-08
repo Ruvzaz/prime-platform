@@ -9,6 +9,7 @@ import { getRateLimit } from "@/lib/rate-limit";
 import { headers } from "next/headers";
 import { ActionResult, ErrorCodes, errorResult, successResult } from "@/lib/action-result";
 import { handleActionError } from "@/lib/error-utils";
+import { auth } from "@/auth";
 
 function generateRefCode(): string {
   return "REF-" + crypto.randomBytes(4).toString("hex").toUpperCase();
@@ -198,7 +199,7 @@ export async function getRegistrations(
           status: true,
           createdAt: true,
           formData: true,
-          checkIn: {
+          checkIns: {
               select: { scannedAt: true }
           },
           event: {
@@ -257,7 +258,7 @@ export async function deleteCheckIn(registrationId: string) {
   }
 
   try {
-    await prisma.checkIn.delete({
+    await prisma.checkIn.deleteMany({
       where: { registrationId },
     });
     revalidatePath("/dashboard/registrations");
@@ -268,7 +269,7 @@ export async function deleteCheckIn(registrationId: string) {
   }
 }
 
-import { auth } from "@/auth";
+
 
 export async function createCheckIn(registrationId: string) {
   const session = await auth();
@@ -278,20 +279,31 @@ export async function createCheckIn(registrationId: string) {
 
   try {
     const staffId = session.user.id;
-    // Check if already checked in
-    const existing = await prisma.checkIn.findUnique({
-      where: { registrationId }
+    // For manual admin check-in, we check if already checked in TODAY
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const existingToday = await prisma.checkIn.findFirst({
+      where: { 
+          registrationId,
+          scannedAt: {
+              gte: today,
+              lt: tomorrow
+          }
+      }
     });
 
-    if (existing) {
-        return { success: true, message: "Already checked in" };
+    if (existingToday) {
+        return { success: true, message: "Already checked in for today" };
     }
 
     await prisma.checkIn.create({
       data: {
         registrationId,
         scannedAt: new Date(),
-        staffId: session.user.id
+        staffId: staffId
       },
     });
     revalidatePath("/dashboard/registrations");
@@ -382,12 +394,13 @@ export async function getRegistrationsForExport(
         status: true,
         createdAt: true,
         formData: true,
-        checkIn: {
+        checkIns: {
             select: { scannedAt: true }
         },
         event: {
           select: { 
               title: true,
+              startDate: true,
               formFields: {
                   orderBy: { order: 'asc' },
                   select: { id: true, label: true, type: true }

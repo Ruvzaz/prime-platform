@@ -91,7 +91,7 @@ model Registration {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
-  checkIn       CheckIn?
+  checkIns      CheckIn[]
 
 
   @@index([eventId])
@@ -105,7 +105,7 @@ enum RegStatus {
 
 model CheckIn {
   id             String       @id @default(cuid())
-  registrationId String       @unique
+  registrationId String
   registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   staffId        String
   staff          User         @relation(fields: [staffId], references: [id])

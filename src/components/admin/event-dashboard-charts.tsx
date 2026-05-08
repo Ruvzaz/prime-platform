@@ -11,7 +11,8 @@ import {
   ResponsiveContainer,
   Tooltip,
   XAxis,
-  YAxis
+  YAxis,
+  LabelList
 } from "recharts"
 import { FieldStat } from "@/app/actions/dashboard"
 
@@ -57,6 +58,8 @@ export function CheckInPieChart({
           paddingAngle={5}
           dataKey="value"
           animationDuration={1500}
+          label={({ name, value }) => `${name}: ${value}`}
+          labelLine={false}
         >
           <Cell key="cell-0" fill="#4f46e5" stroke="rgba(255,255,255,0.2)" /> {/* Indigo for Checked In */}
           <Cell key="cell-1" fill="#e2e8f0" stroke="rgba(255,255,255,0.2)" /> {/* Muted for Not Arrived */}
@@ -115,6 +118,12 @@ export function FieldBarChart({ field }: { field: FieldStat }) {
           {field.answers.map((entry, index) => (
              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
+          <LabelList 
+            dataKey="value" 
+            position="top" 
+            offset={10} 
+            style={{ fill: '#64748b', fontSize: 13, fontWeight: '700' }} 
+          />
         </Bar>
       </BarChart>
     </ResponsiveContainer>

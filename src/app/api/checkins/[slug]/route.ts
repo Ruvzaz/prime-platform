@@ -56,12 +56,11 @@ export async function GET(
       };
     });
 
-    // Get actual total check-ins count for the whole event
-    const totalCheckIns = await prisma.checkIn.count({
+    // Get unique attendees count (people who checked in at least once)
+    const totalUniqueCheckIns = await prisma.registration.count({
       where: {
-        registration: {
-          eventId: event.id
-        }
+        eventId: event.id,
+        checkIns: { some: {} }
       }
     });
 
@@ -80,7 +79,7 @@ export async function GET(
         startDate: event.startDate.toISOString(),
       },
       checkIns: data,
-      total: totalCheckIns,
+      total: totalUniqueCheckIns,
       totalRegistrations: totalRegistrations
     });
   } catch (error) {

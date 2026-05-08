@@ -26,7 +26,7 @@ export async function verifyAndCheckIn(referenceCode: string): Promise<CheckInRe
       where: { referenceCode: referenceCode.toUpperCase() },
       include: {
         event: { include: { formFields: true } },
-        checkIn: true,
+        checkIns: true,
       },
     });
 
@@ -38,17 +38,26 @@ export async function verifyAndCheckIn(referenceCode: string): Promise<CheckInRe
     const formData = registration.formData as Record<string, any>;
     const { name, email } = extractAttendeeInfo(formData, registration.event.formFields);
 
-    // 2. Check if already checked in
-    if (registration.checkIn) {
+    // 2. Check if already checked in TODAY
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const alreadyCheckedInToday = registration.checkIns.find(ci => 
+        ci.scannedAt >= today && ci.scannedAt < tomorrow
+    );
+
+    if (alreadyCheckedInToday) {
       return { 
         success: false, 
-        message: "Already checked in!", 
+        message: "Already checked in for today!", 
         attendee: {
             name,
             email,
             eventTitle: registration.event.title,
             eventImageUrl: registration.event.imageUrl,
-            checkedInAt: registration.checkIn.scannedAt
+            checkedInAt: alreadyCheckedInToday.scannedAt
         }
       };
     }

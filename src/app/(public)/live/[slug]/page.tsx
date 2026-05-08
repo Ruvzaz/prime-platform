@@ -277,7 +277,7 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
   useEffect(() => {
     if (!slug) return
     sync()
-    const itv = setInterval(sync, 10000)
+    const itv = setInterval(sync, 15000)
     return () => clearInterval(itv)
   }, [slug, sync])
 

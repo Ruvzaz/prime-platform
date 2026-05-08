@@ -219,13 +219,13 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                                         {new Date(reg.createdAt).toLocaleDateString()}
                                     </TableCell>
                                     <TableCell>
-                                        {reg.checkIn ? (
+                                        {reg.checkIns?.length > 0 ? (
                                             <div className="flex flex-col gap-1">
                                                 <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400 hover:bg-indigo-100 border-none shadow-sm rounded-full px-3 py-0.5 font-bold text-[10px] w-fit">
-                                                    Checked In
+                                                    Checked In ({reg.checkIns.length})
                                                 </Badge>
                                                 <span className="text-[10px] text-muted-foreground font-bold tracking-tight px-1">
-                                                    {new Date(reg.checkIn.scannedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                    Latest: {new Date(reg.checkIns[reg.checkIns.length - 1].scannedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                                 </span>
                                             </div>
                                         ) : (

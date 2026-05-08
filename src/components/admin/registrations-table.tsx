@@ -65,9 +65,9 @@ interface Registration {
   status: string
   createdAt: Date
   formData: any
-  checkIn?: {
+  checkIns: {
       scannedAt: Date
-  } | null
+  }[]
   event: {
       title: string
       slug: string
@@ -218,13 +218,14 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
           
           // Strategy: Collect unique labels from all events in the dataset to handle "All Events" export too
           const uniqueLabels = new Set<string>()
-          const allStandardIds = new Set<string>()
+          const allStandardIds = new Set<string>();
           
-          allData.forEach(reg => {
-              if (reg.event.formFields) {
-                  const stdIds = getStandardFieldIds(reg.event.formFields)
+          ;(allData as any[]).forEach((reg: any) => {
+              const eventData = reg.event as any;
+              if (eventData?.formFields) {
+                  const stdIds = getStandardFieldIds(eventData.formFields)
                   stdIds.forEach(id => allStandardIds.add(id))
-                  reg.event.formFields.forEach((f: any) => {
+                  eventData.formFields.forEach((f: any) => {
                       if (!stdIds.includes(f.id)) {
                           uniqueLabels.add(f.label)
                       }
@@ -233,12 +234,27 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
           })
           customHeaders = Array.from(uniqueLabels).sort()
 
-          const headers = ["Ref Code", "Name", "Email", "Phone", "Event", "Status", "Date", "Check-in", ...customHeaders]
+          // 2. Identify global check-in dates to define Day 1 and Day 2
+          const allCheckInDates = new Set<string>()
+          ;(allData as any[]).forEach((reg: any) => {
+              reg.checkIns?.forEach((ci: any) => {
+                  allCheckInDates.add(new Date(ci.scannedAt).toLocaleDateString())
+              })
+          })
           
-          const rows = allData.map(reg => {
+          const sortedGlobalDates = Array.from(allCheckInDates).sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+          const globalDay1 = sortedGlobalDates[0]
+          const globalDay2 = sortedGlobalDates[1]
+
+          const headers = ["Ref Code", "Name", "Email", "Phone", "Event", "Status", "Date", "Check In Day 1", "Check In Day 2", ...customHeaders]
+          
+          const rows = (allData as any[]).map((reg: any) => {
               const { name, email, phone } = extractAttendeeInfo(reg.formData as Record<string, unknown>, reg.event.formFields)
               const formData = reg.formData as Record<string, unknown> || {}
               
+              const ci1 = reg.checkIns?.find((ci: any) => new Date(ci.scannedAt).toLocaleDateString() === globalDay1)
+              const ci2 = reg.checkIns?.find((ci: any) => new Date(ci.scannedAt).toLocaleDateString() === globalDay2)
+
               const standardCols = [
                   reg.referenceCode,
                   `"${name}"`, 
@@ -247,12 +263,13 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                   `"${reg.event.title}"`,
                   reg.status,
                   `"${new Date(reg.createdAt).toLocaleDateString()}"`,
-                  reg.checkIn ? `"${new Date(reg.checkIn.scannedAt).toLocaleString()}"` : '""'
+                  ci1 ? `"${new Date(ci1.scannedAt).toLocaleString()}"` : '""',
+                  ci2 ? `"${new Date(ci2.scannedAt).toLocaleString()}"` : '""'
               ]
 
               // Dynamic Fields
               const dynamicCols = customHeaders.map(header => {
-                  const field = reg.event.formFields?.find((f: any) => f.label === header)
+                  const field = (reg.event.formFields as any[])?.find((f: any) => f.label === header)
                   let val = formData[header]
                   if (val === undefined && field) {
                       val = formData[field.id]
@@ -439,13 +456,13 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
-                                        {reg.checkIn ? (
+                                        {reg.checkIns?.length > 0 ? (
                                             <div className="flex flex-col gap-1">
                                                 <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400 hover:bg-indigo-100 border-none shadow-sm rounded-full px-3 py-0.5 font-bold text-[10px] w-fit">
-                                                    Checked In
+                                                    Checked In ({reg.checkIns.length})
                                                 </Badge>
                                                 <span className="text-[10px] text-muted-foreground font-bold tracking-tight px-1">
-                                                    {new Date(reg.checkIn.scannedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                    Latest: {new Date(reg.checkIns[reg.checkIns.length - 1].scannedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                                 </span>
                                             </div>
                                         ) : (

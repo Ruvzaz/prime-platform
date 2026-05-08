@@ -46,7 +46,7 @@ interface Registration {
   status: RegStatus
   createdAt: Date
   formData: Record<string, any>
-  checkIn: { scannedAt: Date } | null
+  checkIns: { scannedAt: Date }[]
   event: {
     title: string
     slug: string
@@ -222,16 +222,16 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
                 <div className="absolute bottom-0 left-0 -ml-8 -mb-8 h-32 w-32 rounded-full bg-primary/5 blur-3xl" />
                 
                 <div className="relative z-10 flex flex-col items-center justify-center text-center gap-5">
-                    {registration.checkIn ? (
+                    {(registration as any).checkIns?.length > 0 ? (
                         <>
                             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-50 shadow-inner ring-1 ring-green-100">
                                 <CheckCircle2 className="h-10 w-10 text-green-600" />
                             </div>
                             
                             <div className="space-y-1">
-                                <h3 className="text-xl font-bold tracking-tight text-green-700">Checked In</h3>
+                                <h3 className="text-xl font-bold tracking-tight text-green-700">Checked In ({(registration as any).checkIns.length})</h3>
                                 <p className="text-sm font-medium text-muted-foreground">
-                                    at {new Date(registration.checkIn.scannedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                    latest at {new Date((registration as any).checkIns[(registration as any).checkIns.length - 1].scannedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                 </p>
                             </div>
 

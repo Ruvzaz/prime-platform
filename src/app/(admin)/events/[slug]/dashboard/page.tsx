@@ -41,9 +41,15 @@ export default async function EventDashboardPage({
                         Real-time analytics for <strong>{stats.eventTitle}</strong>
                     </p>
                 </div>
-                <div className="ml-auto hidden md:flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1 rounded-full border">
-                    <Activity className="w-4 h-4 text-green-500 animate-pulse" />
-                    <span>Live Tracking</span>
+                <div className="ml-auto hidden md:flex items-center gap-3 text-sm text-muted-foreground bg-muted/50 px-4 py-1.5 rounded-full border border-green-500/20">
+                    <div className="flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-green-500 animate-pulse" />
+                        <span className="font-medium text-green-600 dark:text-green-400">Live</span>
+                    </div>
+                    <div className="w-px h-3 bg-border" />
+                    <span className="text-[10px] font-medium tabular-nums">
+                        Updated: {new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </span>
                 </div>
             </div>
 
