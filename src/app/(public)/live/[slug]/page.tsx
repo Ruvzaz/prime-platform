@@ -28,7 +28,7 @@ const Header = memo(({ title, imageUrl, total }: { title: string, imageUrl: stri
 
   return (
     <header className="relative z-30 pt-14 px-14 pb-10 flex-shrink-0">
-      <div className="max-w-[95rem] mx-auto flex items-end justify-between">
+      <div className="max-w-[85rem] mx-auto flex items-center justify-between">
         <div className="flex items-center gap-7">
           <div className="w-14 h-14 rounded-[1.25rem] bg-white shadow-sm border border-slate-100 flex items-center justify-center overflow-hidden p-0.5">
             {imageUrl ? (
@@ -41,13 +41,13 @@ const Header = memo(({ title, imageUrl, total }: { title: string, imageUrl: stri
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">{title}</h1>
             <div className="flex items-center gap-3 mt-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.25em]">Live Monitoring</span>
+              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-[0.25em]">Live Monitoring</span>
             </div>
           </div>
         </div>
 
         <div className="flex flex-col items-end">
-          <span className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.4em] mb-2">Total Presence</span>
+          <span className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.4em] mb-2">Total Presence</span>
           <div className="flex items-baseline gap-2">
             <motion.span className="text-6xl font-bold text-indigo-600 tracking-tighter tabular-nums leading-none">
               {displayTotal}
@@ -61,7 +61,7 @@ const Header = memo(({ title, imageUrl, total }: { title: string, imageUrl: stri
 
 const Spotlight = memo(({ latest, imageUrl }: { latest: CheckInEntry | null, imageUrl: string | null }) => {
   return (
-    <div className="lg:col-span-6 h-full flex items-center justify-center relative">
+    <div className="lg:col-span-6 h-full flex items-center justify-center relative py-10">
       <AnimatePresence mode="popLayout">
         {latest ? (
           <motion.div 
@@ -99,7 +99,7 @@ const Spotlight = memo(({ latest, imageUrl }: { latest: CheckInEntry | null, ima
                 
                 <div className="flex flex-col items-center gap-5 mt-14">
                   <div className="w-10 h-px bg-indigo-200" />
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.6em]">
+                  <span className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.6em]">
                     Registry {latest.referenceCode}
                   </span>
                   <span className="text-indigo-600 text-3xl font-medium mt-1">
@@ -126,14 +126,14 @@ const FeedList = memo(({ items, highlightId }: { items: CheckInEntry[], highligh
   return (
     <div className="lg:col-span-6 h-full flex flex-col overflow-hidden">
       <div className="flex items-center justify-between mb-8 px-2 shrink-0">
-        <h3 className="text-[9px] font-bold text-slate-300 uppercase tracking-[0.4em] flex items-center gap-3">
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+        <h3 className="text-[9px] font-bold text-slate-600 uppercase tracking-[0.4em] flex items-center gap-3">
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
           Latest Check In
         </h3>
-        <span className="text-[8px] font-bold text-slate-200 uppercase tracking-[0.2em]">Latest</span>
+        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em]">Latest</span>
       </div>
 
-      <div className="flex-1 space-y-3 pb-10 overflow-hidden">
+      <div className="flex-1 space-y-3 pb-10 overflow-hidden custom-scrollbar overflow-y-auto pr-2">
         <AnimatePresence initial={false} mode="popLayout">
           {displayItems.map((ci) => {
             const isNew = ci.id === highlightId;
@@ -160,7 +160,7 @@ const FeedList = memo(({ items, highlightId }: { items: CheckInEntry[], highligh
                 <div className="flex items-center gap-5">
                    <div className={`
                      w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 transition-colors
-                     ${isNew ? "bg-indigo-600 text-white shadow-md" : "bg-white text-slate-300 border border-slate-100"}
+                     ${isNew ? "bg-indigo-600 text-white shadow-md" : "bg-white text-slate-600 border border-slate-100"}
                    `}>
                      {ci.name.substring(0, 1).toUpperCase()}
                    </div>
@@ -168,12 +168,12 @@ const FeedList = memo(({ items, highlightId }: { items: CheckInEntry[], highligh
                      <h4 className={`text-base font-bold tracking-tight transition-colors ${isNew ? "text-indigo-600" : "text-slate-900"}`}>
                        {ci.name}
                      </h4>
-                     <p className="text-[8px] font-bold text-slate-300 uppercase tracking-[0.2em] mt-0.5">
+                     <p className="text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-0.5">
                        {ci.referenceCode}
                      </p>
                    </div>
                    <div className="text-right shrink-0">
-                     <span className={`text-base font-bold tabular-nums transition-colors ${isNew ? "text-indigo-600" : "text-slate-400"}`}>
+                     <span className={`text-base font-bold tabular-nums transition-colors ${isNew ? "text-indigo-600" : "text-slate-600"}`}>
                        {new Date(ci.scannedAt).toLocaleTimeString("th-TH", {
                          hour: "2-digit",
                          minute: "2-digit",
@@ -213,10 +213,10 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
   useEffect(() => {
     const style = document.createElement('style')
     style.innerHTML = `
-      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
       
       body, html, .live-root * {
-        font-family: 'Outfit', sans-serif !important;
+        font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif !important;
         -webkit-font-smoothing: antialiased;
       }
 
@@ -224,8 +224,8 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
       .custom-scrollbar::-webkit-scrollbar-thumb { background: #f0f0f0; border-radius: 10px; }
       
       .spotlight-card {
-        background: #f0f7ff;
-        background: linear-gradient(160deg, #f0f7ff 0%, #e0e7ff 100%);
+        background: #f8fbff;
+        background: linear-gradient(165deg, #f8fbff 0%, #f0f4ff 100%);
       }
 
       .animate-spin-slow { animation: spin 10s linear infinite; }
@@ -294,14 +294,14 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
       
       {/* Background Highlight Blobs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-[30%] -left-[40%] w-[60%] h-[60%] bg-blue-100/60 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
-        <div className="absolute top-[40%] -right-[25%] w-[55%] h-[55%] bg-indigo-50/60 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '12s' }} />
-        <div className="absolute -bottom-[30%] left-[40%] w-[65%] h-[65%] bg-cyan-50/60 rounded-full blur-[140px] animate-pulse" style={{ animationDuration: '10s' }} />
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-50/40 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute top-[20%] -right-[10%] w-[35%] h-[35%] bg-indigo-50/40 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '12s' }} />
+        <div className="absolute -bottom-[10%] left-[20%] w-[45%] h-[45%] bg-cyan-50/30 rounded-full blur-[140px] animate-pulse" style={{ animationDuration: '10s' }} />
       </div>
 
       <Header title={data.event.title} imageUrl={data.event.imageUrl} total={data.total} />
 
-      <main className="relative z-20 max-w-[95rem] mx-auto w-full px-14 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-24 items-center overflow-hidden">
+      <main className="relative z-20 max-w-[85rem] mx-auto w-full px-14 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-20 items-center overflow-hidden">
         
         <Spotlight latest={data.checkIns[0] || null} imageUrl={data.event.imageUrl} />
 
@@ -309,8 +309,8 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
         
       </main>
 
-      <footer className="relative z-30 px-14 py-10 mt-auto opacity-20 flex-shrink-0">
-        <div className="max-w-[95rem] mx-auto flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.5em]">
+      <footer className="relative z-30 px-14 py-10 mt-auto opacity-30 flex-shrink-0">
+        <div className="max-w-[85rem] mx-auto flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.5em] text-slate-600">
           <span>Synchronized Terminal</span>
           <span>Prime Digital &copy; 2026</span>
         </div>
