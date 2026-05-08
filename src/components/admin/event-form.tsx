@@ -148,6 +148,7 @@ export function EventForm({ action, initialData }: EventFormProps) {
 
              <div className="space-y-2">
               <Label>Event Banner</Label>
+              <p className="text-[10px] text-muted-foreground mb-2">Banner for registration page. <span className="text-primary font-medium">แนะนำขนาด 1200 x 675 px (16:9)</span></p>
               <AdminFileUpload 
                 id="imageUrl" 
                 name="imageUrl" 

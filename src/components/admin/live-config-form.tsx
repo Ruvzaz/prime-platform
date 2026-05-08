@@ -93,7 +93,7 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
           <CardContent className="space-y-6 pt-6">
             <div className="space-y-3">
               <Label className="text-sm font-semibold">Live Logo</Label>
-              <p className="text-[11px] text-muted-foreground">This logo appears in the header of the live board.</p>
+              <p className="text-[11px] text-muted-foreground">This logo appears in the header of the live board. <span className="text-indigo-500 font-medium">แนะนำขนาด 512 x 512 px (1:1)</span></p>
               <AdminFileUpload 
                 id="logoUrl"
                 name="logoUrl"
@@ -106,7 +106,7 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
 
             <div className="space-y-3">
               <Label className="text-sm font-semibold">Background Banner</Label>
-              <p className="text-[11px] text-muted-foreground">A subtle background image that blurs behind the content.</p>
+              <p className="text-[11px] text-muted-foreground">A subtle background image that blurs behind the content. <span className="text-indigo-500 font-medium">แนะนำขนาด 1920 x 1080 px (16:9)</span></p>
               <AdminFileUpload 
                 id="bannerUrl"
                 name="bannerUrl"
