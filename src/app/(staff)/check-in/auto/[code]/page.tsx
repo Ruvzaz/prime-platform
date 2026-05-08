@@ -24,7 +24,9 @@ export default async function AutoCheckInPage({
     where: { referenceCode: code.toUpperCase() },
     include: {
       event: { include: { formFields: true } },
-      checkIn: true,
+      checkIns: {
+        orderBy: { scannedAt: "desc" }
+      },
     },
   })
 
@@ -47,22 +49,31 @@ export default async function AutoCheckInPage({
 
   const { name, email } = extractAttendeeInfo(registration.formData as Record<string, unknown>, registration.event.formFields)
 
-  // Already checked in
-  if (registration.checkIn) {
+  // Check if already checked in TODAY
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
+
+  const checkInToday = registration.checkIns.find(ci => 
+    new Date(ci.scannedAt) >= today && new Date(ci.scannedAt) < tomorrow
+  );
+
+  if (checkInToday) {
     return (
     <div className="min-h-screen bg-transparent flex items-center justify-center p-4">
         <div className="w-full max-w-sm bg-card text-card-foreground rounded-2xl shadow-xl border border-border p-8 text-center">
           <div className="mx-auto w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
             <AlertCircle className="w-7 h-7 text-muted-foreground" />
           </div>
-          <h1 className="text-xl font-bold mb-2">Already Checked In</h1>
+          <h1 className="text-xl font-bold mb-2">Already Checked In Today</h1>
           <div className="space-y-1 mb-4">
             <p className="text-sm font-medium">{String(name)}</p>
             <p className="text-xs text-muted-foreground">{String(email)}</p>
             <p className="text-xs text-muted-foreground">{registration.event.title}</p>
           </div>
           <p className="text-xs text-muted-foreground/70 mb-6">
-            Checked in at {registration.checkIn.scannedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            Scanned at {new Date(checkInToday.scannedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </p>
           <Button asChild variant="outline">
             <Link href="/check-in">Back to Check-In</Link>
@@ -87,8 +98,8 @@ export default async function AutoCheckInPage({
       }),
     ])
   } catch (error: any) {
+    // If double scanned within milliseconds
     if (error?.code === "P2002") {
-      // Concurrent check-in
       return (
         <div className="min-h-screen bg-transparent flex items-center justify-center p-4">
           <div className="w-full max-w-sm bg-card text-card-foreground rounded-2xl shadow-xl border border-border p-8 text-center">
@@ -96,7 +107,7 @@ export default async function AutoCheckInPage({
               <AlertCircle className="w-7 h-7 text-muted-foreground" />
             </div>
             <h1 className="text-xl font-bold mb-2">Already Checked In</h1>
-            <p className="text-muted-foreground text-sm mb-6">This attendee was checked in by another device.</p>
+            <p className="text-muted-foreground text-sm mb-6">This attendee was just checked in.</p>
             <Button asChild variant="outline">
               <Link href="/check-in">Back to Check-In</Link>
             </Button>
