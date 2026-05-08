@@ -243,17 +243,18 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
           })
           
           const sortedGlobalDates = Array.from(allCheckInDates).sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
-          const globalDay1 = sortedGlobalDates[0]
-          const globalDay2 = sortedGlobalDates[1]
+          const dayHeaders = sortedGlobalDates.map((_, i) => `Check In Day ${i + 1}`)
 
-          const headers = ["Ref Code", "Name", "Email", "Phone", "Event", "Status", "Date", "Check In Day 1", "Check In Day 2", ...customHeaders]
+          const headers = ["Ref Code", "Name", "Email", "Phone", "Event", "Status", "Date", ...dayHeaders, ...customHeaders]
           
           const rows = (allData as any[]).map((reg: any) => {
               const { name, email, phone } = extractAttendeeInfo(reg.formData as Record<string, unknown>, reg.event.formFields)
               const formData = reg.formData as Record<string, unknown> || {}
               
-              const ci1 = reg.checkIns?.find((ci: any) => new Date(ci.scannedAt).toLocaleDateString() === globalDay1)
-              const ci2 = reg.checkIns?.find((ci: any) => new Date(ci.scannedAt).toLocaleDateString() === globalDay2)
+              const dayCols = sortedGlobalDates.map(dateStr => {
+                  const ci = reg.checkIns?.find((ci: any) => new Date(ci.scannedAt).toLocaleDateString() === dateStr)
+                  return ci ? `"${new Date(ci.scannedAt).toLocaleString()}"` : '""'
+              })
 
               const standardCols = [
                   reg.referenceCode,
@@ -263,8 +264,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                   `"${reg.event.title}"`,
                   reg.status,
                   `"${new Date(reg.createdAt).toLocaleDateString()}"`,
-                  ci1 ? `"${new Date(ci1.scannedAt).toLocaleString()}"` : '""',
-                  ci2 ? `"${new Date(ci2.scannedAt).toLocaleString()}"` : '""'
+                  ...dayCols
               ]
 
               // Dynamic Fields
