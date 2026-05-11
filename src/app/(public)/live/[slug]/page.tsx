@@ -15,12 +15,11 @@ interface EventInfo {
   title: string
   imageUrl: string | null
   liveConfig?: {
-    logoUrl?: string | null;
-    bannerUrl?: string | null;
-    welcomeMessage?: string | null;
     themeColor?: string | null;
     showStats?: boolean;
     showLog?: boolean;
+    layoutMode?: string;
+    maskNames?: boolean;
   } | null
 }
 
@@ -135,64 +134,87 @@ const Spotlight = memo(({ latest, imageUrl, liveConfig }: { latest: CheckInEntry
   )
 })
 
-const FeedList = memo(({ items, highlightId, themeColor }: { items: CheckInEntry[], highlightId: string | null, themeColor?: string | null }) => {
-  const displayItems = items.slice(0, 7);
+const maskName = (name: string, shouldMask: boolean) => {
+  if (!shouldMask) return name;
+  if (name.length <= 4) return name + "***";
+  return name.substring(0, name.length - 3) + "***";
+}
+
+const FeedList = memo(({ items, highlightId, themeColor, layoutMode, maskNames }: { items: CheckInEntry[], highlightId: string | null, themeColor?: string | null, layoutMode?: string, maskNames?: boolean }) => {
+  const isFullscreen = layoutMode === 'fullscreen';
+  const displayItems = isFullscreen ? items.slice(0, 6) : items.slice(0, 8);
   const color = themeColor || '#4f46e5';
   
   return (
-    <div className="lg:col-span-6 h-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between mb-8 px-2 shrink-0">
-        <h3 className="text-[9px] font-bold text-slate-600 uppercase tracking-[0.4em] flex items-center gap-3">
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
-          Latest Check In
-        </h3>
-        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em]">Latest</span>
-      </div>
+    <div className={`${isFullscreen ? 'lg:col-span-5 h-full flex flex-col justify-center gap-4' : 'lg:col-span-5 h-full flex flex-col overflow-hidden py-6'}`}>
+      {!isFullscreen && (
+        <div className="flex items-center justify-between mb-8 px-4 shrink-0">
+            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] flex items-center gap-3">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            Recent Activity
+            </h3>
+        </div>
+      )}
 
-      <div className="flex-1 space-y-3 pb-10 overflow-hidden custom-scrollbar overflow-y-auto pr-2">
+      <div className={`flex-1 space-y-4 pb-10 overflow-hidden ${!isFullscreen ? 'custom-scrollbar overflow-y-auto px-2' : 'flex flex-col justify-center'}`}>
         <AnimatePresence initial={false} mode="popLayout">
           {displayItems.map((ci) => {
             const isNew = ci.id === highlightId;
+            const maskedName = maskName(ci.name, maskNames ?? false);
+            
             return (
               <motion.div
                 key={ci.id}
                 layout
-                initial={isNew ? { opacity: 0, y: 5, scale: 0.99 } : false}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
+                initial={isNew ? { opacity: 0, x: isFullscreen ? -50 : 20, scale: 0.9 } : false}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: isFullscreen ? -20 : -20, scale: 0.95 }}
                 transition={{ 
-                  duration: 0.5, 
-                  ease: [0.19, 1, 0.22, 1],
-                  layout: { duration: 0.4, ease: [0.19, 1, 0.22, 1] }
+                  duration: 0.6, 
+                  ease: [0.16, 1, 0.3, 1],
+                  layout: { duration: 0.4 }
                 }}
                 className={`
-                  relative p-5 rounded-[1.5rem] transition-all duration-700
-                  ${isNew 
-                    ? "bg-white shadow-[0_15px_40px_-5px_rgba(0,0,0,0.04)] border border-indigo-50/50" 
-                    : "bg-transparent border border-transparent"
+                  relative transition-all duration-700
+                  ${isFullscreen 
+                    ? "bg-white/90 backdrop-blur-xl rounded-2xl p-4 flex items-center gap-6 shadow-2xl border border-white/50" 
+                    : isNew 
+                      ? "bg-white dark:bg-slate-800 shadow-xl border border-white dark:border-slate-700 p-6 rounded-[2rem]" 
+                      : "bg-slate-50/30 dark:bg-slate-900/30 border border-transparent p-6 rounded-[2rem]"
                   }
                 `}
               >
-                <div className="flex items-center gap-5">
-                   <div className={`
-                     w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 transition-colors shadow-sm
-                   `} style={{ 
-                     backgroundColor: isNew ? color : 'white', 
-                     color: isNew ? 'white' : '#475569',
-                     border: isNew ? 'none' : '1px solid #f1f5f9'
-                   }}>
+                <div className="flex items-center gap-5 w-full">
+                   <div className={`${isFullscreen ? 'w-10 h-10 rounded-full text-sm' : 'w-12 h-12 rounded-2xl text-lg'} flex items-center justify-center font-black shrink-0 shadow-sm border border-white dark:border-slate-800`}
+                    style={{ 
+                      backgroundColor: isNew ? color : isFullscreen ? '#f8fafc' : 'white', 
+                      color: isNew ? 'white' : color,
+                    }}>
                      {ci.name.substring(0, 1).toUpperCase()}
                    </div>
-                   <div className="flex-1 min-w-0">
-                     <h4 className="text-base font-bold tracking-tight transition-colors" style={{ color: isNew ? color : '#0f172a' }}>
-                       {ci.name}
-                     </h4>
-                     <p className="text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-0.5">
-                       {ci.referenceCode}
-                     </p>
-                   </div>
+                   
+                   {isFullscreen ? (
+                     <div className="flex-1 flex items-center gap-8 min-w-0">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 shrink-0 tabular-nums">
+                            {ci.referenceCode}
+                        </span>
+                        <h4 className="text-sm font-black text-slate-900 truncate uppercase">
+                            {maskedName}
+                        </h4>
+                     </div>
+                   ) : (
+                     <div className="flex-1 min-w-0">
+                        <h4 className="text-xl font-black tracking-tight text-slate-900 dark:text-white truncate">
+                            {maskedName}
+                        </h4>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1">
+                            {ci.referenceCode}
+                        </p>
+                     </div>
+                   )}
+
                    <div className="text-right shrink-0">
-                     <span className="text-base font-bold tabular-nums transition-colors" style={{ color: isNew ? color : '#475569' }}>
+                     <span className={`${isFullscreen ? 'text-sm' : 'text-lg'} font-black tabular-nums text-slate-600 dark:text-slate-400`}>
                        {new Date(ci.scannedAt).toLocaleTimeString("th-TH", {
                          hour: "2-digit",
                          minute: "2-digit",
@@ -308,42 +330,58 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
     )
   }
 
+  const isFullscreen = data.event.liveConfig?.layoutMode === 'fullscreen';
+
   return (
     <div className="h-screen w-screen bg-white text-slate-900 relative flex flex-col overflow-hidden live-root select-none">
       
-      {/* Background Highlight Blobs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-50/40 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
-        <div className="absolute top-[20%] -right-[10%] w-[35%] h-[35%] bg-indigo-50/40 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '12s' }} />
-        <div className="absolute -bottom-[10%] left-[20%] w-[45%] h-[45%] bg-cyan-50/30 rounded-full blur-[140px] animate-pulse" style={{ animationDuration: '10s' }} />
-      </div>
-
-      {/* Custom Banner Implementation */}
-      {data.event.liveConfig?.bannerUrl && (
-        <div className="absolute inset-0 z-0 opacity-10 pointer-events-none">
-           <img src={data.event.liveConfig.bannerUrl} alt="" className="w-full h-full object-cover" />
-           <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white" />
+      {/* Background Highlight Blobs - Hide in Fullscreen */}
+      {!isFullscreen && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+            <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-50/40 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
+            <div className="absolute top-[20%] -right-[10%] w-[35%] h-[35%] bg-indigo-50/40 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '12s' }} />
+            <div className="absolute -bottom-[10%] left-[20%] w-[45%] h-[45%] bg-cyan-50/30 rounded-full blur-[140px] animate-pulse" style={{ animationDuration: '10s' }} />
         </div>
       )}
 
-      <Header title={data.event.title} imageUrl={data.event.imageUrl} total={data.total} liveConfig={data.event.liveConfig} />
+      {/* Custom Banner Implementation */}
+      {data.event.liveConfig?.bannerUrl && (
+        <div className={`absolute inset-0 z-0 pointer-events-none ${isFullscreen ? 'opacity-100' : 'opacity-10'}`}>
+           <img src={data.event.liveConfig.bannerUrl} alt="" className="w-full h-full object-cover" />
+           {!isFullscreen && <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white" />}
+        </div>
+      )}
 
-      <main className="relative z-20 max-w-[85rem] mx-auto w-full px-14 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-20 items-center overflow-hidden">
+      {!isFullscreen && (
+        <Header title={data.event.title} imageUrl={data.event.imageUrl} total={data.total} liveConfig={data.event.liveConfig} />
+      )}
+
+      <main className={`relative z-20 max-w-[85rem] mx-auto w-full px-14 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-20 items-center overflow-hidden ${isFullscreen ? 'py-10' : ''}`}>
         
-        <Spotlight latest={data.checkIns[0] || null} imageUrl={data.event.imageUrl} liveConfig={data.event.liveConfig} />
+        {!isFullscreen && (
+          <Spotlight latest={data.checkIns[0] || null} imageUrl={data.event.imageUrl} liveConfig={data.event.liveConfig} />
+        )}
 
         {data.event.liveConfig?.showLog !== false && (
-          <FeedList items={data.checkIns} highlightId={highlightId} themeColor={data.event.liveConfig?.themeColor} />
+          <FeedList 
+            items={data.checkIns} 
+            highlightId={highlightId} 
+            themeColor={data.event.liveConfig?.themeColor} 
+            layoutMode={data.event.liveConfig?.layoutMode}
+            maskNames={data.event.liveConfig?.maskNames}
+          />
         )}
         
       </main>
 
-      <footer className="relative z-30 px-14 py-10 mt-auto opacity-30 flex-shrink-0">
-        <div className="max-w-[85rem] mx-auto flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.5em] text-slate-600">
-          <span>Synchronized Terminal</span>
-          <span>Prime Digital &copy; 2026</span>
-        </div>
-      </footer>
+      {!isFullscreen && (
+        <footer className="relative z-30 px-14 py-10 mt-auto opacity-30 flex-shrink-0">
+            <div className="max-w-[85rem] mx-auto flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.5em] text-slate-600">
+            <span>Synchronized Terminal</span>
+            <span>Prime Digital &copy; 2026</span>
+            </div>
+        </footer>
+      )}
     </div>
   )
 }

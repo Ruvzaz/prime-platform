@@ -23,6 +23,8 @@ export async function updateLiveConfig(eventId: string, data: {
   themeColor?: string | null;
   showStats?: boolean;
   showLog?: boolean;
+  layoutMode?: string;
+  maskNames?: boolean;
 }) {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== 'ADMIN') {

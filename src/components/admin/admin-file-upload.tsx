@@ -13,6 +13,7 @@ interface AdminFileUploadProps {
   accept?: string
   label?: string
   folder?: string
+  onUploadComplete?: (url: string) => void
 }
 
 export function AdminFileUpload({ 
@@ -22,7 +23,8 @@ export function AdminFileUpload({
   defaultValue, 
   accept = "image/*", 
   label = "Upload File",
-  folder = "uploads"
+  folder = "uploads",
+  onUploadComplete
 }: AdminFileUploadProps) {
   const [file, setFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -31,7 +33,7 @@ export function AdminFileUpload({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = async (selectedFile: File) => {
-    // 5MB limit for Admin uploads as per current requirement, but could be higher with R2
+    // 20MB limit for Admin uploads
     if (selectedFile.size > 20 * 1024 * 1024) {
       setError("File size too large (Max 20MB)")
       return
@@ -69,6 +71,7 @@ export function AdminFileUpload({
 
       // 3. Save URL for form submission
       setUploadedUrl(publicUrl)
+      if (onUploadComplete) onUploadComplete(publicUrl)
     } catch (err: any) {
       console.error(err)
       setError(err.message || "Upload failed. Please try again.")
@@ -108,16 +111,16 @@ export function AdminFileUpload({
         <Button 
           type="button" 
           variant="outline" 
-          className="w-full border-dashed py-8 flex flex-col gap-2 h-auto"
+          className="w-full border-dashed py-8 flex flex-col gap-2 h-auto rounded-2xl"
           onClick={() => fileInputRef.current?.click()}
         >
           <UploadCloud className="w-6 h-6 text-muted-foreground" />
           <span className="text-xs font-medium">{label}</span>
         </Button>
       ) : (
-        <div className="flex items-center justify-between p-3 border rounded-md bg-muted/30">
+        <div className="flex items-center justify-between p-3 border rounded-2xl bg-muted/30">
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="w-8 h-8 shrink-0 rounded bg-primary/10 flex items-center justify-center">
+            <div className="w-8 h-8 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center">
               {isUploading ? (
                 <Loader2 className="w-4 h-4 text-primary animate-spin" />
               ) : (
@@ -135,15 +138,17 @@ export function AdminFileUpload({
           </div>
           
           {!isUploading && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-destructive"
-              onClick={removeFile}
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive rounded-full"
+                    onClick={removeFile}
+                >
+                    <X className="w-4 h-4" />
+                </Button>
+            </div>
           )}
         </div>
       )}
@@ -151,8 +156,8 @@ export function AdminFileUpload({
       {error && <p className="text-[10px] text-destructive font-medium">{error}</p>}
       
       {uploadedUrl && !isUploading && (
-        <div className="text-[10px] text-muted-foreground italic truncate">
-          URL: <a href={uploadedUrl} target="_blank" className="underline">{uploadedUrl}</a>
+        <div className="text-[10px] text-muted-foreground italic truncate px-1">
+          URL: <a href={uploadedUrl} target="_blank" rel="noopener noreferrer" className="underline">{uploadedUrl}</a>
         </div>
       )}
     </div>

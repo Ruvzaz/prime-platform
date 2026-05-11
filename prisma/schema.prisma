@@ -68,6 +68,8 @@ model LiveConfig {
   // Display Toggles
   showStats       Boolean  @default(true)
   showLog         Boolean  @default(true)
+  layoutMode      String   @default("standard") // "standard" or "fullscreen"
+  maskNames       Boolean  @default(false)
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
