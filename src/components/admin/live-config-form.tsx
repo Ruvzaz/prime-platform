@@ -82,8 +82,17 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
 
   const maskName = (name: string) => {
     if (!config.maskNames) return name;
-    if (name.length <= 4) return name + "***";
-    return name.substring(0, name.length - 3) + "***";
+    if (!name) return "";
+    const len = name.length;
+    let maskCount = 3;
+    
+    if (len <= 5) maskCount = 2;
+    else if (len <= 10) maskCount = 3;
+    else if (len <= 15) maskCount = 4;
+    else maskCount = 5;
+
+    const safeMaskCount = Math.min(maskCount, len - 1);
+    return name.substring(0, len - safeMaskCount) + "*".repeat(safeMaskCount);
   }
 
   function getBubbleColors(hexColor: string) {

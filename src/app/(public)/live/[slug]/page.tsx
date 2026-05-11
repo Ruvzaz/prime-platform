@@ -141,14 +141,22 @@ const Spotlight = memo(({ latest, imageUrl, liveConfig }: { latest: CheckInEntry
 })
 
 const maskName = (name: string, shouldMask: boolean) => {
-  if (!shouldMask) return name;
-  if (name.length <= 4) return name + "***";
-  return name.substring(0, name.length - 3) + "***";
+  if (!shouldMask || !name) return name;
+  const len = name.length;
+  let maskCount = 3; // Default
+  
+  if (len <= 5) maskCount = 2;
+  else if (len <= 10) maskCount = 3;
+  else if (len <= 15) maskCount = 4;
+  else maskCount = 5;
+
+  const safeMaskCount = Math.min(maskCount, len - 1);
+  return name.substring(0, len - safeMaskCount) + "*".repeat(safeMaskCount);
 }
 
 const FeedList = memo(({ items, highlightId, themeColor, layoutMode, maskNames }: { items: CheckInEntry[], highlightId: string | null, themeColor?: string | null, layoutMode?: string, maskNames?: boolean }) => {
   const isFullscreen = layoutMode === 'fullscreen';
-  const displayItems = isFullscreen ? items.slice(0, 6) : items.slice(0, 8);
+  const displayItems = isFullscreen ? items.slice(0, 4) : items.slice(0, 8);
   const color = themeColor || '#4f46e5';
   
   return (
