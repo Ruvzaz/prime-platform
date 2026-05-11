@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef, memo } from "react"
 import { Users, Sparkles, CheckCircle2, RefreshCw } from "lucide-react"
 import { motion, AnimatePresence, useSpring, useTransform } from "framer-motion"
+import { BubbleBackground } from "@/components/animate-ui/components/backgrounds/bubble"
 
 interface CheckInEntry {
   id: string
@@ -15,11 +16,16 @@ interface EventInfo {
   title: string
   imageUrl: string | null
   liveConfig?: {
+    logoUrl?: string | null;
+    bannerUrl?: string | null;
+    welcomeMessage?: string | null;
     themeColor?: string | null;
     showStats?: boolean;
     showLog?: boolean;
     layoutMode?: string;
     maskNames?: boolean;
+    bubbleColor?: string | null;
+    bubbleOpacity?: number | null;
   } | null
 }
 
@@ -146,7 +152,7 @@ const FeedList = memo(({ items, highlightId, themeColor, layoutMode, maskNames }
   const color = themeColor || '#4f46e5';
   
   return (
-    <div className={`${isFullscreen ? 'lg:col-span-5 h-full flex flex-col justify-center gap-4' : 'lg:col-span-5 h-full flex flex-col overflow-hidden py-6'}`}>
+    <div className={`${isFullscreen ? 'lg:col-span-6 h-full flex flex-col justify-center gap-4 pl-5' : 'lg:col-span-6 h-full flex flex-col overflow-hidden py-6'}`}>
       {!isFullscreen && (
         <div className="flex items-center justify-between mb-8 px-4 shrink-0">
             <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] flex items-center gap-3">
@@ -166,39 +172,41 @@ const FeedList = memo(({ items, highlightId, themeColor, layoutMode, maskNames }
               <motion.div
                 key={ci.id}
                 layout
-                initial={isNew ? { opacity: 0, x: isFullscreen ? -50 : 20, scale: 0.9 } : false}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: isFullscreen ? -20 : -20, scale: 0.95 }}
+                initial={isNew ? { opacity: 0, x: isFullscreen ? -60 : 20, scale: 0.8, filter: 'blur(10px)' } : false}
+                animate={{ opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, x: isFullscreen ? -30 : -20, scale: 0.9, filter: 'blur(10px)' }}
                 transition={{ 
-                  duration: 0.6, 
-                  ease: [0.16, 1, 0.3, 1],
-                  layout: { duration: 0.4 }
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 18,
+                  mass: 1,
+                  layout: { duration: 0.4, ease: "easeInOut" }
                 }}
                 className={`
                   relative transition-all duration-700
                   ${isFullscreen 
-                    ? "bg-white/90 backdrop-blur-xl rounded-2xl p-4 flex items-center gap-6 shadow-2xl border border-white/50" 
+                    ? "bg-white/95 backdrop-blur-2xl rounded-[2.5rem] p-7 flex items-center gap-10 shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-white/60" 
                     : isNew 
                       ? "bg-white dark:bg-slate-800 shadow-xl border border-white dark:border-slate-700 p-6 rounded-[2rem]" 
                       : "bg-slate-50/30 dark:bg-slate-900/30 border border-transparent p-6 rounded-[2rem]"
                   }
                 `}
               >
-                <div className="flex items-center gap-5 w-full">
-                   <div className={`${isFullscreen ? 'w-10 h-10 rounded-full text-sm' : 'w-12 h-12 rounded-2xl text-lg'} flex items-center justify-center font-black shrink-0 shadow-sm border border-white dark:border-slate-800`}
+                <div className="flex items-center gap-6 w-full">
+                   <div className={`${isFullscreen ? 'w-14 h-14 rounded-full text-xl' : 'w-12 h-12 rounded-2xl text-lg'} flex items-center justify-center font-black shrink-0 shadow-sm border border-white dark:border-slate-800`}
                     style={{ 
-                      backgroundColor: isNew ? color : isFullscreen ? '#f8fafc' : 'white', 
+                      backgroundColor: isNew ? color : isFullscreen ? '#f1f5f9' : 'white', 
                       color: isNew ? 'white' : color,
                     }}>
                      {ci.name.substring(0, 1).toUpperCase()}
                    </div>
                    
                    {isFullscreen ? (
-                     <div className="flex-1 flex items-center gap-8 min-w-0">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 shrink-0 tabular-nums">
+                     <div className="flex-1 flex items-center gap-12 min-w-0">
+                        <span className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-400 shrink-0 tabular-nums">
                             {ci.referenceCode}
                         </span>
-                        <h4 className="text-sm font-black text-slate-900 truncate uppercase">
+                        <h4 className="text-2xl font-black text-slate-900 truncate uppercase tracking-tight">
                             {maskedName}
                         </h4>
                      </div>
@@ -214,7 +222,7 @@ const FeedList = memo(({ items, highlightId, themeColor, layoutMode, maskNames }
                    )}
 
                    <div className="text-right shrink-0">
-                     <span className={`${isFullscreen ? 'text-sm' : 'text-lg'} font-black tabular-nums text-slate-600 dark:text-slate-400`}>
+                     <span className={`${isFullscreen ? 'text-2xl' : 'text-lg'} font-black tabular-nums text-slate-700 dark:text-slate-400`}>
                        {new Date(ci.scannedAt).toLocaleTimeString("th-TH", {
                          hour: "2-digit",
                          minute: "2-digit",
@@ -232,6 +240,23 @@ const FeedList = memo(({ items, highlightId, themeColor, layoutMode, maskNames }
 })
 
 // --- Main Application Shell ---
+
+function getBubbleColors(hexColor: string) {
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '79, 70, 229';
+  };
+
+  const rgb = hexToRgb(hexColor);
+  return {
+    first: rgb,
+    second: rgb,
+    third: rgb,
+    fourth: rgb,
+    fifth: rgb,
+    sixth: rgb,
+  };
+}
 
 export default function LiveBoardPage({ params }: { params: Promise<{ slug: string }> }) {
   const [slug, setSlug] = useState<string>("")
@@ -331,57 +356,58 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
   }
 
   const isFullscreen = data.event.liveConfig?.layoutMode === 'fullscreen';
+  const themeColor = data.event.liveConfig?.themeColor || '#4f46e5';
 
   return (
-    <div className="h-screen w-screen bg-white text-slate-900 relative flex flex-col overflow-hidden live-root select-none">
-      
-      {/* Background Highlight Blobs - Hide in Fullscreen */}
-      {!isFullscreen && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-            <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-blue-50/40 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
-            <div className="absolute top-[20%] -right-[10%] w-[35%] h-[35%] bg-indigo-50/40 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '12s' }} />
-            <div className="absolute -bottom-[10%] left-[20%] w-[45%] h-[45%] bg-cyan-50/30 rounded-full blur-[140px] animate-pulse" style={{ animationDuration: '10s' }} />
-        </div>
-      )}
-
-      {/* Custom Banner Implementation */}
+    <div className="h-screen w-screen relative bg-white overflow-hidden select-none">
+      {/* 1. BASE LAYER: CUSTOM BANNER */}
       {data.event.liveConfig?.bannerUrl && (
-        <div className={`absolute inset-0 z-0 pointer-events-none ${isFullscreen ? 'opacity-100' : 'opacity-10'}`}>
-           <img src={data.event.liveConfig.bannerUrl} alt="" className="w-full h-full object-cover" />
-           {!isFullscreen && <div className="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white" />}
+        <div className={`absolute inset-0 z-0 pointer-events-none transition-opacity duration-1000 ${isFullscreen ? 'opacity-100' : 'opacity-10'}`}>
+          <img src={data.event.liveConfig.bannerUrl} alt="" className="w-full h-full object-cover" />
+          {!isFullscreen && <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-transparent to-white/80" />}
         </div>
       )}
 
-      {!isFullscreen && (
-        <Header title={data.event.title} imageUrl={data.event.imageUrl} total={data.total} liveConfig={data.event.liveConfig} />
-      )}
+      <BubbleBackground 
+        interactive 
+        className="absolute inset-0 z-10 bg-transparent"
+        colors={getBubbleColors(data.event.liveConfig?.bubbleColor || '#4f46e5')}
+        bubbleOpacity={data.event.liveConfig?.bubbleOpacity ?? 0.1}
+      >
+        {/* 3. TOP LAYER: ACTUAL CONTENT */}
+        <div className="relative z-20 h-full w-full flex flex-col">
+          {!isFullscreen && (
+            <Header title={data.event.title} imageUrl={data.event.imageUrl} total={data.total} liveConfig={data.event.liveConfig} />
+          )}
 
-      <main className={`relative z-20 max-w-[85rem] mx-auto w-full px-14 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-20 items-center overflow-hidden ${isFullscreen ? 'py-10' : ''}`}>
-        
+          <main className={`relative z-20 max-w-full mx-auto w-full px-16 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center overflow-hidden ${isFullscreen ? 'py-12' : ''}`}>
+            
+            {!isFullscreen && (
+              <Spotlight latest={data.checkIns[0] || null} imageUrl={data.event.imageUrl} liveConfig={data.event.liveConfig} />
+            )}
+
+          {data.event.liveConfig?.showLog !== false && (
+            <FeedList 
+              items={data.checkIns} 
+              highlightId={highlightId} 
+              themeColor={themeColor} 
+              layoutMode={data.event.liveConfig?.layoutMode}
+              maskNames={data.event.liveConfig?.maskNames}
+            />
+          )}
+          
+        </main>
+
         {!isFullscreen && (
-          <Spotlight latest={data.checkIns[0] || null} imageUrl={data.event.imageUrl} liveConfig={data.event.liveConfig} />
+          <footer className="relative z-30 px-14 py-10 mt-auto opacity-30 flex-shrink-0">
+              <div className="max-w-[85rem] mx-auto flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.5em] text-slate-600">
+              <span>Synchronized Terminal</span>
+              <span>Prime Digital &copy; 2026</span>
+              </div>
+          </footer>
         )}
-
-        {data.event.liveConfig?.showLog !== false && (
-          <FeedList 
-            items={data.checkIns} 
-            highlightId={highlightId} 
-            themeColor={data.event.liveConfig?.themeColor} 
-            layoutMode={data.event.liveConfig?.layoutMode}
-            maskNames={data.event.liveConfig?.maskNames}
-          />
-        )}
-        
-      </main>
-
-      {!isFullscreen && (
-        <footer className="relative z-30 px-14 py-10 mt-auto opacity-30 flex-shrink-0">
-            <div className="max-w-[85rem] mx-auto flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.5em] text-slate-600">
-            <span>Synchronized Terminal</span>
-            <span>Prime Digital &copy; 2026</span>
-            </div>
-        </footer>
-      )}
+      </div>
+    </BubbleBackground>
     </div>
   )
 }

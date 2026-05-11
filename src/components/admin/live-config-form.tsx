@@ -22,10 +22,12 @@ import {
   MessageSquare,
   Layout as LayoutIcon,
   Image as ImageIcon,
-  ShieldCheck
+  ShieldCheck,
+  Activity
 } from "lucide-react"
 import Link from "next/link"
 import { updateLiveConfig } from "@/app/actions/live-config"
+import { BubbleBackground } from "@/components/animate-ui/components/backgrounds/bubble"
 
 interface LiveBoardSettingsFormProps {
   eventId: string
@@ -39,6 +41,8 @@ interface LiveBoardSettingsFormProps {
     showLog?: boolean
     layoutMode?: string
     maskNames?: boolean
+    bubbleColor?: string | null
+    bubbleOpacity?: number | null
   } | null
 }
 
@@ -55,8 +59,10 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
     themeColor: initialData?.themeColor || "#4f46e5",
     showStats: initialData?.showStats ?? true,
     showLog: initialData?.showLog ?? true,
-    layoutMode: initialData?.layoutMode || "standard",
-    maskNames: initialData?.maskNames ?? false,
+    layoutMode: initialData?.layoutMode || 'standard',
+    maskNames: initialData?.maskNames || false,
+    bubbleColor: initialData?.bubbleColor || '#4f46e5',
+    bubbleOpacity: initialData?.bubbleOpacity ?? 0.1,
   })
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -78,6 +84,23 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
     if (!config.maskNames) return name;
     if (name.length <= 4) return name + "***";
     return name.substring(0, name.length - 3) + "***";
+  }
+
+  function getBubbleColors(hexColor: string) {
+    const hexToRgb = (hex: string) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '79, 70, 229';
+    };
+
+    const rgb = hexToRgb(hexColor);
+    return {
+        first: rgb,
+        second: rgb,
+        third: rgb,
+        fourth: rgb,
+        fifth: rgb,
+        sixth: rgb,
+    };
   }
 
   return (
@@ -235,6 +258,44 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
                                     <span className="text-xs font-black text-indigo-600">{maskName("John Doe")}</span>
                                 </div>
                             </div>
+
+                            {/* BUBBLE SETTINGS */}
+                            <div className="space-y-4 pt-4 border-t border-slate-100">
+                                <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                                    <Activity className="w-4 h-4 text-indigo-500" />
+                                    <span>BUBBLE AESTHETICS</span>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Bubble Color</label>
+                                        <div className="flex items-center gap-3">
+                                            <input 
+                                                type="color" 
+                                                value={config.bubbleColor || '#4f46e5'}
+                                                onChange={(e) => setConfig({ ...config, bubbleColor: e.target.value })}
+                                                className="w-10 h-10 rounded-lg cursor-pointer border-none p-0 bg-transparent"
+                                            />
+                                            <span className="text-xs font-mono text-slate-600 uppercase">{config.bubbleColor}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                            Bubble Opacity ({Math.round((config.bubbleOpacity ?? 0.1) * 100)}%)
+                                        </label>
+                                        <input 
+                                            type="range"
+                                            min="0"
+                                            max="1"
+                                            step="0.05"
+                                            value={config.bubbleOpacity ?? 0.1}
+                                            onChange={(e) => setConfig({ ...config, bubbleOpacity: parseFloat(e.target.value) })}
+                                            className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </TabsContent>
@@ -274,15 +335,21 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
             Live Preview ({config.layoutMode})
         </div>
         
-        <div className="flex-1 relative rounded-[3rem] bg-slate-100 border-8 border-white shadow-2xl overflow-hidden flex flex-col">
+        <div className="flex-1 relative rounded-[3rem] bg-white border-8 border-white shadow-2xl overflow-hidden flex flex-col">
+            <BubbleBackground 
+                className="absolute inset-0 z-0 bg-transparent"
+                colors={getBubbleColors(config.bubbleColor || '#4f46e5')}
+                bubbleOpacity={config.bubbleOpacity ?? 0.1}
+            />
+            
             {/* BACKGROUND LAYER */}
             <div className="absolute inset-0 z-0">
                 {config.bannerUrl ? (
                     <img src={config.bannerUrl} alt="" className={`w-full h-full object-cover transition-all duration-700 ${config.layoutMode === 'standard' ? 'blur-xl opacity-30 scale-110' : 'opacity-100'}`} />
                 ) : (
-                    <div className="w-full h-full bg-slate-200" />
+                    <div className="w-full h-full bg-transparent" />
                 )}
-                {config.layoutMode === 'standard' && <div className="absolute inset-0 bg-white/60" />}
+                {config.layoutMode === 'standard' && <div className="absolute inset-0 bg-white/40" />}
             </div>
 
             {config.layoutMode === 'standard' ? (

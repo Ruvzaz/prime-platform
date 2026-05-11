@@ -25,19 +25,21 @@ export async function updateLiveConfig(eventId: string, data: {
   showLog?: boolean;
   layoutMode?: string;
   maskNames?: boolean;
+  bubbleColor?: string | null;
+  bubbleOpacity?: number | null;
 }) {
   const session = await auth();
-  if (!session?.user?.id || session.user.role !== 'ADMIN') {
+  if (!session || session.user?.role !== "ADMIN") {
     return { success: false, error: "Unauthorized" };
   }
 
   try {
     const config = await prisma.liveConfig.upsert({
       where: { eventId },
-      update: data,
+      update: data as any,
       create: {
         eventId,
-        ...data,
+        ...(data as any),
       },
     });
 
