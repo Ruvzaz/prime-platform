@@ -279,7 +279,7 @@ export async function createCheckIn(registrationId: string) {
 
   try {
     const staffId = session.user.id;
-    // For manual admin check-in, we check if already checked in TODAY
+    // Check if already checked in TODAY to prevent accidental double-clicks
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -296,7 +296,7 @@ export async function createCheckIn(registrationId: string) {
     });
 
     if (existingToday) {
-        return { success: true, message: "Already checked in for today" };
+        return { success: false, error: "Checked In Already (Today)" };
     }
 
     await prisma.checkIn.create({

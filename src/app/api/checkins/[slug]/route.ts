@@ -26,10 +26,16 @@ export async function GET(
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const checkIns = await prisma.checkIn.findMany({
       where: {
         registration: {
           eventId: event.id,
+        },
+        scannedAt: {
+          gte: today,
         },
       },
       orderBy: { scannedAt: "desc" },
@@ -57,11 +63,15 @@ export async function GET(
       };
     });
 
-    // Get unique attendees count (people who checked in at least once)
-    const totalUniqueCheckIns = await prisma.registration.count({
+    // Get unique attendees count FOR TODAY ONLY
+    const totalUniqueCheckIns = await prisma.checkIn.count({
       where: {
-        eventId: event.id,
-        checkIns: { some: {} }
+        registration: {
+          eventId: event.id,
+        },
+        scannedAt: {
+          gte: today,
+        },
       }
     });
 

@@ -235,14 +235,38 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
                                 </p>
                             </div>
 
-                            <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => setResetCheckInOpen(true)}
-                                className="text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors text-xs uppercase tracking-wider h-8 px-4"
-                            >
-                                Undo Check-in
-                            </Button>
+                             <div className="flex flex-col gap-2 w-full max-w-[200px]">
+                                {(() => {
+                                    const todayStr = new Date().toLocaleDateString();
+                                    const isCheckedInToday = (registration as any).checkIns?.some((ci: any) => 
+                                        new Date(ci.scannedAt).toLocaleDateString() === todayStr
+                                    );
+
+                                    return (
+                                        <Button 
+                                            onClick={handleCreateCheckIn} 
+                                            disabled={isLoading || isCheckedInToday}
+                                            className={cn(
+                                                "w-full shadow-lg transition-all active:scale-[0.98] rounded-xl h-10 font-bold",
+                                                isCheckedInToday 
+                                                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border" 
+                                                    : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                                            )}
+                                        >
+                                            {isLoading ? "Processing..." : isCheckedInToday ? "Checked In Today" : "Check In Again"}
+                                        </Button>
+                                    );
+                                })()}
+                                
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => setResetCheckInOpen(true)}
+                                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/5 transition-colors text-[10px] uppercase tracking-wider h-8 px-4"
+                                >
+                                    Undo Check-in
+                                </Button>
+                            </div>
                         </>
                     ) : (
                         <>
