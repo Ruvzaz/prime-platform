@@ -164,7 +164,7 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
                         />
                         <p className="text-[10px] text-muted-foreground italic px-1 leading-relaxed">
                             {config.layoutMode === 'fullscreen' 
-                                ? "In Fullscreen mode, this image will cover the entire screen without any blurs." 
+                                ? "In Fullscreen mode, this image will cover the entire screen without any blurs 16:9, 4:3." 
                                 : "In Standard mode, this will be blurred as a background element."}
                         </p>
                     </div>

@@ -355,6 +355,11 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
     return () => clearInterval(itv)
   }, [slug, sync])
 
+  const bubbleColors = React.useMemo(() => 
+    getBubbleColors(data.event?.liveConfig?.bubbleColor || '#4f46e5'),
+    [data.event?.liveConfig?.bubbleColor]
+  );
+
   if (!data.event) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center live-root">
@@ -377,9 +382,8 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
       )}
 
       <BubbleBackground 
-        interactive 
         className="absolute inset-0 z-10 bg-transparent"
-        colors={getBubbleColors(data.event.liveConfig?.bubbleColor || '#4f46e5')}
+        colors={bubbleColors}
         bubbleOpacity={data.event.liveConfig?.bubbleOpacity ?? 0.1}
       >
         {/* 3. TOP LAYER: ACTUAL CONTENT */}
