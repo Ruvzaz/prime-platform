@@ -113,6 +113,11 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
   // Edit State
   const [editingRegistration, setEditingRegistration] = useState<any>(null)
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [jumpPage, setJumpPage] = useState(String(currentPage))
+
+  useEffect(() => {
+    setJumpPage(String(currentPage))
+  }, [currentPage])
 
   // Selection State
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -528,8 +533,33 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                 </div>
             </div>
             <div className="flex items-center gap-3">
-                <div className="text-sm font-bold text-muted-foreground bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-border/40">
-                    Page <span className="text-primary">{metadata.page}</span> / <span className="text-primary">{metadata.totalPages}</span>
+                <div className="flex items-center gap-2 text-sm font-bold bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl shadow-sm border border-border/40 transition-all focus-within:ring-2 focus-within:ring-primary/20">
+                    <span className="text-muted-foreground ml-1">Page</span>
+                    <input 
+                        type="text"
+                        value={jumpPage}
+                        onChange={(e) => setJumpPage(e.target.value.replace(/\D/g, ''))}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                const pageNum = parseInt(jumpPage)
+                                if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= metadata.totalPages) {
+                                    handlePageChange(pageNum)
+                                } else {
+                                    setJumpPage(String(currentPage))
+                                }
+                            }
+                        }}
+                        onBlur={() => {
+                            const pageNum = parseInt(jumpPage)
+                            if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= metadata.totalPages) {
+                                handlePageChange(pageNum)
+                            } else {
+                                setJumpPage(String(currentPage))
+                            }
+                        }}
+                        className="w-10 h-7 text-center bg-slate-50 dark:bg-slate-800 rounded-lg border-none focus:ring-0 p-0 text-primary font-black"
+                    />
+                    <span className="text-muted-foreground mr-1">/ {metadata.totalPages || 1}</span>
                 </div>
                 <div className="flex gap-2">
                     <Button 

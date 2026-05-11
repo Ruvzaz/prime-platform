@@ -60,6 +60,7 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
     const [searchTerm, setSearchTerm] = useState("")
     const [sortBy, setSortBy] = useState("createdAt")
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+    const [jumpPage, setJumpPage] = useState("1")
     
     const debouncedSearchTerm = useDebounceValue(searchTerm, 2000)
     
@@ -71,8 +72,13 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
     useEffect(() => {
         if (selectedEventId) {
             setCurrentPage(1)
+            setJumpPage("1")
         }
     }, [selectedEventId, debouncedSearchTerm])
+
+    useEffect(() => {
+        setJumpPage(String(currentPage))
+    }, [currentPage])
 
     useEffect(() => {
         if (selectedEventId) {
@@ -305,8 +311,33 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                     >
                         <ChevronLeft className="h-4 w-4 mr-2" /> Previous
                     </Button>
-                    <div className="text-sm font-bold bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-border/40">
-                        Page {currentPage} / {metadata.totalPages || 1}
+                    <div className="flex items-center gap-2 text-sm font-bold bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl shadow-sm border border-border/40 transition-all focus-within:ring-2 focus-within:ring-primary/20">
+                        <span className="text-muted-foreground ml-1">Page</span>
+                        <input 
+                            type="text"
+                            value={jumpPage}
+                            onChange={(e) => setJumpPage(e.target.value.replace(/\D/g, ''))}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    const pageNum = parseInt(jumpPage)
+                                    if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= metadata.totalPages) {
+                                        setCurrentPage(pageNum)
+                                    } else {
+                                        setJumpPage(String(currentPage))
+                                    }
+                                }
+                            }}
+                            onBlur={() => {
+                                const pageNum = parseInt(jumpPage)
+                                if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= metadata.totalPages) {
+                                    setCurrentPage(pageNum)
+                                } else {
+                                    setJumpPage(String(currentPage))
+                                }
+                            }}
+                            className="w-10 h-7 text-center bg-slate-50 dark:bg-slate-800 rounded-lg border-none focus:ring-0 p-0 text-primary font-black"
+                        />
+                        <span className="text-muted-foreground mr-1">/ {metadata.totalPages || 1}</span>
                     </div>
                     <Button
                         variant="outline"
