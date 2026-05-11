@@ -148,7 +148,7 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                     <TableHeader>
                         <TableRow className="bg-slate-50/30 hover:bg-slate-50/30 border-b-border/40">
                             <TableHead 
-                                className="w-[150px] px-8 cursor-pointer hover:bg-slate-100/50 transition-colors"
+                                className="w-[150px] px-8 cursor-pointer hover:bg-slate-100/50 transition-colors sticky left-0 z-20 bg-slate-50/90 backdrop-blur-sm shadow-[1px_0_0_0_rgba(0,0,0,0.1)]"
                                 onClick={() => {
                                     if (sortBy === "referenceCode") setSortOrder(sortOrder === "asc" ? "desc" : "asc")
                                     else { setSortBy("referenceCode"); setSortOrder("asc"); }
@@ -158,7 +158,7 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                                     Ref Code {sortBy === "referenceCode" && (sortOrder === "asc" ? "↑" : "↓")}
                                 </div>
                             </TableHead>
-                            <TableHead className="min-w-[200px]">Attendee</TableHead>
+                            <TableHead className="min-w-[200px] sticky left-[150px] z-20 bg-slate-50/90 backdrop-blur-sm shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">Attendee</TableHead>
                             <TableHead 
                                 className="min-w-[140px] cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 onClick={() => {
@@ -207,10 +207,10 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                                 const { name, email } = extractAttendeeInfo(reg.formData, selectedEvent?.formFields)
                                 return (
                                 <TableRow key={reg.id} className="group hover:bg-slate-50/50 border-b-border/30">
-                                    <TableCell className="px-8 font-mono text-xs font-bold text-slate-500">
+                                    <TableCell className="px-8 font-mono text-xs font-bold text-slate-500 sticky left-0 z-10 bg-white group-hover:bg-slate-50 transition-colors shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">
                                         {reg.referenceCode}
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="sticky left-[150px] z-10 bg-white group-hover:bg-slate-50 transition-colors shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">
                                         <div className="flex flex-col">
                                             <span className="font-bold text-slate-900 dark:text-white">{name}</span>
                                             <span className="text-xs text-muted-foreground font-medium">{email}</span>

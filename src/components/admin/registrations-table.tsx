@@ -374,7 +374,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
             <Table>
                 <TableHeader>
                     <TableRow className="bg-slate-50/30 hover:bg-slate-50/30 border-b-border/40">
-                        <TableHead className="w-[60px] px-8">
+                        <TableHead className="w-[60px] px-8 sticky left-0 z-20 bg-slate-50/90 backdrop-blur-sm shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">
                             <Checkbox 
                                 checked={initialData.length > 0 && selectedIds.length === initialData.length}
                                 onCheckedChange={toggleSelectAll}
@@ -383,14 +383,14 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                             />
                         </TableHead>
                         <TableHead 
-                            className="min-w-[150px] cursor-pointer hover:bg-slate-100/50 transition-colors"
+                            className="w-[150px] cursor-pointer hover:bg-slate-100/50 transition-colors sticky left-[60px] z-20 bg-slate-50/90 backdrop-blur-sm shadow-[1px_0_0_0_rgba(0,0,0,0.1)]"
                             onClick={() => toggleSort("referenceCode")}
                         >
                             <div className="flex items-center">
                                 Ref Code <SortIcon field="referenceCode" />
                             </div>
                         </TableHead>
-                        <TableHead className="min-w-[200px]">Attendee</TableHead>
+                        <TableHead className="min-w-[200px] sticky left-[210px] z-20 bg-slate-50/90 backdrop-blur-sm shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">Attendee</TableHead>
                         <TableHead className="min-w-[200px]">Event</TableHead>
                         <TableHead 
                             className="min-w-[140px] cursor-pointer hover:bg-slate-100/50 transition-colors"
@@ -429,7 +429,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                             const { name, email } = extractAttendeeInfo(reg.formData as Record<string, unknown>, reg.event.formFields)
                             return (
                                 <TableRow key={reg.id} className="group hover:bg-slate-50/50 border-b-border/30" data-state={selectedIds.includes(reg.id) && "selected"}>
-                                    <TableCell className="px-8">
+                                    <TableCell className="px-8 sticky left-0 z-10 bg-white group-hover:bg-slate-50 transition-colors shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">
                                         <Checkbox 
                                             checked={selectedIds.includes(reg.id)}
                                             onCheckedChange={() => toggleSelect(reg.id)}
@@ -437,8 +437,8 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                                             className="rounded-md"
                                         />
                                     </TableCell>
-                                    <TableCell className="font-mono text-xs font-bold text-slate-500">{reg.referenceCode}</TableCell>
-                                    <TableCell>
+                                    <TableCell className="w-[150px] font-mono text-xs font-bold text-slate-500 sticky left-[60px] z-10 bg-white group-hover:bg-slate-50 transition-colors shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">{reg.referenceCode}</TableCell>
+                                    <TableCell className="sticky left-[210px] z-10 bg-white group-hover:bg-slate-50 transition-colors shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">
                                         <div className="flex flex-col">
                                             <span className="font-bold text-slate-900 dark:text-white">{name}</span>
                                             <span className="text-xs text-muted-foreground font-medium">{email}</span>
