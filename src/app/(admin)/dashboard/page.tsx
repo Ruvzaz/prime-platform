@@ -11,7 +11,11 @@ const getCachedCounts = unstable_cache(
     const [eventCount, registrationCount, checkInCount] = await Promise.all([
       prisma.event.count(),
       prisma.registration.count(),
-      prisma.checkIn.count(),
+      prisma.registration.count({
+        where: {
+          checkIns: { some: {} }
+        }
+      }),
     ])
     return { eventCount, registrationCount, checkInCount }
   },
@@ -101,7 +105,7 @@ export default async function DashboardPage() {
             <h3 className="text-[10px] font-black text-muted-foreground mb-1 tracking-widest uppercase">Check-in Rate</h3>
             <div className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">
               {stats.registrationCount > 0 
-                ? `${Math.round((stats.checkInCount / stats.registrationCount) * 100)}%`
+                ? `${((stats.checkInCount / stats.registrationCount) * 100).toFixed(1)}%`
                 : "0%"}
             </div>
             <div className="mt-4 w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
