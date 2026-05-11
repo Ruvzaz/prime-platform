@@ -346,7 +346,7 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
         
         <div className="flex-1 relative rounded-[3rem] bg-white border-8 border-white shadow-2xl overflow-hidden flex flex-col">
             <BubbleBackground 
-                className="absolute inset-0 z-0 bg-transparent"
+                className="absolute inset-0 z-10 bg-transparent"
                 colors={getBubbleColors(config.bubbleColor || '#4f46e5')}
                 bubbleOpacity={config.bubbleOpacity ?? 0.1}
             />
@@ -362,7 +362,7 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
             </div>
 
             {config.layoutMode === 'standard' ? (
-              <div className="relative z-10 h-full flex flex-col">
+              <div className="relative z-20 h-full flex flex-col">
                 <header className="px-10 py-8 flex items-center justify-between border-b border-black/5">
                     <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-white shadow-md flex items-center justify-center p-0.5 overflow-hidden">
@@ -387,15 +387,15 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
               </div>
             ) : (
               /* FULLSCREEN OVERLAY MODE (AS PER USER IMAGE) */
-              <div className="relative z-10 h-full p-12 flex flex-col">
+              <div className="relative z-20 h-full p-12 flex flex-col">
                   {/* DATA OVERLAY BOXES ON THE LEFT */}
-                  <div className="w-[45%] h-full flex flex-col justify-center gap-4">
-                      {[1, 2, 3, 4, 5, 6].map(i => (
-                          <div key={i} className="bg-white/90 backdrop-blur-md rounded-2xl p-4 flex items-center gap-6 shadow-xl border border-white/50 scale-[0.85] origin-left">
-                              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xs font-black shadow-inner">U</div>
+                  <div className="w-[50%] h-full flex flex-col justify-center gap-4">
+                      {[1, 2, 3, 4].map(i => (
+                          <div key={i} className="bg-white/95 backdrop-blur-md rounded-[2rem] p-5 flex items-center gap-6 shadow-xl border border-white/50 scale-[0.9] origin-left">
+                              <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-xs font-black shadow-inner">U</div>
                               <div className="flex-1 flex items-center gap-8">
                                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 shrink-0">REF-XXXXXX</span>
-                                  <span className="text-sm font-black text-slate-900 truncate">{maskName("JOHN DOE")}</span>
+                                  <span className="text-sm font-black text-slate-900 truncate">{maskName(i % 2 === 0 ? "John Doe" : "Thanapong Sakda")}</span>
                               </div>
                               <div className="text-right">
                                   <span className="text-sm font-black text-slate-600 tabular-nums">14:15</span>

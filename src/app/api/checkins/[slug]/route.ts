@@ -51,7 +51,7 @@ export async function GET(
       return {
         id: ci.id,
         referenceCode: ci.registration.referenceCode,
-        name: maskName(name),
+        name: name,
         email: maskEmail(email),
         scannedAt: ci.scannedAt.toISOString(),
       };
