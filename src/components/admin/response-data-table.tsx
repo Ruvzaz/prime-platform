@@ -54,7 +54,8 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
 
     const [isLoading, setIsLoading] = useState(false)
     const [registrations, setRegistrations] = useState<any[]>([])
-    const [metadata, setMetadata] = useState<any>({ total: 0, page: 1, pageSize: 50, totalPages: 0 })
+    const [pageSize, setPageSize] = useState(10)
+    const [metadata, setMetadata] = useState<any>({ total: 0, page: 1, pageSize: 10, totalPages: 0 })
     const [currentPage, setCurrentPage] = useState(1)
     const [searchTerm, setSearchTerm] = useState("")
     const [sortBy, setSortBy] = useState("createdAt")
@@ -77,12 +78,12 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
         if (selectedEventId) {
             fetchData()
         }
-    }, [selectedEventId, debouncedSearchTerm, sortBy, sortOrder, currentPage])
+    }, [selectedEventId, debouncedSearchTerm, sortBy, sortOrder, currentPage, pageSize])
 
     const fetchData = async () => {
         setIsLoading(true)
         try {
-            const result = await getRegistrations(selectedEventId, currentPage, 50, debouncedSearchTerm, sortBy, sortOrder)
+            const result = await getRegistrations(selectedEventId, currentPage, pageSize, debouncedSearchTerm, sortBy, sortOrder)
             setRegistrations(result.data)
             setMetadata(result.metadata)
         } catch (error) {
@@ -272,10 +273,27 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                 </Table>
             </div>
 
-            {/* Pagination Controls */}
-            <div className="flex items-center justify-between p-6 px-8 bg-slate-50/50 dark:bg-slate-800/20 border-t border-border/40">
-                <div className="text-sm font-bold text-muted-foreground bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-border/40">
-                    Showing <span className="text-primary">{registrations.length}</span> of <span className="text-primary">{metadata.total.toLocaleString()}</span>
+            <div className="flex flex-col sm:flex-row items-center justify-between p-6 px-8 bg-slate-50/50 dark:bg-slate-800/20 border-t border-border/40 gap-4">
+                <div className="flex items-center gap-4">
+                    <div className="text-sm font-bold text-muted-foreground bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-border/40 whitespace-nowrap">
+                        Showing <span className="text-primary">{registrations.length}</span> of <span className="text-primary">{metadata.total.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden sm:inline">Rows:</span>
+                        <Select value={String(pageSize)} onValueChange={(v) => {
+                            setPageSize(Number(v))
+                            setCurrentPage(1)
+                        }}>
+                            <SelectTrigger className="h-10 w-[70px] rounded-xl bg-white border-border/50 shadow-sm font-bold focus:ring-primary/20">
+                                <SelectValue placeholder="10" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl border-border/50 shadow-xl min-w-[70px]">
+                                {[10, 20, 50, 100].map(size => (
+                                    <SelectItem key={size} value={String(size)} className="rounded-lg">{size}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
                 <div className="flex items-center gap-3">
                     <Button
@@ -302,11 +320,6 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                 </div>
             </div>
 
-            <div className="p-6 bg-slate-50/30 dark:bg-slate-800/10 text-center border-t border-border/20">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-50">
-                    Use search to filter across all records • Results are real-time
-                </p>
-            </div>
 
             <RegistrationEditSheet 
                 registration={editingRegistration} 

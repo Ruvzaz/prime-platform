@@ -101,6 +101,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
   // URL State
   const currentEventId = searchParams.get("eventId") || "all"
   const currentPage = Number(searchParams.get("page")) || 1
+  const currentPageSize = Number(searchParams.get("pageSize")) || 10
   const currentQuery = searchParams.get("q") || ""
   const currentSortBy = searchParams.get("sortBy") || "createdAt"
   const currentSortOrder = searchParams.get("sortOrder") || "desc"
@@ -507,30 +508,49 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
             </Table>
         </div>
 
-        {/* PAGINATION CONTROLS */}
-        <div className="flex items-center justify-between p-6 px-8 bg-slate-50/50 dark:bg-slate-800/20 border-t border-border/40">
-            <div className="text-sm font-bold text-muted-foreground bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-border/40">
-                Page <span className="text-primary">{metadata.page}</span> of <span className="text-primary">{metadata.totalPages}</span>
+        <div className="flex flex-col sm:flex-row items-center justify-between p-6 px-8 bg-slate-50/50 dark:bg-slate-800/20 border-t border-border/40 gap-4">
+            <div className="flex items-center gap-4">
+                <div className="text-sm font-bold text-muted-foreground bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-border/40 whitespace-nowrap">
+                    Showing <span className="text-primary">{initialData.length}</span> of <span className="text-primary">{metadata.total.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden sm:inline">Rows:</span>
+                    <Select value={String(currentPageSize)} onValueChange={(v) => updateUrl({ pageSize: v, page: 1 })}>
+                        <SelectTrigger className="h-10 w-[70px] rounded-xl bg-white border-border/50 shadow-sm font-bold focus:ring-primary/20">
+                            <SelectValue placeholder="10" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-border/50 shadow-xl min-w-[70px]">
+                            {[10, 20, 50, 100].map(size => (
+                                <SelectItem key={size} value={String(size)} className="rounded-lg">{size}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
-            <div className="flex gap-3">
-                <Button 
-                    variant="outline" 
-                    size="default" 
-                    className="rounded-xl h-10 px-6 border-border/50 bg-white hover:bg-slate-50 transition-all font-bold shadow-sm"
-                    onClick={() => handlePageChange(Math.max(1, metadata.page - 1))}
-                    disabled={metadata.page <= 1}
-                >
-                    <ChevronLeft className="h-4 w-4 mr-2" /> Previous
-                </Button>
-                <Button 
-                    variant="outline" 
-                    size="default" 
-                    className="rounded-xl h-10 px-6 border-border/50 bg-white hover:bg-slate-50 transition-all font-bold shadow-sm"
-                    onClick={() => handlePageChange(Math.min(metadata.totalPages, metadata.page + 1))}
-                    disabled={metadata.page >= metadata.totalPages}
-                >
-                    Next <ChevronRight className="h-4 w-4 ml-2" />
-                </Button>
+            <div className="flex items-center gap-3">
+                <div className="text-sm font-bold text-muted-foreground bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-border/40">
+                    Page <span className="text-primary">{metadata.page}</span> / <span className="text-primary">{metadata.totalPages}</span>
+                </div>
+                <div className="flex gap-2">
+                    <Button 
+                        variant="outline" 
+                        size="default" 
+                        className="rounded-xl h-10 px-6 border-border/50 bg-white hover:bg-slate-50 transition-all font-bold shadow-sm"
+                        onClick={() => handlePageChange(Math.max(1, metadata.page - 1))}
+                        disabled={metadata.page <= 1}
+                    >
+                        <ChevronLeft className="h-4 w-4 mr-2" /> Previous
+                    </Button>
+                    <Button 
+                        variant="outline" 
+                        size="default" 
+                        className="rounded-xl h-10 px-6 border-border/50 bg-white hover:bg-slate-50 transition-all font-bold shadow-sm"
+                        onClick={() => handlePageChange(Math.min(metadata.totalPages, metadata.page + 1))}
+                        disabled={metadata.page >= metadata.totalPages}
+                    >
+                        Next <ChevronRight className="h-4 w-4 ml-2" />
+                    </Button>
+                </div>
             </div>
         </div>
 
