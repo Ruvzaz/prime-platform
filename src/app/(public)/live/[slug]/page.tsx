@@ -1,8 +1,8 @@
 "use client"
 
-import React, { useState, useEffect, useCallback, useRef, memo } from "react"
-import { Users, Sparkles, CheckCircle2, RefreshCw } from "lucide-react"
-import { motion, AnimatePresence, useSpring, useTransform } from "framer-motion"
+import React, { useState, useEffect, useCallback, useRef, memo, useMemo } from "react"
+import { Users } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import { BubbleBackground } from "@/components/animate-ui/components/backgrounds/bubble"
 
 interface CheckInEntry {
@@ -29,130 +29,105 @@ interface EventInfo {
   } | null
 }
 
-// --- Memoized Sub-components for absolute stability ---
-
-const Header = memo(({ title, imageUrl, total, liveConfig }: { title: string, imageUrl: string | null, total: number, liveConfig?: EventInfo['liveConfig'] }) => {
-  const springTotal = useSpring(total, { stiffness: 10, damping: 20 })
-  const displayTotal = useTransform(springTotal, (value) => Math.floor(value))
-
+const Clock = memo(() => {
+  const [time, setTime] = useState<Date | null>(null)
   useEffect(() => {
-    springTotal.set(total)
-  }, [total, springTotal])
-
-  const logoToUse = liveConfig?.logoUrl || imageUrl;
-  const showStats = liveConfig?.showStats !== false;
-
-  return (
-    <header className="relative z-30 pt-14 px-14 pb-10 flex-shrink-0">
-      <div className="max-w-[85rem] mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-7">
-          <div className="w-14 h-14 rounded-[1.25rem] bg-white shadow-sm border border-slate-100 flex items-center justify-center overflow-hidden p-0.5">
-            {logoToUse ? (
-              <img src={logoToUse} alt="" className="w-full h-full object-cover rounded-[1rem]" />
-            ) : (
-              <Sparkles className="w-6 h-6 text-indigo-500" />
-            )}
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{liveConfig?.welcomeMessage || title}</h1>
-            <div className="flex items-center gap-3 mt-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-[0.25em]">Live Monitoring</span>
-            </div>
-          </div>
-        </div>
-
-        {showStats && (
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.4em] mb-2">Total Presence</span>
-            <div className="flex items-baseline gap-2">
-              <motion.span className="text-6xl font-bold text-indigo-600 tracking-tighter tabular-nums leading-none" style={{ color: liveConfig?.themeColor || undefined }}>
-                {displayTotal}
-              </motion.span>
-            </div>
-          </div>
-        )}
-      </div>
-    </header>
-  )
-})
-
-const Spotlight = memo(({ latest, imageUrl, liveConfig }: { latest: CheckInEntry | null, imageUrl: string | null, liveConfig?: EventInfo['liveConfig'] }) => {
-  const themeColor = liveConfig?.themeColor || '#4f46e5'; // indigo-600
-
-  return (
-    <div className="lg:col-span-6 h-full flex items-center justify-center relative py-10">
-      <AnimatePresence mode="popLayout">
-        {latest ? (
-          <motion.div 
-            key={latest.id}
-            initial={{ opacity: 0, x: -10, scale: 0.99 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 10, scale: 1.01 }}
-            transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
-            className="w-full max-w-xl mx-auto"
-          >
-            <div className="spotlight-card rounded-[3.5rem] p-14 text-center shadow-[0_50px_120px_-20px_rgba(30,58,138,0.1)] border border-indigo-100/50 relative overflow-hidden">
-              <div className="relative z-10">
-                <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-indigo-500/5 border border-indigo-200/50 text-[10px] font-bold uppercase tracking-[0.5em] mb-12" style={{ color: themeColor }}>
-                  <RefreshCw className="w-4 h-4 animate-spin-slow opacity-60" />
-                  Now Arriving
-                </div>
-
-                <div className="relative w-44 h-44 mx-auto mb-12">
-                  <div className="absolute inset-0 rounded-full blur-[90px]" style={{ backgroundColor: `${themeColor}33` }} />
-                  <div className="relative w-full h-full rounded-full bg-white flex items-center justify-center text-7xl font-bold border-[10px] border-indigo-100/50 overflow-hidden shadow-2xl" style={{ color: themeColor }}>
-                    {imageUrl ? (
-                      <img src={imageUrl} alt="" className="w-full h-full object-cover opacity-90" />
-                    ) : (
-                      latest.name.substring(0, 1)
-                    )}
-                  </div>
-                  <div className="absolute bottom-3 right-3 w-12 h-12 rounded-2xl flex items-center justify-center shadow-2xl text-white border-4 border-white" style={{ backgroundColor: themeColor }}>
-                     <CheckCircle2 className="w-6 h-6" />
-                  </div>
-                </div>
-
-                <h2 className="text-5xl font-bold mb-8 text-slate-900 tracking-tight leading-tight">
-                  {latest.name}
-                </h2>
-                
-                <div className="flex flex-col items-center gap-5 mt-14">
-                  <div className="w-10 h-px bg-indigo-200" />
-                  <span className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.6em]">
-                    Registry {latest.referenceCode}
-                  </span>
-                  <span className="text-3xl font-medium mt-1" style={{ color: themeColor }}>
-                    {new Date(latest.scannedAt).toLocaleTimeString("th-TH", { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        ) : (
-          <div className="w-full max-w-xl mx-auto aspect-square bg-[#f8fbff] border border-blue-50 rounded-[3.5rem] flex flex-col items-center justify-center p-20 shadow-sm opacity-50">
-            <Users className="w-12 h-12 text-blue-200 mb-8" />
-            <p className="text-[11px] font-bold text-blue-300 uppercase tracking-[0.5em]">Standby Mode</p>
-          </div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
+    setTime(new Date())
+    const timer = setInterval(() => setTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+  if (!time) return null
+  return <>{time.toLocaleTimeString('en-US', { hour12: false })}</>
 })
 
 const maskName = (name: string, shouldMask: boolean) => {
   if (!shouldMask || !name) return name;
   const len = name.length;
-  let maskCount = 3; // Default
-  
+  let maskCount = 3;
   if (len <= 5) maskCount = 2;
   else if (len <= 10) maskCount = 3;
   else if (len <= 15) maskCount = 4;
   else maskCount = 5;
-
   const safeMaskCount = Math.min(maskCount, len - 1);
   return name.substring(0, len - safeMaskCount) + "*".repeat(safeMaskCount);
 }
+
+const Spotlight = memo(({ latest, maskNames, themeColor = '#4f46e5' }: { latest: CheckInEntry | null, maskNames?: boolean, themeColor?: string }) => {
+  if (!latest) {
+    return (
+      <div className="flex flex-col items-center justify-center opacity-40 h-full w-full">
+         <Users className="w-20 h-20 mb-6 text-slate-400"/>
+         <div className="text-sm font-medium uppercase tracking-[0.5em] text-slate-500">Standby Mode</div>
+      </div>
+    )
+  }
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={latest.id}
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 1.1 }}
+        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+        className="flex flex-col items-center justify-center text-center w-full h-full relative"
+      >
+         <div className="relative w-full max-w-[320px] md:max-w-[400px] lg:max-w-[460px] xl:max-w-[500px] aspect-square flex flex-col items-center justify-center shrink-0">
+            {/* The Floating Bubble Background */}
+            {/* The Floating Bubble Background */}
+            <div className="absolute inset-0 pointer-events-none animate-aura-breathe">
+               <div className="absolute inset-0 animate-aura-spin">
+                  {/* Base Glow */}
+                  <div className="absolute inset-0 rounded-full bg-white opacity-80 blur-3xl will-change-transform" />
+                  
+                  {/* Primary Theme Orb */}
+                  <div 
+                    className="absolute top-[-5%] left-[-5%] w-[65%] h-[65%] rounded-full opacity-80 blur-[40px] animate-aura-pulse-1" 
+                    style={{ backgroundColor: themeColor }}
+                  />
+                  
+                  {/* Violet Orb */}
+                  <div 
+                    className="absolute bottom-[-5%] right-[-5%] w-[70%] h-[70%] rounded-full bg-violet-500 opacity-70 blur-[50px] animate-aura-pulse-2" 
+                  />
+                  
+                  {/* Pink Orb */}
+                  <div 
+                    className="absolute top-[5%] right-[-5%] w-[55%] h-[55%] rounded-full bg-pink-400 opacity-70 blur-[40px] animate-aura-pulse-1" 
+                    style={{ animationDelay: '2s' }}
+                  />
+                  
+                  {/* Sky Blue Orb */}
+                  <div 
+                    className="absolute bottom-[5%] left-[-5%] w-[60%] h-[60%] rounded-full bg-sky-400 opacity-60 blur-[40px] animate-aura-pulse-2" 
+                    style={{ animationDelay: '4s' }}
+                  />
+                  
+                  {/* Center Soft Purple */}
+                  <div 
+                    className="absolute top-[20%] left-[20%] w-[60%] h-[60%] rounded-full bg-fuchsia-400 opacity-50 blur-[50px] animate-aura-pulse-3" 
+                  />
+               </div>
+            </div>
+
+            {/* Inner Content on top of the glowing bubble */}
+            <div className="relative z-10 flex flex-col items-center justify-center w-full px-8">
+               <span className="text-[40px] lg:text-[64px] xl:text-[72px] font-bold text-white tracking-tight drop-shadow-lg leading-none mb-3 lg:mb-4">
+                  Welcome
+               </span>
+               <h2 className="text-2xl lg:text-[32px] xl:text-[36px] font-medium text-white leading-snug tracking-tight drop-shadow-md w-full max-w-[95%] truncate">
+                  {maskName(latest.name, maskNames ?? false)}
+               </h2>
+               
+               <div className="mt-6 lg:mt-8 px-6 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/40 text-white font-mono text-sm lg:text-base font-bold tracking-widest drop-shadow-sm">
+                  {latest.referenceCode}
+               </div>
+            </div>
+         </div>
+      </motion.div>
+    </AnimatePresence>
+  )
+})
 
 const FeedList = memo(({ items, highlightId, themeColor, layoutMode, maskNames }: { items: CheckInEntry[], highlightId: string | null, themeColor?: string | null, layoutMode?: string, maskNames?: boolean }) => {
   const isFullscreen = layoutMode === 'fullscreen';
@@ -247,33 +222,23 @@ const FeedList = memo(({ items, highlightId, themeColor, layoutMode, maskNames }
   )
 })
 
-// --- Main Application Shell ---
-
 function getBubbleColors(hexColor: string) {
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '79, 70, 229';
   };
-
   const rgb = hexToRgb(hexColor);
-  return {
-    first: rgb,
-    second: rgb,
-    third: rgb,
-    fourth: rgb,
-    fifth: rgb,
-    sixth: rgb,
-  };
+  return { first: rgb, second: rgb, third: rgb, fourth: rgb, fifth: rgb, sixth: rgb };
 }
 
 export default function LiveBoardPage({ params }: { params: Promise<{ slug: string }> }) {
   const [slug, setSlug] = useState<string>("")
-  const [data, setData] = useState<{ event: EventInfo | null, checkIns: CheckInEntry[], total: number }>({
+  const [data, setData] = useState<{ event: EventInfo | null, checkIns: CheckInEntry[], total: number, totalRegistrations: number }>({
     event: null,
     checkIns: [],
-    total: 0
+    total: 0,
+    totalRegistrations: 0
   })
-  const [error, setError] = useState<string | null>(null)
   const [highlightId, setHighlightId] = useState<string | null>(null)
   
   const stateRef = useRef(data)
@@ -283,27 +248,59 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
     params.then(p => setSlug(p.slug))
   }, [params])
 
-  // Inject Styles ONCE
   useEffect(() => {
     const style = document.createElement('style')
     style.innerHTML = `
-      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
       
       body, html, .live-root * {
-        font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif !important;
+        font-family: 'Prompt', sans-serif !important;
         -webkit-font-smoothing: antialiased;
       }
-
-      .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: #f0f0f0; border-radius: 10px; }
       
-      .spotlight-card {
-        background: #f8fbff;
-        background: linear-gradient(165deg, #f8fbff 0%, #f0f4ff 100%);
+      .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+      
+      @keyframes marquee {
+        0% { transform: translate3d(0, 0, 0); }
+        100% { transform: translate3d(-50%, 0, 0); }
+      }
+      .animate-marquee {
+        display: flex;
+        width: max-content;
+        will-change: transform;
+        animation: marquee 40s linear infinite;
+      }
+      .animate-marquee:hover {
+        animation-play-state: paused;
       }
 
-      .animate-spin-slow { animation: spin 10s linear infinite; }
-      @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      @keyframes aura-spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes aura-breathe {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-15px); }
+      }
+      @keyframes aura-pulse-1 {
+        0%, 100% { transform: scale(1) translate(0,0); }
+        50% { transform: scale(1.15) translate(5%, 5%); }
+      }
+      @keyframes aura-pulse-2 {
+        0%, 100% { transform: scale(1) translate(0,0); }
+        50% { transform: scale(1.2) translate(-5%, -5%); }
+      }
+      @keyframes aura-pulse-3 {
+        0%, 100% { transform: scale(0.9); }
+        50% { transform: scale(1.3); }
+      }
+      
+      .animate-aura-spin { animation: aura-spin 35s linear infinite; will-change: transform; }
+      .animate-aura-breathe { animation: aura-breathe 8s ease-in-out infinite; will-change: transform; }
+      .animate-aura-pulse-1 { animation: aura-pulse-1 10s ease-in-out infinite; will-change: transform; }
+      .animate-aura-pulse-2 { animation: aura-pulse-2 14s ease-in-out infinite; will-change: transform; }
+      .animate-aura-pulse-3 { animation: aura-pulse-3 12s ease-in-out infinite; will-change: transform; }
     `
     document.head.appendChild(style)
     return () => { document.head.removeChild(style) }
@@ -311,7 +308,6 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
 
   const sync = useCallback(async () => {
     if (!slug || isFetching.current) return
-    
     try {
       isFetching.current = true
       const res = await fetch(`/api/checkins/${slug}`)
@@ -320,26 +316,28 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
       const next = await res.json()
       const prev = stateRef.current
 
-      // Strict Equality Check to prevent ANY re-render if data is identical
       const isEventSame = prev.event?.title === next.event.title && prev.event?.imageUrl === next.event.imageUrl
       const isCheckInsSame = prev.checkIns.length === next.checkIns.length && 
                            (prev.checkIns.length === 0 || prev.checkIns[0].id === next.checkIns[0].id)
       const isTotalSame = prev.total === next.total
 
       if (!isEventSame || !isCheckInsSame || !isTotalSame) {
-        // Handle new check-in highlight
         if (!isCheckInsSame && prev.checkIns.length > 0 && next.checkIns.length > 0) {
           if (next.checkIns[0].id !== prev.checkIns[0].id) {
             setHighlightId(next.checkIns[0].id)
             setTimeout(() => setHighlightId(null), 10000)
           }
         }
-        
-        const newState = { event: next.event, checkIns: next.checkIns, total: next.total }
+
+        const newState = { 
+          event: next.event, 
+          checkIns: next.checkIns, 
+          total: next.total, 
+          totalRegistrations: next.totalRegistrations 
+        }
         setData(newState)
         stateRef.current = newState
       }
-      setError(null)
     } catch {
       // Silent
     } finally {
@@ -347,7 +345,6 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
     }
   }, [slug])
 
-  // Optimized Polling (10s for live feel, but 0ms re-render cost if no change)
   useEffect(() => {
     if (!slug) return
     sync()
@@ -355,71 +352,146 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
     return () => clearInterval(itv)
   }, [slug, sync])
 
-  const bubbleColors = React.useMemo(() => 
-    getBubbleColors(data.event?.liveConfig?.bubbleColor || '#4f46e5'),
-    [data.event?.liveConfig?.bubbleColor]
-  );
+
 
   if (!data.event) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center live-root">
-        <div className="w-10 h-10 border-[3px] border-slate-50 border-t-indigo-500 rounded-full animate-spin" />
+        <div className="w-10 h-10 border-[3px] border-slate-200 border-t-slate-800 rounded-full animate-spin" />
       </div>
     )
   }
 
   const isFullscreen = data.event.liveConfig?.layoutMode === 'fullscreen';
   const themeColor = data.event.liveConfig?.themeColor || '#4f46e5';
+  const bubbleColors = getBubbleColors(themeColor);
 
   return (
-    <div className="h-screen w-screen relative bg-white overflow-hidden select-none">
-      {/* 1. BASE LAYER: CUSTOM BANNER */}
-      {data.event.liveConfig?.bannerUrl && (
-        <div className={`absolute inset-0 z-0 pointer-events-none transition-opacity duration-1000 ${isFullscreen ? 'opacity-100' : 'opacity-10'}`}>
-          <img src={data.event.liveConfig.bannerUrl} alt="" className="w-full h-full object-cover" />
-          {!isFullscreen && <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-transparent to-white/80" />}
-        </div>
-      )}
-
-      <BubbleBackground 
-        className="absolute inset-0 z-10 bg-transparent"
-        colors={bubbleColors}
-        bubbleOpacity={data.event.liveConfig?.bubbleOpacity ?? 0.1}
-      >
-        {/* 3. TOP LAYER: ACTUAL CONTENT */}
-        <div className="relative z-20 h-full w-full flex flex-col">
-          {!isFullscreen && (
-            <Header title={data.event.title} imageUrl={data.event.imageUrl} total={data.total} liveConfig={data.event.liveConfig} />
+    <div className="h-screen w-screen relative bg-slate-50 overflow-hidden select-none flex flex-col live-root text-slate-900">
+      {isFullscreen ? (
+        <div className="absolute inset-0 z-0 flex flex-col">
+          {/* Base Layer: Background Image */}
+          {data.event.liveConfig?.bannerUrl ? (
+            <img src={data.event.liveConfig.bannerUrl} className="absolute inset-0 w-full h-full object-cover z-0" alt="background" />
+          ) : (
+            <div className="absolute inset-0 w-full h-full bg-slate-950 z-0" />
           )}
 
-          <main className={`relative z-20 max-w-full mx-auto w-full px-16 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center overflow-hidden ${isFullscreen ? 'py-12' : ''}`}>
-            
-            {!isFullscreen && (
-              <Spotlight latest={data.checkIns[0] || null} imageUrl={data.event.imageUrl} liveConfig={data.event.liveConfig} />
+          {/* Floating Bubbles Layer */}
+          <BubbleBackground 
+            className="absolute inset-0 z-10 bg-transparent pointer-events-none"
+            colors={bubbleColors}
+            bubbleOpacity={data.event.liveConfig?.bubbleOpacity ?? 0.3}
+          />
+
+          <main className="relative z-20 w-full flex-1 grid grid-cols-1 lg:grid-cols-12 gap-10 overflow-hidden py-10 px-12">
+            {data.event.liveConfig?.showLog !== false && (
+              <FeedList 
+                items={data.checkIns} 
+                highlightId={highlightId} 
+                themeColor={themeColor} 
+                layoutMode={data.event.liveConfig?.layoutMode}
+                maskNames={data.event.liveConfig?.maskNames}
+              />
             )}
-
-          {data.event.liveConfig?.showLog !== false && (
-            <FeedList 
-              items={data.checkIns} 
-              highlightId={highlightId} 
-              themeColor={themeColor} 
-              layoutMode={data.event.liveConfig?.layoutMode}
-              maskNames={data.event.liveConfig?.maskNames}
-            />
-          )}
-          
-        </main>
-
-        {!isFullscreen && (
-          <footer className="relative z-30 px-14 py-10 mt-auto opacity-30 flex-shrink-0">
-              <div className="max-w-[85rem] mx-auto flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.5em] text-slate-600">
-              <span>Synchronized Terminal</span>
-              <span>Prime Digital &copy; 2026</span>
+          </main>
+        </div>
+      ) : (
+        <>
+          {/* 1. TOP BAR */}
+          <div className="relative z-30 h-[80px] bg-white border-b border-slate-300 flex items-center justify-between px-6 lg:px-8 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white border border-slate-300 rounded-full overflow-hidden flex items-center justify-center p-1.5 shrink-0 shadow-sm">
+                {data.event.liveConfig?.logoUrl || data.event.imageUrl ? (
+                  <img src={data.event.liveConfig?.logoUrl || data.event.imageUrl!} className="w-full h-full object-cover rounded-full"/>
+                ) : (
+                  <span className="text-[10px] font-medium text-slate-400">LOGO</span>
+                )}
               </div>
-          </footer>
-        )}
-      </div>
-    </BubbleBackground>
+              <div className="flex flex-col justify-center">
+                <span className="text-lg lg:text-xl font-medium text-slate-900 leading-tight">
+                  {data.event.liveConfig?.welcomeMessage || "Header"}
+                </span>
+                <span className="text-[13px] text-slate-500 leading-tight mt-0.5">
+                  {data.event.title || "SubHeader"}
+                </span>
+              </div>
+            </div>
+            <div className="text-xl lg:text-2xl font-mono font-medium text-slate-800 tracking-widest tabular-nums">
+              <Clock />
+            </div>
+          </div>
+
+          {/* 2. BANNER */}
+          <div className="relative z-20 w-full h-[140px] md:h-[192px] bg-slate-50 border-b border-slate-300 shrink-0">
+            {data.event.liveConfig?.bannerUrl ? (
+              <img src={data.event.liveConfig.bannerUrl} alt="Banner" className="w-full h-full object-cover"/>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 gap-2">
+                <span className="font-medium">Banner</span>
+                <span className="text-sm font-mono">1920*192px</span>
+              </div>
+            )}
+          </div>
+
+          {/* 3. MAIN CONTENT GRID */}
+          <main className="relative z-20 flex-1 p-4 lg:p-8 overflow-hidden flex flex-col">
+            <div className="flex-1 border border-slate-300 rounded-[2rem] bg-white shadow-sm overflow-hidden flex flex-col lg:flex-row p-6 lg:p-8 gap-8">
+              
+              <div className="flex-1 flex flex-col justify-center items-center relative min-w-0">
+                <Spotlight latest={data.checkIns[0] || null} maskNames={data.event.liveConfig?.maskNames} themeColor={data.event.liveConfig?.themeColor || '#4f46e5'} />
+              </div>
+
+              {/* Right List Panel */}
+              {data.event.liveConfig?.showLog !== false && (
+                <div className="w-full lg:w-[420px] xl:w-[460px] shrink-0 flex flex-col border border-slate-300 rounded-3xl bg-slate-50/50 p-4 overflow-hidden shadow-sm">
+                  <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 lg:space-y-4 pr-1">
+                    <FeedList 
+                      items={data.checkIns} 
+                      highlightId={highlightId} 
+                      themeColor={themeColor} 
+                      layoutMode={data.event.liveConfig?.layoutMode}
+                      maskNames={data.event.liveConfig?.maskNames}
+                    />
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </main>
+
+          {/* 4. BOTTOM TICKER */}
+          <div className="relative z-30 h-12 bg-white border-t border-slate-300 flex items-center overflow-hidden shrink-0 text-[13px] font-medium text-slate-700">
+              {data.checkIns.length > 0 ? (() => {
+                // Create a long enough base array so the ticker never runs out of width before looping
+                const padCount = Math.max(1, Math.ceil(20 / data.checkIns.length));
+                const baseItems = Array(padCount).fill(data.checkIns).flat();
+                
+                return (
+                  <div className="animate-marquee flex items-center whitespace-nowrap">
+                    <div className="flex items-center">
+                      {baseItems.map((ci, idx) => (
+                          <span key={`${ci.id}-1-${idx}`} className="mx-8 flex items-center gap-3">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                            Activity {maskName(ci.name, data.event?.liveConfig?.maskNames ?? false)} Check In
+                          </span>
+                      ))}
+                      {/* Duplicate entire track exactly once for seamless -50% CSS looping */}
+                      {baseItems.map((ci, idx) => (
+                          <span key={`${ci.id}-2-${idx}`} className="mx-8 flex items-center gap-3">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                            Activity {maskName(ci.name, data.event?.liveConfig?.maskNames ?? false)} Check In
+                          </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })() : (
+                <div className="w-full text-center text-slate-500 tracking-wider">Activity รายชื่อ Check In Slide Run</div>
+              )}
+          </div>
+        </>
+      )}
     </div>
   )
 }
