@@ -29,28 +29,35 @@ export async function GET(
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const checkIns = await prisma.checkIn.findMany({
-      where: {
-        registration: {
-          eventId: event.id,
+    const [checkIns, totalUniqueCheckIns, totalRegistrations] = await Promise.all([
+      prisma.checkIn.findMany({
+        where: {
+          registration: { eventId: event.id },
+          scannedAt: { gte: today },
         },
-        scannedAt: {
-          gte: today,
-        },
-      },
-      orderBy: { scannedAt: "desc" },
-      take: 50,
-      select: {
-        id: true,
-        scannedAt: true,
-        registration: {
-          select: {
-            referenceCode: true,
-            formData: true,
+        orderBy: { scannedAt: "desc" },
+        take: 50,
+        select: {
+          id: true,
+          scannedAt: true,
+          registration: {
+            select: {
+              referenceCode: true,
+              formData: true,
+            },
           },
         },
-      },
-    });
+      }),
+      prisma.checkIn.count({
+        where: {
+          registration: { eventId: event.id },
+          scannedAt: { gte: today },
+        }
+      }),
+      prisma.registration.count({
+        where: { eventId: event.id }
+      })
+    ]);
 
     const data = checkIns.map((ci) => {
       const { name, email } = extractAttendeeInfo(ci.registration.formData as Record<string, unknown>, event.formFields);
@@ -61,25 +68,6 @@ export async function GET(
         email: maskEmail(email),
         scannedAt: ci.scannedAt.toISOString(),
       };
-    });
-
-    // Get unique attendees count FOR TODAY ONLY
-    const totalUniqueCheckIns = await prisma.checkIn.count({
-      where: {
-        registration: {
-          eventId: event.id,
-        },
-        scannedAt: {
-          gte: today,
-        },
-      }
-    });
-
-    // Get total registrations count
-    const totalRegistrations = await prisma.registration.count({
-      where: {
-        eventId: event.id
-      }
     });
 
     return NextResponse.json({
