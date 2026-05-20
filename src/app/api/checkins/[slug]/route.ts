@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { extractAttendeeInfo } from "@/lib/attendee-utils";
+import { extractAttendeeInfo, maskName, maskEmail } from "@/lib/attendee-utils";
 
 export async function GET(
   request: NextRequest,
@@ -18,6 +18,7 @@ export async function GET(
         themeColor: true,
         startDate: true,
         formFields: true,
+        liveConfig: true,
       },
     });
 
@@ -25,10 +26,16 @@ export async function GET(
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const checkIns = await prisma.checkIn.findMany({
       where: {
         registration: {
           eventId: event.id,
+        },
+        scannedAt: {
+          gte: today,
         },
       },
       orderBy: { scannedAt: "desc" },
@@ -46,13 +53,33 @@ export async function GET(
     });
 
     const data = checkIns.map((ci) => {
-      const { name } = extractAttendeeInfo(ci.registration.formData as Record<string, unknown>, event.formFields);
+      const { name, email } = extractAttendeeInfo(ci.registration.formData as Record<string, unknown>, event.formFields);
       return {
         id: ci.id,
         referenceCode: ci.registration.referenceCode,
-        name,
+        name: name,
+        email: maskEmail(email),
         scannedAt: ci.scannedAt.toISOString(),
       };
+    });
+
+    // Get unique attendees count FOR TODAY ONLY
+    const totalUniqueCheckIns = await prisma.checkIn.count({
+      where: {
+        registration: {
+          eventId: event.id,
+        },
+        scannedAt: {
+          gte: today,
+        },
+      }
+    });
+
+    // Get total registrations count
+    const totalRegistrations = await prisma.registration.count({
+      where: {
+        eventId: event.id
+      }
     });
 
     return NextResponse.json({
@@ -61,9 +88,11 @@ export async function GET(
         imageUrl: event.imageUrl,
         themeColor: event.themeColor,
         startDate: event.startDate.toISOString(),
+        liveConfig: event.liveConfig,
       },
       checkIns: data,
-      total: data.length,
+      total: totalUniqueCheckIns,
+      totalRegistrations: totalRegistrations
     });
   } catch (error) {
     console.error("Failed to fetch check-ins:", error);

@@ -10,7 +10,7 @@ export function DashboardRefresher() {
         // Auto-refresh the server component data every 30 seconds
         const interval = setInterval(() => {
             router.refresh()
-        }, 30000)
+        }, 5000)
 
         return () => clearInterval(interval)
     }, [router])

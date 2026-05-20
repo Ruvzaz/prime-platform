@@ -52,6 +52,29 @@ model Event {
   
   formFields    FormField[]
   registrations Registration[]
+  liveConfig    LiveConfig?
+}
+
+model LiveConfig {
+  id              String   @id @default(cuid())
+  eventId         String   @unique
+  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  logoUrl         String?
+  bannerUrl       String?
+  welcomeMessage  String?
+  themeColor      String?  @default("#000000")
+  
+  // Display Toggles
+  showStats       Boolean  @default(true)
+  showLog         Boolean  @default(true)
+  layoutMode      String   @default("standard") // "standard" or "fullscreen"
+  maskNames       Boolean  @default(false)
+  bubbleColor     String?  @default("#4f46e5")
+  bubbleOpacity   Float?   @default(0.1)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model FormField {
@@ -91,7 +114,7 @@ model Registration {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
-  checkIn       CheckIn?
+  checkIns      CheckIn[]
 
 
   @@index([eventId])
@@ -105,7 +128,7 @@ enum RegStatus {
 
 model CheckIn {
   id             String       @id @default(cuid())
-  registrationId String       @unique
+  registrationId String
   registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   staffId        String
   staff          User         @relation(fields: [staffId], references: [id])

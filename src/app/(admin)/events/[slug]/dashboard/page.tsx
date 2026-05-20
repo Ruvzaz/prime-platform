@@ -5,7 +5,7 @@ import { CheckInPieChart, FieldBarChart } from "@/components/admin/event-dashboa
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { DashboardRefresher } from "@/components/admin/dashboard-refresher"
-import { Activity, ArrowLeft, Users, UserCheck, Percent } from "lucide-react"
+import { Activity, ArrowLeft, Users, UserCheck, Percent, Sparkles } from "lucide-react"
 
 export default async function EventDashboardPage({
     params,
@@ -41,9 +41,31 @@ export default async function EventDashboardPage({
                         Real-time analytics for <strong>{stats.eventTitle}</strong>
                     </p>
                 </div>
-                <div className="ml-auto hidden md:flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1 rounded-full border">
-                    <Activity className="w-4 h-4 text-green-500 animate-pulse" />
-                    <span>Live Tracking</span>
+                <div className="ml-auto flex items-center gap-3">
+                    <div className="hidden md:flex items-center gap-3 text-sm text-muted-foreground bg-muted/50 px-4 py-1.5 rounded-full border border-green-500/20 mr-2">
+                        <div className="flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-green-500 animate-pulse" />
+                            <span className="font-medium text-green-600 dark:text-green-400">Live</span>
+                        </div>
+                        <div className="w-px h-3 bg-border" />
+                        <span className="text-[10px] font-medium tabular-nums">
+                            Updated: {new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        </span>
+                    </div>
+                    
+                    <Link href={`/events/${slug}/live`}>
+                        <Button variant="outline" className="rounded-full gap-2 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600">
+                            <Sparkles className="w-4 h-4" />
+                            Live Board Settings
+                        </Button>
+                    </Link>
+                    
+                    <Link href={`/live/${slug}`} target="_blank">
+                        <Button className="rounded-full gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200">
+                            <Activity className="w-4 h-4" />
+                            View Live Board
+                        </Button>
+                    </Link>
                 </div>
             </div>
 

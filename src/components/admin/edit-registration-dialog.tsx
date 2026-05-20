@@ -33,7 +33,7 @@ interface Registration {
   referenceCode: string
   status: RegStatus
   formData: Record<string, string>
-  checkIn: { scannedAt: Date } | null
+  checkIns: { scannedAt: Date }[]
   event: {
     title: string
     slug: string
@@ -191,7 +191,7 @@ export function EditRegistrationDialog({ registration, open, onOpenChange }: Edi
 
         <DialogFooter className="flex justify-between sm:justify-between">
           <div>
-            {registration.checkIn && (
+            {registration.checkIns && registration.checkIns.length > 0 && (
                  <Button 
                     type="button" 
                     variant="destructive" 

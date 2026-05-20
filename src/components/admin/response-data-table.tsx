@@ -54,11 +54,13 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
 
     const [isLoading, setIsLoading] = useState(false)
     const [registrations, setRegistrations] = useState<any[]>([])
-    const [metadata, setMetadata] = useState<any>({ total: 0, page: 1, pageSize: 50, totalPages: 0 })
+    const [pageSize, setPageSize] = useState(10)
+    const [metadata, setMetadata] = useState<any>({ total: 0, page: 1, pageSize: 10, totalPages: 0 })
     const [currentPage, setCurrentPage] = useState(1)
     const [searchTerm, setSearchTerm] = useState("")
     const [sortBy, setSortBy] = useState("createdAt")
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+    const [jumpPage, setJumpPage] = useState("1")
     
     const debouncedSearchTerm = useDebounceValue(searchTerm, 2000)
     
@@ -70,19 +72,24 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
     useEffect(() => {
         if (selectedEventId) {
             setCurrentPage(1)
+            setJumpPage("1")
         }
     }, [selectedEventId, debouncedSearchTerm])
+
+    useEffect(() => {
+        setJumpPage(String(currentPage))
+    }, [currentPage])
 
     useEffect(() => {
         if (selectedEventId) {
             fetchData()
         }
-    }, [selectedEventId, debouncedSearchTerm, sortBy, sortOrder, currentPage])
+    }, [selectedEventId, debouncedSearchTerm, sortBy, sortOrder, currentPage, pageSize])
 
     const fetchData = async () => {
         setIsLoading(true)
         try {
-            const result = await getRegistrations(selectedEventId, currentPage, 50, debouncedSearchTerm, sortBy, sortOrder)
+            const result = await getRegistrations(selectedEventId, currentPage, pageSize, debouncedSearchTerm, sortBy, sortOrder)
             setRegistrations(result.data)
             setMetadata(result.metadata)
         } catch (error) {
@@ -147,7 +154,7 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                     <TableHeader>
                         <TableRow className="bg-slate-50/30 hover:bg-slate-50/30 border-b-border/40">
                             <TableHead 
-                                className="w-[150px] px-8 cursor-pointer hover:bg-slate-100/50 transition-colors"
+                                className="w-[150px] px-8 cursor-pointer hover:bg-slate-100/50 transition-colors sticky left-0 z-20 bg-slate-50/90 backdrop-blur-sm shadow-[1px_0_0_0_rgba(0,0,0,0.1)]"
                                 onClick={() => {
                                     if (sortBy === "referenceCode") setSortOrder(sortOrder === "asc" ? "desc" : "asc")
                                     else { setSortBy("referenceCode"); setSortOrder("asc"); }
@@ -157,7 +164,7 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                                     Ref Code {sortBy === "referenceCode" && (sortOrder === "asc" ? "↑" : "↓")}
                                 </div>
                             </TableHead>
-                            <TableHead className="min-w-[200px]">Attendee</TableHead>
+                            <TableHead className="min-w-[200px] sticky left-[150px] z-20 bg-slate-50/90 backdrop-blur-sm shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">Attendee</TableHead>
                             <TableHead 
                                 className="min-w-[140px] cursor-pointer hover:bg-slate-100/50 transition-colors"
                                 onClick={() => {
@@ -206,10 +213,10 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                                 const { name, email } = extractAttendeeInfo(reg.formData, selectedEvent?.formFields)
                                 return (
                                 <TableRow key={reg.id} className="group hover:bg-slate-50/50 border-b-border/30">
-                                    <TableCell className="px-8 font-mono text-xs font-bold text-slate-500">
+                                    <TableCell className="px-8 font-mono text-xs font-bold text-slate-500 sticky left-0 z-10 bg-white group-hover:bg-slate-50 transition-colors shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">
                                         {reg.referenceCode}
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="sticky left-[150px] z-10 bg-white group-hover:bg-slate-50 transition-colors shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">
                                         <div className="flex flex-col">
                                             <span className="font-bold text-slate-900 dark:text-white">{name}</span>
                                             <span className="text-xs text-muted-foreground font-medium">{email}</span>
@@ -219,13 +226,13 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                                         {new Date(reg.createdAt).toLocaleDateString()}
                                     </TableCell>
                                     <TableCell>
-                                        {reg.checkIn ? (
+                                        {reg.checkIns?.length > 0 ? (
                                             <div className="flex flex-col gap-1">
                                                 <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400 hover:bg-indigo-100 border-none shadow-sm rounded-full px-3 py-0.5 font-bold text-[10px] w-fit">
-                                                    Checked In
+                                                    Checked In ({reg.checkIns.length})
                                                 </Badge>
                                                 <span className="text-[10px] text-muted-foreground font-bold tracking-tight px-1">
-                                                    {new Date(reg.checkIn.scannedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                    Latest: {new Date(reg.checkIns[reg.checkIns.length - 1].scannedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                                 </span>
                                             </div>
                                         ) : (
@@ -272,10 +279,27 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                 </Table>
             </div>
 
-            {/* Pagination Controls */}
-            <div className="flex items-center justify-between p-6 px-8 bg-slate-50/50 dark:bg-slate-800/20 border-t border-border/40">
-                <div className="text-sm font-bold text-muted-foreground bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-border/40">
-                    Showing <span className="text-primary">{registrations.length}</span> of <span className="text-primary">{metadata.total.toLocaleString()}</span>
+            <div className="flex flex-col sm:flex-row items-center justify-between p-6 px-8 bg-slate-50/50 dark:bg-slate-800/20 border-t border-border/40 gap-4">
+                <div className="flex items-center gap-4">
+                    <div className="text-sm font-bold text-muted-foreground bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-border/40 whitespace-nowrap">
+                        Showing <span className="text-primary">{registrations.length}</span> of <span className="text-primary">{metadata.total.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden sm:inline">Rows:</span>
+                        <Select value={String(pageSize)} onValueChange={(v) => {
+                            setPageSize(Number(v))
+                            setCurrentPage(1)
+                        }}>
+                            <SelectTrigger className="h-10 w-[70px] rounded-xl bg-white border-border/50 shadow-sm font-bold focus:ring-primary/20">
+                                <SelectValue placeholder="10" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl border-border/50 shadow-xl min-w-[70px]">
+                                {[10, 20, 50, 100].map(size => (
+                                    <SelectItem key={size} value={String(size)} className="rounded-lg">{size}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
                 <div className="flex items-center gap-3">
                     <Button
@@ -287,8 +311,33 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                     >
                         <ChevronLeft className="h-4 w-4 mr-2" /> Previous
                     </Button>
-                    <div className="text-sm font-bold bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-border/40">
-                        Page {currentPage} / {metadata.totalPages || 1}
+                    <div className="flex items-center gap-2 text-sm font-bold bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl shadow-sm border border-border/40 transition-all focus-within:ring-2 focus-within:ring-primary/20">
+                        <span className="text-muted-foreground ml-1">Page</span>
+                        <input 
+                            type="text"
+                            value={jumpPage}
+                            onChange={(e) => setJumpPage(e.target.value.replace(/\D/g, ''))}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    const pageNum = parseInt(jumpPage)
+                                    if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= metadata.totalPages) {
+                                        setCurrentPage(pageNum)
+                                    } else {
+                                        setJumpPage(String(currentPage))
+                                    }
+                                }
+                            }}
+                            onBlur={() => {
+                                const pageNum = parseInt(jumpPage)
+                                if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= metadata.totalPages) {
+                                    setCurrentPage(pageNum)
+                                } else {
+                                    setJumpPage(String(currentPage))
+                                }
+                            }}
+                            className="w-10 h-7 text-center bg-slate-50 dark:bg-slate-800 rounded-lg border-none focus:ring-0 p-0 text-primary font-black"
+                        />
+                        <span className="text-muted-foreground mr-1">/ {metadata.totalPages || 1}</span>
                     </div>
                     <Button
                         variant="outline"
@@ -302,11 +351,6 @@ export function ResponseDataTable({ initialEvents }: ResponseDataTableProps) {
                 </div>
             </div>
 
-            <div className="p-6 bg-slate-50/30 dark:bg-slate-800/10 text-center border-t border-border/20">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-50">
-                    Use search to filter across all records • Results are real-time
-                </p>
-            </div>
 
             <RegistrationEditSheet 
                 registration={editingRegistration} 

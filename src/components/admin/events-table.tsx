@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Calendar, MapPin, Users, Trash2, MoreHorizontal, BarChart3, Radio, Pencil, Globe, AlertCircle, AlertTriangle } from "lucide-react"
+import { Calendar, MapPin, Users, Trash2, MoreHorizontal, BarChart3, Radio, Pencil, Globe, AlertCircle, AlertTriangle, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
@@ -221,6 +221,12 @@ export function EventsTable({ initialEvents }: EventsTableProps) {
                             <Link href={`/events/${event.id}/edit`}>
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Edit Event
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="rounded-lg" asChild>
+                            <Link href={`/events/${event.slug}/live`}>
+                                <Sparkles className="mr-2 h-4 w-4 text-indigo-500" />
+                                Live Settings
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem className="rounded-lg" asChild>

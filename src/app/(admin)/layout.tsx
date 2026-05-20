@@ -40,13 +40,7 @@ export default async function AdminLayout({
             <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-primary transition-colors" />
             <div className="w-px h-6 bg-border/40 mx-2 hidden md:block" />
             
-            <div className="flex-1 ml-2 hidden md:flex max-w-md relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-              <Input 
-                placeholder="Search everything..." 
-                className="pl-10 bg-slate-100/50 dark:bg-slate-800/50 border-none shadow-none ring-1 ring-border/50 focus-visible:ring-primary/20 focus-visible:bg-white dark:focus-visible:bg-slate-900 transition-all w-full h-10 rounded-xl"
-              />
-            </div>
+            <div className="flex-1" />
             
             <div className="ml-auto flex items-center gap-2">
               <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all">

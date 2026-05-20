@@ -36,19 +36,22 @@ export async function getEventDashboardStats(slug: string): Promise<EventDashboa
 
     if (!event) return null
 
-    // Fetch all registrations for this event
-    // Select only necessary fields to minimize data transfer
-    const registrations = await prisma.registration.findMany({
-      where: { eventId: event.id },
-      select: {
-        status: true,
-        checkIn: { select: { id: true } },
-        formData: true,
-      },
-    })
+    // Fetch Stats in Parallel
+    const [totalRegistrations, totalCheckedIn, registrations] = await Promise.all([
+      prisma.registration.count({ where: { eventId: event.id } }),
+      prisma.registration.count({ 
+        where: { 
+          eventId: event.id, 
+          checkIns: { some: {} } 
+        } 
+      }),
+      // Only fetch formData for fields that need aggregation
+      prisma.registration.findMany({
+        where: { eventId: event.id },
+        select: { formData: true }
+      })
+    ])
 
-    const totalRegistrations = registrations.length
-    const totalCheckedIn = registrations.filter((r) => r.checkIn).length
     const checkInRate = totalRegistrations > 0 ? (totalCheckedIn / totalRegistrations) * 100 : 0
 
     // Aggregate Form Field Answers

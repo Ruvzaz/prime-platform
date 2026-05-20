@@ -65,9 +65,9 @@ interface Registration {
   status: string
   createdAt: Date
   formData: any
-  checkIn?: {
+  checkIns: {
       scannedAt: Date
-  } | null
+  }[]
   event: {
       title: string
       slug: string
@@ -101,6 +101,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
   // URL State
   const currentEventId = searchParams.get("eventId") || "all"
   const currentPage = Number(searchParams.get("page")) || 1
+  const currentPageSize = Number(searchParams.get("pageSize")) || 10
   const currentQuery = searchParams.get("q") || ""
   const currentSortBy = searchParams.get("sortBy") || "createdAt"
   const currentSortOrder = searchParams.get("sortOrder") || "desc"
@@ -112,6 +113,11 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
   // Edit State
   const [editingRegistration, setEditingRegistration] = useState<any>(null)
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [jumpPage, setJumpPage] = useState(String(currentPage))
+
+  useEffect(() => {
+    setJumpPage(String(currentPage))
+  }, [currentPage])
 
   // Selection State
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -218,13 +224,14 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
           
           // Strategy: Collect unique labels from all events in the dataset to handle "All Events" export too
           const uniqueLabels = new Set<string>()
-          const allStandardIds = new Set<string>()
+          const allStandardIds = new Set<string>();
           
-          allData.forEach(reg => {
-              if (reg.event.formFields) {
-                  const stdIds = getStandardFieldIds(reg.event.formFields)
+          ;(allData as any[]).forEach((reg: any) => {
+              const eventData = reg.event as any;
+              if (eventData?.formFields) {
+                  const stdIds = getStandardFieldIds(eventData.formFields)
                   stdIds.forEach(id => allStandardIds.add(id))
-                  reg.event.formFields.forEach((f: any) => {
+                  eventData.formFields.forEach((f: any) => {
                       if (!stdIds.includes(f.id)) {
                           uniqueLabels.add(f.label)
                       }
@@ -233,12 +240,28 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
           })
           customHeaders = Array.from(uniqueLabels).sort()
 
-          const headers = ["Ref Code", "Name", "Email", "Phone", "Event", "Status", "Date", "Check-in", ...customHeaders]
+          // 2. Identify global check-in dates to define Day 1 and Day 2
+          const allCheckInDates = new Set<string>()
+          ;(allData as any[]).forEach((reg: any) => {
+              reg.checkIns?.forEach((ci: any) => {
+                  allCheckInDates.add(new Date(ci.scannedAt).toLocaleDateString())
+              })
+          })
           
-          const rows = allData.map(reg => {
+          const sortedGlobalDates = Array.from(allCheckInDates).sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+          const dayHeaders = sortedGlobalDates.map((_, i) => `Check In Day ${i + 1}`)
+
+          const headers = ["Ref Code", "Name", "Email", "Phone", "Event", "Status", "Date", ...dayHeaders, ...customHeaders]
+          
+          const rows = (allData as any[]).map((reg: any) => {
               const { name, email, phone } = extractAttendeeInfo(reg.formData as Record<string, unknown>, reg.event.formFields)
               const formData = reg.formData as Record<string, unknown> || {}
               
+              const dayCols = sortedGlobalDates.map(dateStr => {
+                  const ci = reg.checkIns?.find((ci: any) => new Date(ci.scannedAt).toLocaleDateString() === dateStr)
+                  return ci ? `"${new Date(ci.scannedAt).toLocaleString()}"` : '""'
+              })
+
               const standardCols = [
                   reg.referenceCode,
                   `"${name}"`, 
@@ -247,12 +270,12 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                   `"${reg.event.title}"`,
                   reg.status,
                   `"${new Date(reg.createdAt).toLocaleDateString()}"`,
-                  reg.checkIn ? `"${new Date(reg.checkIn.scannedAt).toLocaleString()}"` : '""'
+                  ...dayCols
               ]
 
               // Dynamic Fields
               const dynamicCols = customHeaders.map(header => {
-                  const field = reg.event.formFields?.find((f: any) => f.label === header)
+                  const field = (reg.event.formFields as any[])?.find((f: any) => f.label === header)
                   let val = formData[header]
                   if (val === undefined && field) {
                       val = formData[field.id]
@@ -356,7 +379,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
             <Table>
                 <TableHeader>
                     <TableRow className="bg-slate-50/30 hover:bg-slate-50/30 border-b-border/40">
-                        <TableHead className="w-[60px] px-8">
+                        <TableHead className="w-[60px] px-8 sticky left-0 z-20 bg-slate-50/90 backdrop-blur-sm shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">
                             <Checkbox 
                                 checked={initialData.length > 0 && selectedIds.length === initialData.length}
                                 onCheckedChange={toggleSelectAll}
@@ -365,14 +388,14 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                             />
                         </TableHead>
                         <TableHead 
-                            className="min-w-[150px] cursor-pointer hover:bg-slate-100/50 transition-colors"
+                            className="w-[150px] cursor-pointer hover:bg-slate-100/50 transition-colors sticky left-[60px] z-20 bg-slate-50/90 backdrop-blur-sm shadow-[1px_0_0_0_rgba(0,0,0,0.1)]"
                             onClick={() => toggleSort("referenceCode")}
                         >
                             <div className="flex items-center">
                                 Ref Code <SortIcon field="referenceCode" />
                             </div>
                         </TableHead>
-                        <TableHead className="min-w-[200px]">Attendee</TableHead>
+                        <TableHead className="min-w-[200px] sticky left-[210px] z-20 bg-slate-50/90 backdrop-blur-sm shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">Attendee</TableHead>
                         <TableHead className="min-w-[200px]">Event</TableHead>
                         <TableHead 
                             className="min-w-[140px] cursor-pointer hover:bg-slate-100/50 transition-colors"
@@ -411,7 +434,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                             const { name, email } = extractAttendeeInfo(reg.formData as Record<string, unknown>, reg.event.formFields)
                             return (
                                 <TableRow key={reg.id} className="group hover:bg-slate-50/50 border-b-border/30" data-state={selectedIds.includes(reg.id) && "selected"}>
-                                    <TableCell className="px-8">
+                                    <TableCell className="px-8 sticky left-0 z-10 bg-white group-hover:bg-slate-50 transition-colors shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">
                                         <Checkbox 
                                             checked={selectedIds.includes(reg.id)}
                                             onCheckedChange={() => toggleSelect(reg.id)}
@@ -419,8 +442,8 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                                             className="rounded-md"
                                         />
                                     </TableCell>
-                                    <TableCell className="font-mono text-xs font-bold text-slate-500">{reg.referenceCode}</TableCell>
-                                    <TableCell>
+                                    <TableCell className="w-[150px] font-mono text-xs font-bold text-slate-500 sticky left-[60px] z-10 bg-white group-hover:bg-slate-50 transition-colors shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">{reg.referenceCode}</TableCell>
+                                    <TableCell className="sticky left-[210px] z-10 bg-white group-hover:bg-slate-50 transition-colors shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">
                                         <div className="flex flex-col">
                                             <span className="font-bold text-slate-900 dark:text-white">{name}</span>
                                             <span className="text-xs text-muted-foreground font-medium">{email}</span>
@@ -439,13 +462,13 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
-                                        {reg.checkIn ? (
+                                        {reg.checkIns?.length > 0 ? (
                                             <div className="flex flex-col gap-1">
                                                 <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400 hover:bg-indigo-100 border-none shadow-sm rounded-full px-3 py-0.5 font-bold text-[10px] w-fit">
-                                                    Checked In
+                                                    Checked In ({reg.checkIns.length})
                                                 </Badge>
                                                 <span className="text-[10px] text-muted-foreground font-bold tracking-tight px-1">
-                                                    {new Date(reg.checkIn.scannedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                                    Latest: {new Date(reg.checkIns[reg.checkIns.length - 1].scannedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                                 </span>
                                             </div>
                                         ) : (
@@ -490,30 +513,74 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
             </Table>
         </div>
 
-        {/* PAGINATION CONTROLS */}
-        <div className="flex items-center justify-between p-6 px-8 bg-slate-50/50 dark:bg-slate-800/20 border-t border-border/40">
-            <div className="text-sm font-bold text-muted-foreground bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-border/40">
-                Page <span className="text-primary">{metadata.page}</span> of <span className="text-primary">{metadata.totalPages}</span>
+        <div className="flex flex-col sm:flex-row items-center justify-between p-6 px-8 bg-slate-50/50 dark:bg-slate-800/20 border-t border-border/40 gap-4">
+            <div className="flex items-center gap-4">
+                <div className="text-sm font-bold text-muted-foreground bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-border/40 whitespace-nowrap">
+                    Showing <span className="text-primary">{initialData.length}</span> of <span className="text-primary">{metadata.total.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider hidden sm:inline">Rows:</span>
+                    <Select value={String(currentPageSize)} onValueChange={(v) => updateUrl({ pageSize: v, page: 1 })}>
+                        <SelectTrigger className="h-10 w-[70px] rounded-xl bg-white border-border/50 shadow-sm font-bold focus:ring-primary/20">
+                            <SelectValue placeholder="10" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-border/50 shadow-xl min-w-[70px]">
+                            {[10, 20, 50, 100].map(size => (
+                                <SelectItem key={size} value={String(size)} className="rounded-lg">{size}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
-            <div className="flex gap-3">
-                <Button 
-                    variant="outline" 
-                    size="default" 
-                    className="rounded-xl h-10 px-6 border-border/50 bg-white hover:bg-slate-50 transition-all font-bold shadow-sm"
-                    onClick={() => handlePageChange(Math.max(1, metadata.page - 1))}
-                    disabled={metadata.page <= 1}
-                >
-                    <ChevronLeft className="h-4 w-4 mr-2" /> Previous
-                </Button>
-                <Button 
-                    variant="outline" 
-                    size="default" 
-                    className="rounded-xl h-10 px-6 border-border/50 bg-white hover:bg-slate-50 transition-all font-bold shadow-sm"
-                    onClick={() => handlePageChange(Math.min(metadata.totalPages, metadata.page + 1))}
-                    disabled={metadata.page >= metadata.totalPages}
-                >
-                    Next <ChevronRight className="h-4 w-4 ml-2" />
-                </Button>
+            <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-sm font-bold bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl shadow-sm border border-border/40 transition-all focus-within:ring-2 focus-within:ring-primary/20">
+                    <span className="text-muted-foreground ml-1">Page</span>
+                    <input 
+                        type="text"
+                        value={jumpPage}
+                        onChange={(e) => setJumpPage(e.target.value.replace(/\D/g, ''))}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                const pageNum = parseInt(jumpPage)
+                                if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= metadata.totalPages) {
+                                    handlePageChange(pageNum)
+                                } else {
+                                    setJumpPage(String(currentPage))
+                                }
+                            }
+                        }}
+                        onBlur={() => {
+                            const pageNum = parseInt(jumpPage)
+                            if (!isNaN(pageNum) && pageNum >= 1 && pageNum <= metadata.totalPages) {
+                                handlePageChange(pageNum)
+                            } else {
+                                setJumpPage(String(currentPage))
+                            }
+                        }}
+                        className="w-10 h-7 text-center bg-slate-50 dark:bg-slate-800 rounded-lg border-none focus:ring-0 p-0 text-primary font-black"
+                    />
+                    <span className="text-muted-foreground mr-1">/ {metadata.totalPages || 1}</span>
+                </div>
+                <div className="flex gap-2">
+                    <Button 
+                        variant="outline" 
+                        size="default" 
+                        className="rounded-xl h-10 px-6 border-border/50 bg-white hover:bg-slate-50 transition-all font-bold shadow-sm"
+                        onClick={() => handlePageChange(Math.max(1, metadata.page - 1))}
+                        disabled={metadata.page <= 1}
+                    >
+                        <ChevronLeft className="h-4 w-4 mr-2" /> Previous
+                    </Button>
+                    <Button 
+                        variant="outline" 
+                        size="default" 
+                        className="rounded-xl h-10 px-6 border-border/50 bg-white hover:bg-slate-50 transition-all font-bold shadow-sm"
+                        onClick={() => handlePageChange(Math.min(metadata.totalPages, metadata.page + 1))}
+                        disabled={metadata.page >= metadata.totalPages}
+                    >
+                        Next <ChevronRight className="h-4 w-4 ml-2" />
+                    </Button>
+                </div>
             </div>
         </div>
 
