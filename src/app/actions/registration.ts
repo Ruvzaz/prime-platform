@@ -15,78 +15,61 @@ function generateRefCode(): string {
   return "REF-" + crypto.randomBytes(4).toString("hex").toUpperCase();
 }
 
-export async function registerAttendee(prevState: any, formData: FormData): Promise<ActionResult> {
-  try {
-    // 1. Rate Limiting (15 requests per 10 minutes)
+// --- Helper Functions to Reduce Cognitive Complexity ---
+
+async function checkRateLimitAndGetIP(): Promise<{ isAllowed: boolean; error?: ActionResult }> {
     const headersList = await headers()
     const forwarded = headersList.get("x-forwarded-for")
     const ip = forwarded ? forwarded.split(',')[0].trim() : "unknown-ip"
     
     const isAllowed = await getRateLimit(ip, 15, 10 * 60 * 1000)
     if (!isAllowed) {
-      return errorResult("TOO_MANY_REQUESTS", "คำขอมากเกินไป กรุณารอสักครู่แล้วลองใหม่");
+        return { isAllowed: false, error: errorResult("TOO_MANY_REQUESTS", "คำขอมากเกินไป กรุณารอสักครู่แล้วลองใหม่") };
     }
+    return { isAllowed: true };
+}
 
-    const eventId = formData.get("eventId") as string;
-    const slug = formData.get("eventSlug") as string;
-    
-    if (!eventId || !slug) {
-      return errorResult(ErrorCodes.BAD_REQUEST, "ข้อมูลกิจกรรมไม่ครบถ้วน กรุณารีเฟรชหน้าแล้วลองใหม่");
-    }
-
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
-      select: { 
-          title: true, 
-          startDate: true,
-          emailSubject: true,
-          emailBody: true,
-          emailAttachmentUrl: true,
-          formFields: true
-      },
-    });
-
-    if (!event) {
-        return errorResult(ErrorCodes.NOT_FOUND, "ไม่พบข้อมูลกิจกรรม");
-    }
-
-    const formFields = event.formFields as { id: string; label: string; type: string }[];
+function parseRegistrationFormData(
+    formData: FormData, 
+    formFields: { id: string; label: string; type: string }[]
+): { rawData?: Record<string, any>; error?: ActionResult } {
     const rawData: Record<string, any> = {};
     const keys = Array.from(new Set(Array.from(formData.keys())));
     
     for (const key of keys) {
-      if (key.startsWith("field_") && !key.endsWith("_other")) {
-         const fieldId = key.replace("field_", "");
-         const values = formData.getAll(key) as string[];
-         
-          if (values.length > 1) {
-             rawData[fieldId] = values;
-         } else if (values.length === 1) {
-             let val = values[0];
-             
-             if (val === "__other__") {
-                 const otherVal = formData.get(`${key}_other`);
-                 if (otherVal && String(otherVal).trim() !== "") {
-                     val = String(otherVal).trim();
-                 } else {
-                     val = "อื่นๆ"; 
-                 }
-             }
-             
-             const fieldDef = formFields.find(f => f.id === fieldId);
-             if (fieldDef && typeof val === "string") {
-                 if (fieldDef.type === "LONG_TEXT" && val.length > 2000) {
-                     return errorResult(ErrorCodes.VALIDATION_FAILED, `ข้อความในช่อง "${fieldDef.label}" ยาวเกินไป (สูงสุด 2000 ตัวอักษร)`);
-                 } else if (fieldDef.type !== "LONG_TEXT" && fieldDef.type !== "FILE" && val.length > 255) {
-                     return errorResult(ErrorCodes.VALIDATION_FAILED, `ข้อความในช่อง "${fieldDef.label}" ยาวเกินไป (สูงสุด 255 ตัวอักษร)`);
-                 }
-             }
-             
-             rawData[fieldId] = val;
-         }
+      if (!key.startsWith("field_") || key.endsWith("_other")) continue;
+      
+      const fieldId = key.replace("field_", "");
+      const values = formData.getAll(key) as string[];
+      
+      if (values.length > 1) {
+          rawData[fieldId] = values;
+          continue;
+      } 
+      
+      if (values.length === 1) {
+          let val = values[0];
+          
+          if (val === "__other__") {
+              const otherVal = formData.get(`${key}_other`);
+              val = (otherVal && String(otherVal).trim() !== "") ? String(otherVal).trim() : "อื่นๆ";
+          }
+          
+          const fieldDef = formFields.find(f => f.id === fieldId);
+          if (fieldDef && typeof val === "string") {
+              if (fieldDef.type === "LONG_TEXT" && val.length > 2000) {
+                  return { error: errorResult(ErrorCodes.VALIDATION_FAILED, `ข้อความในช่อง "${fieldDef.label}" ยาวเกินไป (สูงสุด 2000 ตัวอักษร)`) };
+              } else if (fieldDef.type !== "LONG_TEXT" && fieldDef.type !== "FILE" && val.length > 255) {
+                  return { error: errorResult(ErrorCodes.VALIDATION_FAILED, `ข้อความในช่อง "${fieldDef.label}" ยาวเกินไป (สูงสุด 255 ตัวอักษร)`) };
+              }
+          }
+          rawData[fieldId] = val;
       }
     }
+    return { rawData };
+}
 
+async function createRegistrationWithRetry(eventId: string, rawData: Record<string, any>) {
     let referenceCode = "";
     const MAX_RETRIES = 3;
     let registration = null;
@@ -102,19 +85,21 @@ export async function registerAttendee(prevState: any, formData: FormData): Prom
             status: "CONFIRMED",
           },
         });
-        break; 
+        return { referenceCode, registration };
       } catch (e) {
         if (e instanceof Error && "code" in e && (e as { code: string }).code === "P2002" && attempt < MAX_RETRIES - 1) {
           continue; 
         }
-        throw e; // Let the general handler take it
+        throw e;
       }
     }
+    throw new Error("Failed to generate unique reference code after max retries");
+}
 
-    const { name, email } = extractAttendeeInfo(rawData, event?.formFields || undefined);
-
-    if (email && process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD && event) {
-      try {
+async function sendConfirmationEmailSafe(email: string, name: string, event: any, referenceCode: string) {
+    if (!email || !process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD || !event) return;
+    
+    try {
         const { sendRegistrationEmail } = await import("@/lib/email");
         await sendRegistrationEmail(
             email, 
@@ -126,10 +111,48 @@ export async function registerAttendee(prevState: any, formData: FormData): Prom
             event.emailBody, 
             event.emailAttachmentUrl
         );
-      } catch (e) {
+    } catch (e) {
         console.error("Failed to send confirmation email:", e);
-      }
     }
+}
+
+// --- Main Action Function ---
+
+export async function registerAttendee(prevState: any, formData: FormData): Promise<ActionResult> {
+  try {
+    // 1. Rate Limiting
+    const rateLimit = await checkRateLimitAndGetIP();
+    if (!rateLimit.isAllowed) return rateLimit.error!;
+
+    // 2. Validate Event Input
+    const eventId = formData.get("eventId") as string;
+    const slug = formData.get("eventSlug") as string;
+    if (!eventId || !slug) {
+      return errorResult(ErrorCodes.BAD_REQUEST, "ข้อมูลกิจกรรมไม่ครบถ้วน กรุณารีเฟรชหน้าแล้วลองใหม่");
+    }
+
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: { 
+          title: true, startDate: true, emailSubject: true, 
+          emailBody: true, emailAttachmentUrl: true, formFields: true 
+      },
+    });
+
+    if (!event) return errorResult(ErrorCodes.NOT_FOUND, "ไม่พบข้อมูลกิจกรรม");
+
+    // 3. Parse and Validate Form Data
+    const formFields = event.formFields as { id: string; label: string; type: string }[];
+    const parsed = parseRegistrationFormData(formData, formFields);
+    if (parsed.error) return parsed.error;
+    const rawData = parsed.rawData!;
+
+    // 4. Create Record
+    const { referenceCode } = await createRegistrationWithRetry(eventId, rawData);
+
+    // 5. Send Confirmation Email
+    const { name, email } = extractAttendeeInfo(rawData, formFields);
+    await sendConfirmationEmailSafe(email, name, event, referenceCode);
     
     return successResult(
       { 
@@ -260,7 +283,7 @@ export async function deleteCheckIn(registrationId: string) {
 
 
 
-export async function createCheckIn(registrationId: string) {
+export async function createCheckIn(registrationId: string, sessionTitle: string) {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== 'ADMIN') {
     return { success: false, error: "Unauthorized" };
@@ -268,31 +291,25 @@ export async function createCheckIn(registrationId: string) {
 
   try {
     const staffId = session.user.id;
-    // Check if already checked in TODAY to prevent accidental double-clicks
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const existingToday = await prisma.checkIn.findFirst({
+    
+    // Check if already checked in for this session
+    const existingCheckIn = await prisma.checkIn.findFirst({
       where: { 
           registrationId,
-          scannedAt: {
-              gte: today,
-              lt: tomorrow
-          }
+          sessionTitle
       }
     });
 
-    if (existingToday) {
-        return { success: false, error: "Checked In Already (Today)" };
+    if (existingCheckIn) {
+        return { success: false, error: `Checked In Already for ${sessionTitle}` };
     }
 
     await prisma.checkIn.create({
       data: {
         registrationId,
         scannedAt: new Date(),
-        staffId: staffId
+        staffId: staffId,
+        sessionTitle
       },
     });
     revalidatePath("/dashboard/registrations");

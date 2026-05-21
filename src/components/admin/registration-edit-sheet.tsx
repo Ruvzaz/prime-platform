@@ -65,6 +65,9 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [resetCheckInOpen, setResetCheckInOpen] = useState(false)
+  
+  const SESSIONS = ["Day 1 - Morning", "Day 1 - Afternoon", "Day 2 - Morning", "Day 2 - Afternoon"];
+  const [selectedSession, setSelectedSession] = useState(SESSIONS[0])
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const router = useRouter()
 
@@ -117,7 +120,7 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
     setIsLoading(true)
     setErrorMessage(null)
     try {
-        const result = await createCheckIn(registration!.id)
+        const result = await createCheckIn(registration!.id, selectedSession)
         if (result.success) {
             router.refresh()
             onOpenChange(false)
@@ -235,28 +238,36 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
                                 </p>
                             </div>
 
-                             <div className="flex flex-col gap-2 w-full max-w-[200px]">
-                                {(() => {
-                                    const todayStr = new Date().toLocaleDateString();
-                                    const isCheckedInToday = (registration as any).checkIns?.some((ci: any) => 
-                                        new Date(ci.scannedAt).toLocaleDateString() === todayStr
-                                    );
+                                 <div className="flex flex-col gap-2 w-full max-w-[200px]">
+                                    <Select value={selectedSession} onValueChange={setSelectedSession}>
+                                        <SelectTrigger className="w-full text-xs h-9 bg-white">
+                                            <SelectValue placeholder="Select Session" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {SESSIONS.map(s => (
+                                                <SelectItem key={s} value={s}>{s}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    
+                                    {(() => {
+                                        const isCheckedInSession = (registration as any).checkIns?.some((ci: any) => ci.sessionTitle === selectedSession);
 
-                                    return (
-                                        <Button 
-                                            onClick={handleCreateCheckIn} 
-                                            disabled={isLoading || isCheckedInToday}
-                                            className={cn(
-                                                "w-full shadow-lg transition-all active:scale-[0.98] rounded-xl h-10 font-bold",
-                                                isCheckedInToday 
-                                                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border" 
-                                                    : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                                            )}
-                                        >
-                                            {isLoading ? "Processing..." : isCheckedInToday ? "Checked In Today" : "Check In Again"}
-                                        </Button>
-                                    );
-                                })()}
+                                        return (
+                                            <Button 
+                                                onClick={handleCreateCheckIn} 
+                                                disabled={isLoading || isCheckedInSession}
+                                                className={cn(
+                                                    "w-full shadow-md transition-all active:scale-[0.98] rounded-xl h-9 font-bold text-xs",
+                                                    isCheckedInSession 
+                                                        ? "bg-gray-100 text-gray-400 cursor-not-allowed border" 
+                                                        : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                                                )}
+                                            >
+                                                {isLoading ? "Processing..." : isCheckedInSession ? "Checked In" : "Check In"}
+                                            </Button>
+                                        );
+                                    })()}
                                 
                                 <Button 
                                     variant="ghost" 
@@ -279,13 +290,26 @@ export function RegistrationEditSheet({ registration, open, onOpenChange }: Regi
                                 <p className="text-sm text-muted-foreground">Ready to admit attendee</p>
                             </div>
 
-                            <Button 
-                                onClick={handleCreateCheckIn} 
-                                disabled={isLoading}
-                                className="w-full max-w-[200px] bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
-                            >
-                                {isLoading ? "Processing..." : "Check In Now"}
-                            </Button>
+                            <div className="flex flex-col gap-2 w-full max-w-[200px]">
+                                <Select value={selectedSession} onValueChange={setSelectedSession}>
+                                    <SelectTrigger className="w-full text-xs h-9 bg-white">
+                                        <SelectValue placeholder="Select Session" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {SESSIONS.map(s => (
+                                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+
+                                <Button 
+                                    onClick={handleCreateCheckIn} 
+                                    disabled={isLoading}
+                                    className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md shadow-primary/20 transition-all active:scale-[0.98] h-9 text-xs font-bold rounded-xl"
+                                >
+                                    {isLoading ? "Processing..." : "Check In Now"}
+                                </Button>
+                            </div>
                         </>
                     )}
                 </div>
