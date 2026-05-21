@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { Download, Filter, Search, MoreHorizontal, ChevronLeft, ChevronRight, Copy, Pencil, Trash2, AlertCircle, Loader2 } from "lucide-react"
 import * as XLSX from "xlsx"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -124,6 +125,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
   // Selection State
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [isDeleting, setIsDeleting] = useState(false)
+  const [singleDeleteId, setSingleDeleteId] = useState<string | null>(null)
 
   const toggleSelectAll = () => {
     if (selectedIds.length === initialData.length) {
@@ -154,6 +156,24 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
       }
     } catch (e) {
       alert("Failed to delete registrations")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleDeleteSingle = async () => {
+    if (!singleDeleteId) return;
+    setIsDeleting(true)
+    try {
+      const res = await deleteRegistrations([singleDeleteId])
+      if (res.message.includes("successfully")) {
+         setSingleDeleteId(null)
+         router.refresh()
+      } else {
+         alert(res.message)
+      }
+    } catch (e) {
+      alert("Failed to delete registration")
     } finally {
       setIsDeleting(false)
     }
@@ -378,6 +398,24 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                      </AlertDialog>
                 )}
                 
+                {/* Single Delete Alert Dialog */}
+                <AlertDialog open={!!singleDeleteId} onOpenChange={(open) => !open && setSingleDeleteId(null)}>
+                    <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl p-8">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className="text-xl font-bold">ยืนยันการลบข้อมูล</AlertDialogTitle>
+                            <AlertDialogDescription className="text-sm mt-2">
+                                การกระทำนี้จะลบข้อมูลผู้ลงทะเบียนรายการนี้ออกจากระบบอย่างถาวร ไม่สามารถกู้คืนได้
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="mt-6 gap-3">
+                            <AlertDialogCancel className="rounded-xl h-11 px-6">ยกเลิก</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteSingle} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-xl h-11 px-6 shadow-lg shadow-destructive/10">
+                                {isDeleting ? "กำลังลบ..." : "ลบข้อมูลถาวร"}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                
                 <div className="hidden sm:flex items-center justify-center text-sm font-bold bg-white dark:bg-slate-800 px-5 h-11 rounded-xl border border-border/50 shadow-sm">
                     Total: <span className="text-primary ml-1.5">{metadata.total.toLocaleString()}</span>
                 </div>
@@ -445,10 +483,20 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                             </TableCell>
                         </TableRow>
                     ) : (
-                        initialData.map((reg) => {
+                        <AnimatePresence mode="popLayout">
+                        {initialData.map((reg) => {
                             const { name, email } = extractAttendeeInfo(reg.formData as Record<string, unknown>, reg.event.formFields)
                             return (
-                                <TableRow key={reg.id} className="group hover:bg-slate-50/50 border-b-border/30" data-state={selectedIds.includes(reg.id) && "selected"}>
+                                <motion.tr 
+                                    key={reg.id} 
+                                    layout
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="group hover:bg-slate-50/50 border-b-border/30 hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors" 
+                                    data-state={selectedIds.includes(reg.id) && "selected"}
+                                >
                                     <TableCell className="px-8 sticky left-0 z-10 bg-white group-hover:bg-slate-50 transition-colors shadow-[1px_0_0_0_rgba(0,0,0,0.1)]">
                                         <Checkbox 
                                             checked={selectedIds.includes(reg.id)}
@@ -516,12 +564,21 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                                             <Pencil className="mr-2 h-4 w-4" />
                                             Edit Registration
                                           </DropdownMenuItem>
+                                          <DropdownMenuSeparator className="bg-border/50" />
+                                          <DropdownMenuItem 
+                                            className="rounded-lg text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-500/10" 
+                                            onClick={() => setSingleDeleteId(reg.id)}
+                                          >
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Delete Registration
+                                          </DropdownMenuItem>
                                         </DropdownMenuContent>
                                       </DropdownMenu>
                                     </TableCell>
-                                </TableRow>
+                                </motion.tr>
                             )
-                        })
+                        })}
+                        </AnimatePresence>
                     )}
                 </TableBody>
             </Table>
