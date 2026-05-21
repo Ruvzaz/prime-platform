@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import { Download, Filter, Search, MoreHorizontal, ChevronLeft, ChevronRight, Copy, Pencil, Trash2, AlertCircle } from "lucide-react"
+import { Download, Filter, Search, MoreHorizontal, ChevronLeft, ChevronRight, Copy, Pencil, Trash2, AlertCircle, Loader2 } from "lucide-react"
 import * as XLSX from "xlsx"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -109,7 +109,8 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
 
   // Local State for input (debounced update)
   const [searchTerm, setSearchTerm] = useState(currentQuery)
-  const debouncedSearchTerm = useDebounceValue(searchTerm, 2000)
+  const debouncedSearchTerm = useDebounceValue(searchTerm, 1000) // Reduced to 1s for better UX
+  const isSearching = searchTerm !== currentQuery
 
   // Edit State
   const [editingRegistration, setEditingRegistration] = useState<any>(null)
@@ -326,7 +327,11 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
         <div className="flex flex-col md:flex-row gap-4 justify-between md:items-center transition-all p-6 px-8 bg-white dark:bg-slate-900 border-b border-border/50">
              <div className="flex flex-col sm:flex-row gap-3 sm:items-center flex-1">
                  <div className="relative w-full sm:max-w-md">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    {isSearching ? (
+                        <Loader2 className="absolute left-3 top-3.5 h-4 w-4 text-primary animate-spin" />
+                    ) : (
+                        <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+                    )}
                     <Input 
                         placeholder="Search by reference code..." 
                         className="pl-10 h-11 w-full rounded-xl bg-slate-50 border-none shadow-none focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-primary/20 transition-all" 
