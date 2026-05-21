@@ -132,6 +132,7 @@ model CheckIn {
   registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   staffId        String
   staff          User         @relation(fields: [staffId], references: [id])
+  sessionTitle   String?
   scannedAt      DateTime     @default(now())
 
   @@index([staffId])

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { Download, Filter, Search, MoreHorizontal, ChevronLeft, ChevronRight, Copy, Pencil, Trash2, AlertCircle } from "lucide-react"
+import * as XLSX from "xlsx"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -202,7 +203,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
 
   const [isExporting, setIsExporting] = useState(false)
 
-  const exportCSV = async () => {
+  const exportExcel = async () => {
       setIsExporting(true)
       try {
           // Dynamically import to avoid server-side issues if needed, or just call the action
@@ -240,37 +241,51 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
           })
           customHeaders = Array.from(uniqueLabels).sort()
 
-          // 2. Identify global check-in dates to define Day 1 and Day 2
-          const allCheckInDates = new Set<string>()
+          // 2. Identify global check-in sessions
+          const PREDEFINED_SESSIONS = [
+            "Day 1 - Morning",
+            "Day 1 - Afternoon",
+            "Day 2 - Morning",
+            "Day 2 - Afternoon"
+          ];
+          const allCheckInSessions = new Set<string>(PREDEFINED_SESSIONS)
           ;(allData as any[]).forEach((reg: any) => {
               reg.checkIns?.forEach((ci: any) => {
-                  allCheckInDates.add(new Date(ci.scannedAt).toLocaleDateString())
+                  allCheckInSessions.add(ci.sessionTitle || new Date(ci.scannedAt).toLocaleDateString())
               })
           })
           
-          const sortedGlobalDates = Array.from(allCheckInDates).sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
-          const dayHeaders = sortedGlobalDates.map((_, i) => `Check In Day ${i + 1}`)
+          // Custom sort to keep predefined sessions in order, then others
+          const sortedSessions = Array.from(allCheckInSessions).sort((a, b) => {
+              const idxA = PREDEFINED_SESSIONS.indexOf(a);
+              const idxB = PREDEFINED_SESSIONS.indexOf(b);
+              if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+              if (idxA !== -1) return -1;
+              if (idxB !== -1) return 1;
+              return a.localeCompare(b);
+          });
+          const sessionHeaders = sortedSessions.map(session => `Check In (${session})`)
 
-          const headers = ["Ref Code", "Name", "Email", "Phone", "Event", "Status", "Date", ...dayHeaders, ...customHeaders]
+          const headers = ["Ref Code", "Name", "Email", "Phone", "Event", "Status", "Date", ...sessionHeaders, ...customHeaders]
           
           const rows = (allData as any[]).map((reg: any) => {
               const { name, email, phone } = extractAttendeeInfo(reg.formData as Record<string, unknown>, reg.event.formFields)
               const formData = reg.formData as Record<string, unknown> || {}
               
-              const dayCols = sortedGlobalDates.map(dateStr => {
-                  const ci = reg.checkIns?.find((ci: any) => new Date(ci.scannedAt).toLocaleDateString() === dateStr)
-                  return ci ? `"${new Date(ci.scannedAt).toLocaleString()}"` : '""'
+              const sessionCols = sortedSessions.map(session => {
+                  const ci = reg.checkIns?.find((ci: any) => (ci.sessionTitle || new Date(ci.scannedAt).toLocaleDateString()) === session)
+                  return ci ? new Date(ci.scannedAt).toLocaleString() : ''
               })
 
               const standardCols = [
                   reg.referenceCode,
-                  `"${name}"`, 
+                  name, 
                   email,
                   phone || "",
-                  `"${reg.event.title}"`,
+                  reg.event.title,
                   reg.status,
-                  `"${new Date(reg.createdAt).toLocaleDateString()}"`,
-                  ...dayCols
+                  new Date(reg.createdAt).toLocaleDateString(),
+                  ...sessionCols
               ]
 
               // Dynamic Fields
@@ -282,26 +297,21 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                   }
                   
                   if (val === undefined || val === null) return ""
-                  if (Array.isArray(val)) return `"${val.join(', ').replace(/"/g, '""')}"`
-                  if (typeof val === 'string') return `"${val.replace(/"/g, '""')}"` // Escape quotes
-                  return `"${val}"`
+                  if (Array.isArray(val)) return val.join(', ')
+                  return val
               })
 
-              return [...standardCols, ...dynamicCols].join(',')
+              return [...standardCols, ...dynamicCols]
           })
           
           const title = currentEventId !== "all" 
             ? `registrations-${currentEventId}` 
             : "registrations-all"
             
-          const csv = [headers.join(','), ...rows].join('\n')
-          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = `${title}-${new Date().toISOString().slice(0,10)}.csv`
-          a.click()
-          URL.revokeObjectURL(url)
+          const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows])
+          const workbook = XLSX.utils.book_new()
+          XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations")
+          XLSX.writeFile(workbook, `${title}-${new Date().toISOString().slice(0,10)}.xlsx`)
       } catch (error) {
           console.error("Export failed", error)
           alert("Failed to export data. Please try again.")
@@ -367,9 +377,9 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                     Total: <span className="text-primary ml-1.5">{metadata.total.toLocaleString()}</span>
                 </div>
 
-                <Button variant="outline" className="rounded-xl h-11 px-6 border-border/60 hover:bg-slate-50 shadow-sm" onClick={exportCSV} disabled={isExporting}>
+                <Button variant="outline" className="rounded-xl h-11 px-6 border-border/60 hover:bg-slate-50 shadow-sm" onClick={exportExcel} disabled={isExporting}>
                     <Download className={`mr-2 h-4 w-4 ${isExporting ? 'animate-bounce' : ''}`} />
-                    {isExporting ? "Exporting..." : "Export CSV"}
+                    {isExporting ? "Exporting..." : "Export Excel"}
                 </Button>
             </div>
         </div>
@@ -463,13 +473,12 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                                     </TableCell>
                                     <TableCell>
                                         {reg.checkIns?.length > 0 ? (
-                                            <div className="flex flex-col gap-1">
-                                                <Badge className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400 hover:bg-indigo-100 border-none shadow-sm rounded-full px-3 py-0.5 font-bold text-[10px] w-fit">
-                                                    Checked In ({reg.checkIns.length})
-                                                </Badge>
-                                                <span className="text-[10px] text-muted-foreground font-bold tracking-tight px-1">
-                                                    Latest: {new Date(reg.checkIns[reg.checkIns.length - 1].scannedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                                </span>
+                                            <div className="flex flex-wrap gap-1 max-w-[150px]">
+                                                {reg.checkIns.map((ci: any, idx: number) => (
+                                                  <Badge key={ci.id || `ci-${idx}`} className="bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400 hover:bg-indigo-100 border-none shadow-sm rounded-full px-2 py-0.5 font-bold text-[9px] w-fit truncate max-w-[140px]" title={new Date(ci.scannedAt).toLocaleString()}>
+                                                      {ci.sessionTitle || "Checked In"}
+                                                  </Badge>
+                                                ))}
                                             </div>
                                         ) : (
                                             <span className="text-muted-foreground/40 font-bold ml-4">—</span>

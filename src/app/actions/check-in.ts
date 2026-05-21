@@ -17,7 +17,7 @@ export type CheckInResult = {
   };
 };
 
-export async function verifyAndCheckIn(referenceCode: string): Promise<CheckInResult> {
+export async function verifyAndCheckIn(referenceCode: string, sessionTitle?: string): Promise<CheckInResult> {
   if (!referenceCode) return { success: false, message: "Reference code is required" };
 
   try {
@@ -38,26 +38,30 @@ export async function verifyAndCheckIn(referenceCode: string): Promise<CheckInRe
     const formData = registration.formData as Record<string, any>;
     const { name, email } = extractAttendeeInfo(formData, registration.event.formFields);
 
-    // 2. Check if already checked in TODAY
+    // 2. Check if already checked in
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const alreadyCheckedInToday = registration.checkIns.find(ci => 
-        ci.scannedAt >= today && ci.scannedAt < tomorrow
-    );
+    const alreadyCheckedIn = registration.checkIns.find(ci => {
+        if (sessionTitle) {
+            return ci.sessionTitle === sessionTitle;
+        }
+        // Fallback if no session specified: check if already checked in today
+        return ci.scannedAt >= today && ci.scannedAt < tomorrow;
+    });
 
-    if (alreadyCheckedInToday) {
+    if (alreadyCheckedIn) {
       return { 
         success: false, 
-        message: "Already checked in for today!", 
+        message: sessionTitle ? `Already checked in for ${sessionTitle}!` : "Already checked in for today!", 
         attendee: {
             name,
             email,
             eventTitle: registration.event.title,
             eventImageUrl: registration.event.imageUrl,
-            checkedInAt: alreadyCheckedInToday.scannedAt
+            checkedInAt: alreadyCheckedIn.scannedAt
         }
       };
     }
@@ -76,6 +80,7 @@ export async function verifyAndCheckIn(referenceCode: string): Promise<CheckInRe
           data: {
             registrationId: registration.id,
             staffId: staffId,
+            sessionTitle: sessionTitle || null,
           },
         }),
         prisma.registration.update({

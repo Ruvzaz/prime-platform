@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, Suspense } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,16 @@ import { verifyAndCheckIn, CheckInResult } from "@/app/actions/check-in"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { QRScanner } from "@/components/admin/qr-scanner"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useSearchParams, useRouter } from "next/navigation"
+
+const PREDEFINED_SESSIONS = [
+  "Day 1 - Morning",
+  "Day 1 - Afternoon",
+  "Day 2 - Morning",
+  "Day 2 - Afternoon",
+  "General / All Day"
+];
 
 /**
  * Extract reference code from a value that might be:
@@ -36,13 +46,38 @@ function extractRefCode(input: string): string {
   return trimmed.toUpperCase()
 }
 
-export default function CheckInPage() {
+function CheckInPageContent() {
   const [code, setCode] = useState("")
   const [machineInput, setMachineInput] = useState("")
   const [result, setResult] = useState<CheckInResult | null>(null)
   const [loading, setLoading] = useState(false)
+  const searchParams = useSearchParams()
+  const router = useRouter()
   const [scanCount, setScanCount] = useState(0)
+  const [sessionTitle, setSessionTitle] = useState<string>(PREDEFINED_SESSIONS[0])
   const machineInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const saved = localStorage.getItem("prime_checkin_session");
+    if (saved && PREDEFINED_SESSIONS.includes(saved)) {
+      setSessionTitle(saved);
+    }
+  }, []);
+
+  // Handle URL code (Auto Scan)
+  useEffect(() => {
+    const autoCode = searchParams.get("code")
+    if (autoCode) {
+      handleCheckIn(autoCode)
+      // Clear URL parameter so it doesn't trigger again on refresh
+      router.replace('/check-in')
+    }
+  }, [searchParams])
+
+  const handleSessionChange = (val: string) => {
+    setSessionTitle(val);
+    localStorage.setItem("prime_checkin_session", val);
+  };
 
   const handleCheckIn = async (refCode: string) => {
     if (!refCode || loading) return;
@@ -50,7 +85,8 @@ export default function CheckInPage() {
     setResult(null);
     
     try {
-        const res = await verifyAndCheckIn(refCode);
+        const actualSession = sessionTitle !== "General / All Day" ? sessionTitle : undefined;
+        const res = await verifyAndCheckIn(refCode, actualSession);
         setResult(res);
         if (res.success) {
             setCode(""); 
@@ -113,6 +149,20 @@ export default function CheckInPage() {
               {scanCount} checked in this session
             </div>
           )}
+          
+          <div className="mt-4 flex items-center justify-center gap-2 text-sm">
+            <span className="font-medium text-muted-foreground whitespace-nowrap">Session:</span>
+            <Select value={sessionTitle} onValueChange={handleSessionChange}>
+              <SelectTrigger className="w-[180px] h-8 text-xs font-semibold bg-muted/50">
+                <SelectValue placeholder="Select Session" />
+              </SelectTrigger>
+              <SelectContent>
+                {PREDEFINED_SESSIONS.map(s => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
           
@@ -222,5 +272,13 @@ export default function CheckInPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function CheckInPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <CheckInPageContent />
+    </Suspense>
   )
 }

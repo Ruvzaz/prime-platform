@@ -200,7 +200,7 @@ export async function getRegistrations(
           createdAt: true,
           formData: true,
           checkIns: {
-              select: { scannedAt: true }
+              select: { id: true, scannedAt: true, sessionTitle: true }
           },
           event: {
             select: { title: true, slug: true, formFields: { orderBy: { order: 'asc' } } }
@@ -395,7 +395,7 @@ export async function getRegistrationsForExport(
         createdAt: true,
         formData: true,
         checkIns: {
-            select: { scannedAt: true }
+            select: { id: true, scannedAt: true, sessionTitle: true }
         },
         event: {
           select: { 
