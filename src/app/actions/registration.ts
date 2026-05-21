@@ -168,23 +168,12 @@ export async function getRegistrations(
 
     // Search Logic (Basic)
     if (query) {
-       // We search refCode OR common fields in formData
-       // Since formData is Json, we can't easily do a full-text search on the whole object standardly in Prisma without Raw.
-       // However, we can check specific common keys if we know them.
-       // OR we can fetch more and filter in memory (bad for pagination).
-       // BEST APPROACH FOR NOW (without Schema change):
-       // Use Prisma's JSON filtering for specific well-known keys used in our form builder.
-       // Our FormBuilder uses: "name", "email", "firstName", "lastName", "phone"
-       // We will check if any of these contain the string.
-       
-       where.OR = [
-         { referenceCode: { contains: query, mode: 'insensitive' } },
-         { formData: { path: ['name'], string_contains: query } },
-         { formData: { path: ['email'], string_contains: query } },
-         { formData: { path: ['firstName'], string_contains: query } },
-         { formData: { path: ['lastName'], string_contains: query } },
-         // Add support for dynamic keys if they follow a pattern, but for now specific keys are safer.
-       ];
+       const matchingIds = await prisma.$queryRaw<{id: string}[]>`
+          SELECT id FROM "Registration"
+          WHERE "referenceCode" ILIKE ${`%${query}%`}
+             OR "formData"::text ILIKE ${`%${query}%`}
+       `;
+       where.id = { in: matchingIds.map((m) => m.id) };
     }
     
     const [registrations, total] = await prisma.$transaction([
@@ -200,7 +189,7 @@ export async function getRegistrations(
           createdAt: true,
           formData: true,
           checkIns: {
-              select: { scannedAt: true }
+              select: { id: true, scannedAt: true, sessionTitle: true }
           },
           event: {
             select: { title: true, slug: true, formFields: { orderBy: { order: 'asc' } } }
@@ -375,13 +364,12 @@ export async function getRegistrationsForExport(
     }
 
     if (query) {
-       where.OR = [
-         { referenceCode: { contains: query, mode: 'insensitive' } },
-         { formData: { path: ['name'], string_contains: query } },
-         { formData: { path: ['email'], string_contains: query } },
-         { formData: { path: ['firstName'], string_contains: query } },
-         { formData: { path: ['lastName'], string_contains: query } },
-       ];
+       const matchingIds = await prisma.$queryRaw<{id: string}[]>`
+          SELECT id FROM "Registration"
+          WHERE "referenceCode" ILIKE ${`%${query}%`}
+             OR "formData"::text ILIKE ${`%${query}%`}
+       `;
+       where.id = { in: matchingIds.map((m) => m.id) };
     }
     
     // FETCH ALL with specific fields for export
@@ -395,7 +383,7 @@ export async function getRegistrationsForExport(
         createdAt: true,
         formData: true,
         checkIns: {
-            select: { scannedAt: true }
+            select: { id: true, scannedAt: true, sessionTitle: true }
         },
         event: {
           select: { 
