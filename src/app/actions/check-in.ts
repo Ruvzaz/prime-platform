@@ -88,12 +88,12 @@ export async function verifyAndCheckIn(referenceCode: string, sessionTitle?: str
           data: { status: "CONFIRMED" }
         })
       ]);
-    } catch (txError) {
+    } catch (txError: any) {
       // P2002 = Unique constraint on registrationId → concurrent double check-in
-      if (txError instanceof Error && "code" in txError && (txError as { code: string }).code === "P2002") {
+      if (txError?.code === "P2002") {
         return { success: false, message: "Already checked in (concurrent request)" };
       }
-      throw txError;
+      return { success: false, message: `Database error: ${txError?.message || String(txError)}` };
     }
 
     revalidatePath("/check-in");
@@ -110,8 +110,8 @@ export async function verifyAndCheckIn(referenceCode: string, sessionTitle?: str
       },
     };
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Check-in error:", error);
-    return { success: false, message: "Internal server error" };
+    return { success: false, message: `Server error: ${error?.message || String(error)}` };
   }
 }

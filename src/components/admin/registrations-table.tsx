@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { Download, Filter, Search, MoreHorizontal, ChevronLeft, ChevronRight, Copy, Pencil, Trash2, AlertCircle, Loader2 } from "lucide-react"
 import * as XLSX from "xlsx"
 import { motion, AnimatePresence } from "framer-motion"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -150,12 +151,13 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
       const res = await deleteRegistrations(selectedIds)
       if (res.message.includes("successfully")) {
          setSelectedIds([])
+         toast.success("Registrations deleted successfully")
          router.refresh()
       } else {
-         alert(res.message)
+         toast.error(res.message)
       }
     } catch (e) {
-      alert("Failed to delete registrations")
+      toast.error("Failed to delete registrations")
     } finally {
       setIsDeleting(false)
     }
@@ -168,12 +170,13 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
       const res = await deleteRegistrations([singleDeleteId])
       if (res.message.includes("successfully")) {
          setSingleDeleteId(null)
+         toast.success("Registration deleted successfully")
          router.refresh()
       } else {
-         alert(res.message)
+         toast.error(res.message)
       }
     } catch (e) {
-      alert("Failed to delete registration")
+      toast.error("Failed to delete registration")
     } finally {
       setIsDeleting(false)
     }
@@ -232,7 +235,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
           const allData = await getRegistrationsForExport(currentEventId, currentQuery)
           
           if (allData.length === 0) {
-            alert("No data to export.")
+            toast.error("No data to export.")
             return
           }
 
@@ -335,7 +338,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
           XLSX.writeFile(workbook, `${title}-${new Date().toISOString().slice(0,10)}.xlsx`)
       } catch (error) {
           console.error("Export failed", error)
-          alert("Failed to export data. Please try again.")
+          toast.error("Failed to export data. Please try again.")
       } finally {
           setIsExporting(false)
       }
