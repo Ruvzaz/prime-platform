@@ -173,7 +173,9 @@ export async function getRegistrations(
   pageSize: number = 10,
   query: string = "",
   sortBy: string = "createdAt",
-  sortOrder: "asc" | "desc" = "desc"
+  sortOrder: "asc" | "desc" = "desc",
+  checkInStatus?: string,
+  sessionFilter?: string
 ) {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== 'ADMIN') {
@@ -197,6 +199,19 @@ export async function getRegistrations(
              OR "formData"::text ILIKE ${`%${query}%`}
        `;
        where.id = { in: matchingIds.map((m) => m.id) };
+    }
+    
+    // Check-in Filters
+    if (checkInStatus) {
+        if (checkInStatus === "any") {
+            where.checkIns = { some: {} };
+        } else if (checkInStatus === "none") {
+            where.checkIns = { none: {} };
+        } else if (checkInStatus === "attended" && sessionFilter) {
+            where.checkIns = { some: { sessionTitle: sessionFilter } };
+        } else if (checkInStatus === "missing" && sessionFilter) {
+            where.checkIns = { none: { sessionTitle: sessionFilter } };
+        }
     }
     
     const [registrations, total] = await prisma.$transaction([
@@ -364,7 +379,9 @@ export async function getRecentCheckIns(eventId: string, limit = 10) {
 
 export async function getRegistrationsForExport(
   eventId?: string, 
-  query: string = ""
+  query: string = "",
+  checkInStatus?: string,
+  sessionFilter?: string
 ) {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== 'ADMIN') {
@@ -387,6 +404,18 @@ export async function getRegistrationsForExport(
              OR "formData"::text ILIKE ${`%${query}%`}
        `;
        where.id = { in: matchingIds.map((m) => m.id) };
+    }
+    
+    if (checkInStatus) {
+        if (checkInStatus === "any") {
+            where.checkIns = { some: {} };
+        } else if (checkInStatus === "none") {
+            where.checkIns = { none: {} };
+        } else if (checkInStatus === "attended" && sessionFilter) {
+            where.checkIns = { some: { sessionTitle: sessionFilter } };
+        } else if (checkInStatus === "missing" && sessionFilter) {
+            where.checkIns = { none: { sessionTitle: sessionFilter } };
+        }
     }
     
     // FETCH ALL with specific fields for export

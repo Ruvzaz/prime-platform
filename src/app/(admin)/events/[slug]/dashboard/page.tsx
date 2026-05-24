@@ -1,7 +1,7 @@
 
 import { getEventDashboardStats } from "@/app/actions/dashboard"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { CheckInPieChart, FieldBarChart } from "@/components/admin/event-dashboard-charts"
+import { CheckInPieChart, FieldBarChart, SessionProgressBars } from "@/components/admin/event-dashboard-charts"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { DashboardRefresher } from "@/components/admin/dashboard-refresher"
@@ -124,8 +124,17 @@ export default async function EventDashboardPage({
                 </Card>
                 
                 {/* RIGHT COLUMN INFO or EMPTY */}
-                 <Card className="col-span-4 flex flex-col justify-center items-center text-center p-6 text-muted-foreground">
-                    <p>Select fields below to view detailed breakdown.</p>
+                 <Card className="col-span-4 flex flex-col p-6">
+                    <CardHeader className="px-0 pt-0">
+                        <CardTitle>Session Check-ins Pulse</CardTitle>
+                        <CardDescription>Live tracking across different event sessions</CardDescription>
+                    </CardHeader>
+                    <div className="flex-1 mt-4">
+                        <SessionProgressBars 
+                            sessionCheckIns={stats.sessionCheckIns} 
+                            totalRegistrations={stats.totalRegistrations} 
+                        />
+                    </div>
                  </Card>
             </div>
 

@@ -15,6 +15,7 @@ export type EventDashboardStats = {
   totalCheckedIn: number
   checkInRate: number
   fieldStats: FieldStat[]
+  sessionCheckIns: { sessionTitle: string; count: number }[]
 }
 import { auth } from "@/auth"
 
@@ -37,7 +38,7 @@ export async function getEventDashboardStats(slug: string): Promise<EventDashboa
     if (!event) return null
 
     // Fetch Stats in Parallel
-    const [totalRegistrations, totalCheckedIn, registrations] = await Promise.all([
+    const [totalRegistrations, totalCheckedIn, registrations, sessionCheckInsData] = await Promise.all([
       prisma.registration.count({ where: { eventId: event.id } }),
       prisma.registration.count({ 
         where: { 
@@ -49,6 +50,11 @@ export async function getEventDashboardStats(slug: string): Promise<EventDashboa
       prisma.registration.findMany({
         where: { eventId: event.id },
         select: { formData: true }
+      }),
+      prisma.checkIn.groupBy({
+        by: ['sessionTitle'],
+        where: { registration: { eventId: event.id } },
+        _count: { registrationId: true }
       })
     ])
 
@@ -102,6 +108,10 @@ export async function getEventDashboardStats(slug: string): Promise<EventDashboa
       totalCheckedIn,
       checkInRate,
       fieldStats,
+      sessionCheckIns: sessionCheckInsData.map(s => ({
+          sessionTitle: s.sessionTitle || "Checked In",
+          count: s._count.registrationId
+      })).sort((a, b) => b.count - a.count)
     }
   } catch (error) {
     console.error("Failed to fetch dashboard stats:", error)
