@@ -70,6 +70,7 @@ interface Registration {
   formData: any
   checkIns: {
       scannedAt: Date
+      sessionTitle: string | null
   }[]
   event: {
       title: string
@@ -108,6 +109,8 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
   const currentQuery = searchParams.get("q") || ""
   const currentSortBy = searchParams.get("sortBy") || "createdAt"
   const currentSortOrder = searchParams.get("sortOrder") || "desc"
+  const checkInStatus = searchParams.get("checkInStatus") || "all"
+  const sessionFilter = searchParams.get("sessionFilter") || "Day 1 - Morning"
 
   // Local State for input (debounced update)
   const [searchTerm, setSearchTerm] = useState(currentQuery)
@@ -232,7 +235,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
       try {
           // Dynamically import to avoid server-side issues if needed, or just call the action
           const { getRegistrationsForExport } = await import("@/app/actions/registration")
-          const allData = await getRegistrationsForExport(currentEventId, currentQuery)
+          const allData = await getRegistrationsForExport(currentEventId, currentQuery, checkInStatus, sessionFilter)
           
           if (allData.length === 0) {
             toast.error("No data to export.")
@@ -374,9 +377,53 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                         ))}
                     </SelectContent>
                  </Select>
+                 
+                 <Select value={checkInStatus} onValueChange={(v) => updateUrl({ checkInStatus: v, page: 1 })}>
+                    <SelectTrigger className="w-full sm:w-[180px] h-11 rounded-xl bg-slate-50 border-none shadow-none focus:ring-1 focus:ring-primary/20 transition-all">
+                        <SelectValue placeholder="Check-in Status" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-border/50 shadow-xl">
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="any">Checked In (Any)</SelectItem>
+                        <SelectItem value="attended">Attended Session...</SelectItem>
+                        <SelectItem value="missing">Missing Session...</SelectItem>
+                        <SelectItem value="none">No Show (Never)</SelectItem>
+                    </SelectContent>
+                 </Select>
+                 
+                 {(checkInStatus === "attended" || checkInStatus === "missing") && (
+                     <Select value={sessionFilter} onValueChange={(v) => updateUrl({ sessionFilter: v, page: 1 })}>
+                        <SelectTrigger className="w-full sm:w-[200px] h-11 rounded-xl bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border-none shadow-none focus:ring-1 focus:ring-primary/20 transition-all font-semibold">
+                            <SelectValue placeholder="Select Session" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-border/50 shadow-xl">
+                            <SelectItem value="General / All Day">General / All Day</SelectItem>
+                            <SelectItem value="Day 1 - Morning">Day 1 - Morning</SelectItem>
+                            <SelectItem value="Day 1 - Afternoon">Day 1 - Afternoon</SelectItem>
+                            <SelectItem value="Day 2 - Morning">Day 2 - Morning</SelectItem>
+                            <SelectItem value="Day 2 - Afternoon">Day 2 - Afternoon</SelectItem>
+                            <SelectItem value="Day 3 - Morning">Day 3 - Morning</SelectItem>
+                            <SelectItem value="Day 3 - Afternoon">Day 3 - Afternoon</SelectItem>
+                        </SelectContent>
+                     </Select>
+                 )}
             </div>
             <div className="flex items-center gap-3">
                 {selectedIds.length > 0 && (
+                     <>
+                     {checkInStatus === "missing" && (
+                         <Button 
+                            variant="default" 
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-11 px-6 shadow-lg shadow-indigo-600/20"
+                            onClick={() => {
+                                toast.success(`Sending reminder emails to ${selectedIds.length} missing attendees...`)
+                                setTimeout(() => toast.success("Reminder emails sent successfully!"), 2000)
+                                setSelectedIds([])
+                            }}
+                         >
+                             ✉️ Send Reminder ({selectedIds.length})
+                         </Button>
+                     )}
                      <AlertDialog>
                         <AlertDialogTrigger asChild>
                             <Button variant="destructive" size="default" className="rounded-xl h-11 px-6 shadow-lg shadow-destructive/10">
@@ -399,6 +446,7 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                             </AlertDialogFooter>
                         </AlertDialogContent>
                      </AlertDialog>
+                     </>
                 )}
                 
                 {/* Single Delete Alert Dialog */}

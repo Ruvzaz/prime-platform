@@ -158,3 +158,51 @@ export function FieldBarChart({ field }: { field: FieldStat }) {
   )
 }
 
+export function SessionProgressBars({
+  sessionCheckIns,
+  totalRegistrations,
+}: {
+  sessionCheckIns: { sessionTitle: string; count: number }[]
+  totalRegistrations: number
+}) {
+  if (!sessionCheckIns || sessionCheckIns.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-6">
+         <p>No session data available yet.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {sessionCheckIns.map((session, index) => {
+        const percentage = totalRegistrations > 0 
+          ? Math.round((session.count / totalRegistrations) * 100) 
+          : 0;
+          
+        return (
+          <div key={session.sessionTitle} className="space-y-2">
+            <div className="flex justify-between items-end">
+              <div className="font-semibold text-slate-800 dark:text-slate-200">
+                {session.sessionTitle}
+              </div>
+              <div className="text-sm font-bold text-slate-500">
+                {session.count} / {totalRegistrations} <span className="text-xs text-muted-foreground ml-1">({percentage}%)</span>
+              </div>
+            </div>
+            <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
+              <div 
+                className="h-full rounded-full transition-all duration-1000 ease-out"
+                style={{ 
+                  width: `${percentage}%`,
+                  background: `linear-gradient(90deg, ${GRADIENTS[index % GRADIENTS.length].start}, ${GRADIENTS[index % GRADIENTS.length].end})`
+                }}
+              />
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
