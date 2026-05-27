@@ -55,6 +55,7 @@ model Event {
   formFields    FormField[]
   registrations Registration[]
   liveConfig    LiveConfig?
+  activityLogs    ActivityLog[]
 }
 
 model LiveConfig {
@@ -117,6 +118,7 @@ model Registration {
   updatedAt     DateTime @updatedAt
   
   checkIns      CheckIn[]
+  activityLogs  ActivityLog[]
 
 
   @@index([eventId])
@@ -138,4 +140,21 @@ model CheckIn {
   scannedAt      DateTime     @default(now())
 
   @@index([staffId])
+}
+
+model ActivityLog {
+  id             String        @id @default(cuid())
+  type           String
+  action         String
+  description    String
+  eventId        String?
+  event          Event?        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  registrationId String?
+  registration   Registration? @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  metadata       Json?
+  createdAt      DateTime      @default(now())
+
+  @@index([eventId])
+  @@index([registrationId])
+  @@index([type])
 }

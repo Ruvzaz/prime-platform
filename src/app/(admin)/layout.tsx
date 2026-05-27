@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { logout } from "@/app/actions/auth"
 import { auth } from "@/auth"
-import { LayoutDashboard, Calendar, Users, LogOut, QrCode, Table, Search, Bell, Settings } from "lucide-react"
+import { LayoutDashboard, Calendar, Users, LogOut, QrCode, Table, Search, Bell, Settings, ActivitySquare } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -118,6 +118,15 @@ function AppSidebar({ userName, userRole }: { userName?: string | null; userRole
               <Link href="/responses" prefetch={true}>
                 <Table className="h-5 w-5" />
                 <span className="font-medium">Responses</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Activity Logs" className="h-11 px-4">
+              <Link href="/logs" prefetch={true}>
+                <ActivitySquare className="h-5 w-5" />
+                <span className="font-medium">Activity Logs</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
