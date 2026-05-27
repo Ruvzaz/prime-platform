@@ -28,6 +28,8 @@ interface EventFormProps {
     emailSubject?: string | null
     emailBody?: string | null
     emailAttachmentUrl?: string | null
+    sendEmail?: boolean
+    generateQr?: boolean
     isActive?: boolean
     formFields: FormFieldConfig[]
   }
@@ -180,9 +182,40 @@ export function EventForm({ action, initialData }: EventFormProps) {
             
             <div className="space-y-4">
               <div className="mb-2">
-                  <h3 className="text-sm font-semibold">Email Customization (Optional)</h3>
-                  <p className="text-xs text-muted-foreground">Custom details for the confirmation email.</p>
+                  <h3 className="text-sm font-semibold">Email & QR Settings (Optional)</h3>
+                  <p className="text-xs text-muted-foreground">Configure confirmation emails and QR code generation.</p>
               </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-background/50">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="sendEmail" className="text-sm font-semibold">ส่งอีเมลยืนยัน</Label>
+                      <p className="text-xs text-muted-foreground">
+                        ระบบจะส่งอีเมลหาผู้ลงทะเบียน
+                      </p>
+                    </div>
+                    <Switch
+                      id="sendEmail"
+                      name="sendEmail"
+                      defaultChecked={initialData?.sendEmail ?? true}
+                    />
+                  </div>
+                  
+                  <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-background/50">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="generateQr" className="text-sm font-semibold">สร้าง QR Code</Label>
+                      <p className="text-xs text-muted-foreground">
+                        แนบ QR สำหรับ Check-in
+                      </p>
+                    </div>
+                    <Switch
+                      id="generateQr"
+                      name="generateQr"
+                      defaultChecked={initialData?.generateQr ?? true}
+                    />
+                  </div>
+              </div>
+
               <div className="space-y-2">
                   <Label htmlFor="emailSubject">Custom Subject</Label>
                   <Input id="emailSubject" name="emailSubject" defaultValue={state?.data?.emailSubject ?? initialData?.emailSubject ?? ""} placeholder="e.g. Your ticket to Prime Party!" />

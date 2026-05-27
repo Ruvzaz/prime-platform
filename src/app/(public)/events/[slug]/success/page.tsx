@@ -18,7 +18,7 @@ export default async function SuccessPage({
 
   const event = await prisma.event.findUnique({
     where: { slug },
-    select: { title: true, imageUrl: true, themeColor: true }
+    select: { title: true, imageUrl: true, themeColor: true, generateQr: true, sendEmail: true }
   });
 
   if (!event) {
@@ -64,19 +64,21 @@ export default async function SuccessPage({
           </div>
 
           {/* QR Code */}
-          {checkInUrl && (
+          {(event.generateQr && checkInUrl) && (
             <div className="px-6 md:px-8 pt-5">
               <QRCodeDisplay value={checkInUrl} size={180} />
             </div>
           )}
 
           {/* Email notification */}
-          <div className="px-6 md:px-8 pt-5">
-            <div className="flex items-center justify-center gap-2 text-sm p-3 rounded-lg bg-primary/5 text-primary">
-              <Mail className="w-4 h-4" />
-              <span>อีเมลยืนยันถูกส่งเรียบร้อยแล้ว</span>
-            </div>
-          </div>
+          {event.sendEmail && (
+              <div className="px-6 md:px-8 pt-5">
+                <div className="flex items-center justify-center gap-2 text-sm p-3 rounded-lg bg-primary/5 text-primary">
+                  <Mail className="w-4 h-4" />
+                  <span>อีเมลยืนยันถูกส่งเรียบร้อยแล้ว</span>
+                </div>
+              </div>
+          )}
 
           {/* Info text */}
           <div className="px-6 md:px-8 pt-4">
