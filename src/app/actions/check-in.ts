@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { extractAttendeeInfo } from "@/lib/attendee-utils";
+import { logActivity } from "@/app/actions/activity-log";
 
 export type CheckInResult = {
   success: boolean;
@@ -95,6 +96,15 @@ export async function verifyAndCheckIn(referenceCode: string, sessionTitle?: str
       }
       return { success: false, message: `Database error: ${txError?.message || String(txError)}` };
     }
+
+    await logActivity({
+      type: "CHECK_IN",
+      action: "SUCCESS",
+      description: `Checked in for ${sessionTitle || "event"}`,
+      eventId: registration.eventId,
+      registrationId: registration.id,
+      metadata: { staffId, sessionTitle }
+    });
 
     revalidatePath("/check-in");
     revalidatePath(`/events/${registration.event.slug}`);

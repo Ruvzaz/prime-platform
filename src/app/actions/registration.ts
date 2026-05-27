@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { RegStatus } from "@prisma/client";
 import { extractAttendeeInfo } from "@/lib/attendee-utils";
+import { logActivity } from "@/app/actions/activity-log";
 import { getRateLimit } from "@/lib/rate-limit";
 import { headers } from "next/headers";
 import { ActionResult, ErrorCodes, errorResult, successResult } from "@/lib/action-result";
@@ -112,8 +113,17 @@ async function sendConfirmationEmailSafe(email: string, name: string, event: any
             event.emailAttachmentUrl,
             event.generateQr
         );
-    } catch (e) {
+        return true;
+    } catch (e: any) {
         console.error("Failed to send confirmation email:", e);
+        await logActivity({
+            type: "EMAIL",
+            action: "FAILED",
+            description: `Failed to send confirmation email to ${email}`,
+            eventId: event.id,
+            metadata: { error: e.message }
+        });
+        return false;
     }
 }
 
@@ -135,7 +145,7 @@ export async function registerAttendee(prevState: any, formData: FormData): Prom
     const event = await prisma.event.findUnique({
       where: { id: eventId },
       select: { 
-          title: true, startDate: true, emailSubject: true, 
+          id: true, title: true, startDate: true, emailSubject: true, 
           emailBody: true, emailAttachmentUrl: true, formFields: true,
           sendEmail: true, generateQr: true
       },
@@ -150,13 +160,30 @@ export async function registerAttendee(prevState: any, formData: FormData): Prom
     const rawData = parsed.rawData!;
 
     // 4. Create Record
-    const { referenceCode } = await createRegistrationWithRetry(eventId, rawData);
+    const { referenceCode, registration } = await createRegistrationWithRetry(eventId, rawData);
 
     // 5. Send Confirmation Email (if enabled)
     if (event.sendEmail) {
         const { name, email } = extractAttendeeInfo(rawData, formFields);
-        await sendConfirmationEmailSafe(email, name, event, referenceCode);
+        const emailSent = await sendConfirmationEmailSafe(email, name, event, referenceCode);
+        if (emailSent) {
+            await logActivity({
+                type: "EMAIL",
+                action: "SUCCESS",
+                description: `Sent confirmation email to ${email}`,
+                eventId: event.id,
+                registrationId: registration.id,
+            });
+        }
     }
+    
+    await logActivity({
+        type: "REGISTRATION",
+        action: "SUCCESS",
+        description: `New registration created: ${referenceCode}`,
+        eventId: event.id,
+        registrationId: registration.id,
+    });
     
     return successResult(
       { 
