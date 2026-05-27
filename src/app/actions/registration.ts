@@ -109,7 +109,8 @@ async function sendConfirmationEmailSafe(email: string, name: string, event: any
             event.startDate, 
             event.emailSubject, 
             event.emailBody, 
-            event.emailAttachmentUrl
+            event.emailAttachmentUrl,
+            event.generateQr
         );
     } catch (e) {
         console.error("Failed to send confirmation email:", e);
@@ -135,7 +136,8 @@ export async function registerAttendee(prevState: any, formData: FormData): Prom
       where: { id: eventId },
       select: { 
           title: true, startDate: true, emailSubject: true, 
-          emailBody: true, emailAttachmentUrl: true, formFields: true 
+          emailBody: true, emailAttachmentUrl: true, formFields: true,
+          sendEmail: true, generateQr: true
       },
     });
 
@@ -150,9 +152,11 @@ export async function registerAttendee(prevState: any, formData: FormData): Prom
     // 4. Create Record
     const { referenceCode } = await createRegistrationWithRetry(eventId, rawData);
 
-    // 5. Send Confirmation Email
-    const { name, email } = extractAttendeeInfo(rawData, formFields);
-    await sendConfirmationEmailSafe(email, name, event, referenceCode);
+    // 5. Send Confirmation Email (if enabled)
+    if (event.sendEmail) {
+        const { name, email } = extractAttendeeInfo(rawData, formFields);
+        await sendConfirmationEmailSafe(email, name, event, referenceCode);
+    }
     
     return successResult(
       { 

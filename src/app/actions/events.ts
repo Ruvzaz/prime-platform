@@ -19,6 +19,8 @@ const eventSchema = z.object({
   emailSubject: z.string().optional(),
   emailBody: z.string().optional(),
   emailAttachmentUrl: z.string().optional().nullable(),
+  sendEmail: z.boolean().default(true),
+  generateQr: z.boolean().default(true),
   isActive: z.boolean().default(true),
 });
 
@@ -56,6 +58,8 @@ export async function createEvent(prevState: any, formData: FormData): Promise<A
       emailSubject: formData.get("emailSubject"),
       emailBody: formData.get("emailBody"),
       emailAttachmentUrl: emailAttachmentUrl,
+      sendEmail: formData.get("sendEmail") === "on",
+      generateQr: formData.get("generateQr") === "on",
       isActive: formData.get("isActive") === "on",
     };
 
@@ -81,6 +85,8 @@ export async function createEvent(prevState: any, formData: FormData): Promise<A
         emailSubject: data.emailSubject,
         emailBody: data.emailBody,
         emailAttachmentUrl: emailAttachmentUrl,
+        sendEmail: data.sendEmail,
+        generateQr: data.generateQr,
         isActive: data.isActive,
         organizer: {
             connect: { id: session.user.id }
@@ -139,6 +145,8 @@ export async function updateEvent(prevState: any, formData: FormData) {
     emailSubject: formData.get("emailSubject"),
     emailBody: formData.get("emailBody"),
     emailAttachmentUrl: emailAttachmentUrl,
+    sendEmail: formData.get("sendEmail") === "on",
+    generateQr: formData.get("generateQr") === "on",
     isActive: formData.get("isActive") === "on",
   };
 
@@ -182,6 +190,8 @@ export async function updateEvent(prevState: any, formData: FormData) {
                 emailSubject: data.emailSubject,
                 emailBody: data.emailBody,
                 emailAttachmentUrl: emailAttachmentUrl,
+                sendEmail: data.sendEmail,
+                generateQr: data.generateQr,
                 isActive: data.isActive,
             }
         });

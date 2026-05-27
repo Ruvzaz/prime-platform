@@ -1,7 +1,6 @@
 
 import nodemailer from 'nodemailer';
 
-// Create a transporter using Gmail SMTP
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -19,7 +18,8 @@ export const sendRegistrationEmail = async (
   eventDate: Date,
   customSubject?: string | null,
   customBody?: string | null,
-  attachmentUrl?: string | null
+  attachmentUrl?: string | null,
+  generateQr?: boolean
 ) => {
   if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
     console.warn("GMAIL_USER or GMAIL_APP_PASSWORD not found. Skipping confirmation email.");
@@ -58,6 +58,12 @@ export const sendRegistrationEmail = async (
     const optionalCustomBodyHtml = customBody && customBody.trim() !== ''
         ? `<div style="margin: 20px 0; padding: 15px; background-color: #f9fafb; border-left: 4px solid #333; color: #444; white-space: pre-wrap; font-size: 14px;">${customBody}</div>`
         : '';
+        
+    const qrHtml = (generateQr === undefined || generateQr) ? `
+          <div style="text-align: center; margin: 20px 0;">
+            <p style="margin: 0 0 10px; font-size: 14px; color: #666;">Scan this QR Code at the event:</p>
+            <img src="${qrImageUrl}" alt="QR Code: ${refCode}" width="200" height="200" style="border: 1px solid #eee; border-radius: 8px;" />
+          </div>` : '';
 
     const info = await transporter.sendMail({
       from: `"ระบบลงทะเบียน" <${process.env.GMAIL_USER}>`,
@@ -77,10 +83,7 @@ export const sendRegistrationEmail = async (
             <h2 style="margin: 10px 0; font-family: monospace; font-size: 32px; letter-spacing: 2px;">${refCode}</h2>
           </div>
 
-          <div style="text-align: center; margin: 20px 0;">
-            <p style="margin: 0 0 10px; font-size: 14px; color: #666;">Scan this QR Code at the event:</p>
-            <img src="${qrImageUrl}" alt="QR Code: ${refCode}" width="200" height="200" style="border: 1px solid #eee; border-radius: 8px;" />
-          </div>
+          ${qrHtml}
 
           <p><strong>Date:</strong> ${eventDate.toLocaleDateString()} at ${eventDate.toLocaleTimeString()}</p>
         </div>
