@@ -16,8 +16,15 @@ export default async function ChallengeLandingPage() {
           id: true,
           name: true,
           leader: {
-            select: { name: true },
+            select: { username: true },
           },
+          _count: {
+            select: {
+              members: {
+                where: { status: 'APPROVED' }
+              }
+            }
+          }
         },
         orderBy: { createdAt: "asc" },
       },

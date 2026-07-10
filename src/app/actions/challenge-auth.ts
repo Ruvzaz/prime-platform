@@ -52,7 +52,8 @@ export async function registerParticipant(prevState: any, formData: FormData) {
       };
     }
 
-    const { title, firstName, lastName, gender, institution, educationLevel, phoneNumber, username, email, password } = validated.data;
+    const { title, firstName, lastName, gender, institution, educationLevel, phoneNumber, password, username } = validated.data;
+    const email = validated.data.email.toLowerCase();
     const name = `${firstName} ${lastName}`;
 
     // Security Check 1: Check if user already exists
@@ -60,7 +61,7 @@ export async function registerParticipant(prevState: any, formData: FormData) {
       where: { 
         OR: [
           { email },
-          { username }
+          { username: { equals: username, mode: 'insensitive' } }
         ]
       }
     });
@@ -69,7 +70,7 @@ export async function registerParticipant(prevState: any, formData: FormData) {
       if (existingUser.email === email) {
         return { error: "Email is already registered.", data: rawData };
       }
-      if (existingUser.username === username) {
+      if (existingUser.username?.toLowerCase() === username.toLowerCase()) {
         return { error: "Username is already taken.", data: rawData };
       }
     }
@@ -198,7 +199,7 @@ export async function completeGoogleProfile(prevState: any, formData: FormData) 
 
     const existingUser = await prisma.user.findFirst({
       where: { 
-        username,
+        username: { equals: username, mode: 'insensitive' },
         id: { not: session.user.id }
       }
     });
@@ -249,7 +250,7 @@ export async function updateParticipantProfile(prevState: any, formData: FormDat
 
     const existingUser = await prisma.user.findFirst({
       where: { 
-        username,
+        username: { equals: username, mode: 'insensitive' },
         id: { not: session.user.id }
       }
     });

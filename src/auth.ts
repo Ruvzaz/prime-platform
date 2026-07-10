@@ -10,11 +10,12 @@ import { User } from '@prisma/client';
 
 async function getUser(email: string): Promise<User | null> {
   try {
+    const searchEmail = email.toLowerCase();
     const user = await prisma.user.findFirst({
       where: {
         OR: [
-          { email },
-          { username: email }
+          { email: searchEmail },
+          { username: searchEmail }
         ]
       }
     });
