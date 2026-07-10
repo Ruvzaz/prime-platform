@@ -50,7 +50,7 @@ export function ViewTeamsDialog({
                   </div>
                   <div>
                     <p className="font-bold text-sm text-foreground">{team.name}</p>
-                    <p className="text-xs text-muted-foreground">Leader: <span className="font-medium text-foreground/80">{team.leader.name || 'Unknown'}</span></p>
+                    <p className="text-xs text-muted-foreground">Leader: <span className="font-medium text-foreground/80">{team.leader?.name || 'Unknown'}</span></p>
                   </div>
                 </div>
               </div>
