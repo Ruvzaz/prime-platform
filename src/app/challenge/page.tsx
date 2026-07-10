@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Shield, Users, Terminal, ChevronRight } from "lucide-react";
 import { ViewTeamsDialog } from "./components/ViewTeamsDialog";
 
+export const dynamic = 'force-dynamic';
+
 export default async function ChallengeLandingPage() {
   // Fetch active challenges from database
   const challenges = await prisma.challenge.findMany({
@@ -126,7 +128,7 @@ export default async function ChallengeLandingPage() {
                       <Users className="w-4 h-4" /> Active Operatives
                     </span>
                     <span className="text-red-500 font-bold">
-                      {challenge._count.teamMembers} Enlisted
+                      {challenge._count?.teamMembers || 0} Enlisted
                     </span>
                   </div>
 
