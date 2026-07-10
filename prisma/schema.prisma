@@ -3,21 +3,41 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String?  // Hashed password
-  role      Role     @default(STAFF)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  events    Event[]
-  checkIns  CheckIn[]
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String?   @unique
+  name          String?
+  title         String?
+  firstName     String?
+  lastName      String?
+  gender        String?
+  institution   String?
+  educationLevel String?
+  phoneNumber   String?
+  password      String? // Hashed password
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Existing relations
+  events   Event[]
+  checkIns CheckIn[]
+
+  // NextAuth relations
+  accounts Account[]
+  sessions Session[]
+
+  // Challenge Team relations
+  teamMemberships TeamMember[]
+  ledTeams        Team[]       @relation("TeamLeader")
 }
 
 enum Role {
@@ -37,59 +57,59 @@ model Event {
   themeColor  String?  @default("#000000")
   imageUrl    String?
   bannerUrl   String?
-  
+
   // Custom Email configurations
   emailSubject       String?
   emailBody          String?
   emailAttachmentUrl String?
   sendEmail          Boolean @default(true)
   generateQr         Boolean @default(true)
-  
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   organizerId String
-  organizer   User     @relation(fields: [organizerId], references: [id])
-  
+  organizer   User   @relation(fields: [organizerId], references: [id])
+
   formFields    FormField[]
   registrations Registration[]
   liveConfig    LiveConfig?
-  activityLogs    ActivityLog[]
+  activityLogs  ActivityLog[]
 }
 
 model LiveConfig {
-  id              String   @id @default(cuid())
-  eventId         String   @unique
-  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  
-  logoUrl         String?
-  bannerUrl       String?
-  welcomeMessage  String?
-  themeColor      String?  @default("#000000")
-  
+  id      String @id @default(cuid())
+  eventId String @unique
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  logoUrl        String?
+  bannerUrl      String?
+  welcomeMessage String?
+  themeColor     String? @default("#000000")
+
   // Display Toggles
-  showStats       Boolean  @default(true)
-  showLog         Boolean  @default(true)
-  layoutMode      String   @default("standard") // "standard" or "fullscreen"
-  maskNames       Boolean  @default(false)
-  bubbleColor     String?  @default("#4f46e5")
-  bubbleOpacity   Float?   @default(0.1)
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  showStats     Boolean @default(true)
+  showLog       Boolean @default(true)
+  layoutMode    String  @default("standard") // "standard" or "fullscreen"
+  maskNames     Boolean @default(false)
+  bubbleColor   String? @default("#4f46e5")
+  bubbleOpacity Float?  @default(0.1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model FormField {
-  id          String   @id @default(cuid())
-  eventId     String
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  label       String
-  type        FieldType
-  options     String[] // JSON array relevant for SELECT/RADIO
-  required    Boolean  @default(false)
-  allowOther  Boolean  @default(false)
-  order       Int      @default(0)
+  id         String    @id @default(cuid())
+  eventId    String
+  event      Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  label      String
+  type       FieldType
+  options    String[] // JSON array relevant for SELECT/RADIO
+  required   Boolean   @default(false)
+  allowOther Boolean   @default(false)
+  order      Int       @default(0)
 
   @@index([eventId])
 }
@@ -108,18 +128,17 @@ enum FieldType {
 }
 
 model Registration {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   eventId       String
-  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  formData      Json     // Stores dynamic form answers: { "fieldId": "answer" }
-  referenceCode String   @unique // Generated unique code for check-in
+  event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  formData      Json // Stores dynamic form answers: { "fieldId": "answer" }
+  referenceCode String    @unique // Generated unique code for check-in
   status        RegStatus @default(PENDING) // Default to PENDING for verification
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
-  checkIns      CheckIn[]
-  activityLogs  ActivityLog[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
+  checkIns     CheckIn[]
+  activityLogs ActivityLog[]
 
   @@index([eventId])
 }
@@ -157,4 +176,111 @@ model ActivityLog {
   @@index([eventId])
   @@index([registrationId])
   @@index([type])
+}
+
+// ==========================================
+// NextAuth Standard Models
+// ==========================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==========================================
+// Team Challenge Models
+// ==========================================
+
+model Challenge {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  maxTeamSize Int     @default(3)
+  isActive    Boolean @default(true)
+  imageUrl    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teams       Team[]
+  teamMembers TeamMember[]
+}
+
+model Team {
+  id          String @id @default(cuid())
+  name        String
+  challengeId String
+  leaderId    String
+  inviteToken String @unique @default(cuid())
+  organization String?
+  region      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  challenge Challenge    @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  leader    User         @relation("TeamLeader", fields: [leaderId], references: [id], onDelete: Cascade)
+  members   TeamMember[]
+
+  @@unique([challengeId, name]) // Team name must be unique within a challenge
+  @@index([challengeId])
+  @@index([leaderId])
+}
+
+enum JoinStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model TeamMember {
+  id          String     @id @default(cuid())
+  teamId      String
+  challengeId String // Added for strict 1-challenge 1-team rule
+  userId      String
+  status      JoinStatus @default(PENDING)
+  joinedAt    DateTime   @default(now())
+
+  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId]) // User can only join 1 team per challenge
+  @@index([teamId])
+  @@index([userId])
+  @@index([challengeId])
 }

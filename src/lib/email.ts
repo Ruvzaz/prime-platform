@@ -96,3 +96,104 @@ export const sendRegistrationEmail = async (
     return { success: false, error };
   }
 };
+
+export const sendVerificationEmail = async (email: string, token: string) => {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    return { success: false, error: "Missing Gmail credentials" };
+  }
+  try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const verifyUrl = `${appUrl}/auth/verify?token=${token}`;
+    const info = await transporter.sendMail({
+      from: `"Prime Digital (CTF System)" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: "Verify your email for CTF Platform",
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
+          <h2 style="color: #333;">Email Verification</h2>
+          <p>Please verify your email address to complete your registration for the Capture The Flag (CTF) platform.</p>
+          <a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: #fff; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">Verify Email Address</a>
+          <p style="margin-top: 30px; font-size: 12px; color: #888;">If you didn't request this registration, you can safely ignore this email.</p>
+        </div>
+      `,
+    });
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error("Failed to send verification email:", error);
+    return { success: false, error };
+  }
+};
+
+const escapeHtml = (unsafe: string) => {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+};
+
+export const sendTeamCompleteEmail = async (
+  teamName: string,
+  organization: string,
+  region: string,
+  challengeName: string,
+  members: { title?: string | null; firstName?: string | null; lastName?: string | null; email: string }[]
+) => {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    return { success: false, error: "Missing Gmail credentials" };
+  }
+  try {
+    const toEmails = members.map(m => m.email).join(', ');
+    const memberListHtml = members.map(m => {
+      const title = escapeHtml(m.title || '');
+      const fname = escapeHtml(m.firstName || '');
+      const lname = escapeHtml(m.lastName || '');
+      const email = escapeHtml(m.email);
+      return `<li style="margin-bottom: 8px;">
+        <strong>${title} ${fname} ${lname}</strong><br />
+        <span style="color: #666; font-size: 14px;">${email}</span>
+      </li>`;
+    }).join('');
+
+    const safeTeamName = escapeHtml(teamName);
+    const safeOrg = escapeHtml(organization);
+    const safeRegion = escapeHtml(region);
+    const safeChallenge = escapeHtml(challengeName);
+
+    const info = await transporter.sendMail({
+      from: `"Prime Digital (CTF System)" <${process.env.GMAIL_USER}>`,
+      to: toEmails,
+      subject: `Team Complete: ${teamName} (${challengeName})`,
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #4f46e5; margin-bottom: 5px;">Team Registration Complete!</h2>
+            <p style="color: #666; font-size: 14px; margin-top: 0;">Your team has reached the required 3 members.</p>
+          </div>
+          
+          <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0; color: #333; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 8px;">Team Details</h3>
+            <p style="margin: 8px 0;"><strong>Challenge:</strong> ${safeChallenge}</p>
+            <p style="margin: 8px 0;"><strong>Team Name:</strong> ${safeTeamName}</p>
+            <p style="margin: 8px 0;"><strong>Organization:</strong> ${safeOrg}</p>
+            <p style="margin: 8px 0;"><strong>Region:</strong> ${safeRegion}</p>
+          </div>
+
+          <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px;">
+            <h3 style="margin-top: 0; color: #333; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 8px;">Team Members</h3>
+            <ul style="list-style-type: none; padding: 0; margin: 0;">
+              ${memberListHtml}
+            </ul>
+          </div>
+          
+          <p style="margin-top: 30px; font-size: 12px; color: #888; text-align: center;">This is an automated message from the Prime Digital CTF Platform.</p>
+        </div>
+      `,
+    });
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error("Failed to send team complete email:", error);
+    return { success: false, error };
+  }
+};
