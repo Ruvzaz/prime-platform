@@ -115,7 +115,7 @@ function ParticipantRegisterContent() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="phoneNumber" className="font-mono text-xs uppercase tracking-widest text-[#849495]">เบอร์โทร *</Label>
-              <Input id="phoneNumber" type="tel" name="phoneNumber" defaultValue={state?.data?.phoneNumber as string || ''} required className="h-11 bg-[#0e1418] border-[#3b494b] text-[#dee3e9] placeholder:text-[#849495]/50 focus-visible:ring-red-500 focus-visible:border-red-500 font-mono text-sm" placeholder="08xxxxxxxx" />
+              <Input id="phoneNumber" type="tel" name="phoneNumber" maxLength={10} defaultValue={state?.data?.phoneNumber as string || ''} required className="h-11 bg-[#0e1418] border-[#3b494b] text-[#dee3e9] placeholder:text-[#849495]/50 focus-visible:ring-red-500 focus-visible:border-red-500 font-mono text-sm" placeholder="08xxxxxxxx" />
               {state?.details?.phoneNumber && <p className="text-xs text-red-500 font-mono">{state.details.phoneNumber[0]}</p>}
             </div>
             <div className="grid gap-2">
