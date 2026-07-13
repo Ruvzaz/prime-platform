@@ -2,9 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Shield, Users, Terminal, ChevronRight } from "lucide-react";
 import { ViewTeamsDialog } from "./components/ViewTeamsDialog";
-
-export const dynamic = 'force-dynamic';
-
+export const revalidate = 30; // แคชหน้าเว็บและดึงข้อมูลใหม่ทุกๆ 30 วินาที เพื่อประหยัด Database Connection
 export default async function ChallengeLandingPage() {
   // Fetch active challenges from database
   const challenges = await prisma.challenge.findMany({
@@ -21,20 +19,20 @@ export default async function ChallengeLandingPage() {
           _count: {
             select: {
               members: {
-                where: { status: 'APPROVED' }
-              }
-            }
-          }
+                where: { status: "APPROVED" },
+              },
+            },
+          },
         },
         orderBy: { createdAt: "asc" },
       },
       _count: {
         select: {
           teamMembers: {
-            where: { status: 'APPROVED' }
-          }
-        }
-      }
+            where: { status: "APPROVED" },
+          },
+        },
+      },
     },
   });
 
@@ -58,16 +56,15 @@ export default async function ChallengeLandingPage() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-10">
           <div className="mb-10">
             <span className="font-mono text-xs sm:text-sm text-red-500 uppercase tracking-[0.3em] sm:tracking-[0.5em] block mb-6 animate-pulse">
-              [ Elite Recruitment Protocol Activated ]
+              [ Capture The Flag ]
             </span>
             <h1 className="text-5xl sm:text-7xl md:text-8xl font-black uppercase mb-6 tracking-tighter leading-none">
-              Forge Your
+              Thailand <span className="text-blue-500">Cyber</span>
               <br />
-              <span className="text-red-500 italic">Digital Legacy</span>
+              <span className="text-red-500">Top </span>Talent
             </h1>
             <p className="max-w-2xl mx-auto text-lg text-[#b9cacb] font-light tracking-wide">
-              Initialize connection to the Cyber Top Talent network. Select your
-              operational vector and form your squad.
+              การแข่งขันทักษะทางไซเบอร์ที่ยิ่งใหญ่ที่สุดในประเทศไทย
             </p>
           </div>
         </div>
@@ -97,9 +94,9 @@ export default async function ChallengeLandingPage() {
                 {/* Image or Icon Header */}
                 {challenge.imageUrl ? (
                   <div className="w-full aspect-video relative border-b border-[#3b494b]">
-                    <img 
-                      src={challenge.imageUrl} 
-                      alt={challenge.name} 
+                    <img
+                      src={challenge.imageUrl}
+                      alt={challenge.name}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute top-4 right-4 px-3 py-1 bg-red-500/90 backdrop-blur text-[#161c21] rounded font-mono text-[10px] font-black uppercase tracking-widest shadow-lg">
@@ -119,43 +116,55 @@ export default async function ChallengeLandingPage() {
                   </div>
                 )}
 
-                <div className={`flex flex-col flex-1 ${challenge.imageUrl ? 'p-8' : 'px-8 pb-8 pt-0'}`}>
+                <div
+                  className={`flex flex-col flex-1 ${challenge.imageUrl ? "p-8" : "px-8 pb-8 pt-0"}`}
+                >
                   <h3 className="text-2xl font-bold tracking-tight mb-2 uppercase">
                     {challenge.name}
                   </h3>
 
-                <p className="text-[#b9cacb] mb-8 flex-1 text-sm leading-relaxed">
-                  {challenge.description ||
-                    "Engage in advanced cyber warfare simulation. Prove your worth on the digital battlefield."}
-                </p>
+                  <p className="text-[#b9cacb] mb-8 flex-1 text-sm leading-relaxed">
+                    {challenge.description ||
+                      "Engage in advanced cyber warfare simulation. Prove your worth on the digital battlefield."}
+                  </p>
 
-                <div className="flex flex-col gap-4 mt-auto">
-                  <div className="flex items-center justify-between text-xs font-mono uppercase tracking-widest text-[#849495] border-t border-[#3b494b] pt-4">
-                    <span className="flex items-center gap-2">
-                      <Users className="w-4 h-4" /> Active Operatives
-                    </span>
-                    <span className="text-red-500 font-bold">
-                      {challenge._count?.teamMembers || 0} Enlisted
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3 w-full">
-                    <div className="flex-1">
-                      <ViewTeamsDialog
-                        teams={challenge.teams}
-                        challengeName={challenge.name}
-                      />
+                  <div className="flex flex-col gap-4 mt-auto">
+                    <div className="flex flex-col gap-2 border-t border-[#3b494b] pt-4">
+                      <div className="flex items-center justify-between text-xs font-mono uppercase tracking-widest text-[#849495]">
+                        <span className="flex items-center gap-2">
+                          <Users className="w-4 h-4" /> จำนวนผู้สมัคร
+                        </span>
+                        <span className="text-red-500 font-bold">
+                          {challenge._count?.teamMembers || 0} คน
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs font-mono uppercase tracking-widest text-[#849495]">
+                        <span className="flex items-center gap-2">
+                          <Shield className="w-4 h-4" /> จำนวนทีมที่สมัคร
+                        </span>
+                        <span className="text-blue-500 font-bold">
+                          {challenge.teams.length || 0} ทีม
+                        </span>
+                      </div>
                     </div>
-                    <Link
-                      href={`/challenge/${challenge.slug}`}
-                      className="flex-1"
-                    >
-                      <button className="w-full font-mono text-xs uppercase tracking-widest px-4 py-3 bg-red-500 text-white font-bold hover:brightness-125 active:scale-95 transition-all duration-150 flex items-center justify-center gap-2 rounded shadow-[0_0_15px_rgba(255,0,0,0.3)]">
-                        Select <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </Link>
+
+                    <div className="flex items-center gap-3 w-full">
+                      <div className="flex-1">
+                        <ViewTeamsDialog
+                          teams={challenge.teams}
+                          challengeName={challenge.name}
+                        />
+                      </div>
+                      <Link
+                        href={`/challenge/${challenge.slug}`}
+                        className="flex-1"
+                      >
+                        <button className="w-full font-mono text-xs uppercase tracking-widest px-4 py-3 bg-red-500 text-white font-bold hover:brightness-125 active:scale-95 transition-all duration-150 flex items-center justify-center gap-2 rounded shadow-[0_0_15px_rgba(255,0,0,0.3)]">
+                          Select <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </Link>
+                    </div>
                   </div>
-                </div>
                 </div>
               </div>
             </div>
@@ -179,12 +188,19 @@ export default async function ChallengeLandingPage() {
       <div className="border-t border-[#3b494b] bg-[#090f13] py-8 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="font-black italic text-xl tracking-tighter text-[#dee3e9]">
-              CYBER<span className="text-red-500">HUB</span>
+            <span className="font-black text-xl tracking-tighter text-[#dee3e9]">
+              N
+              <span className="text-blue-500">
+                C
+                <span className="text-red-500">
+                  S<span className="text-white">A</span>
+                </span>
+              </span>
+              CTF
             </span>
           </div>
           <p className="font-mono text-[10px] text-[#849495] uppercase tracking-widest">
-            © 2026 CYBER RECRUITMENT HUB // ALL RIGHTS RESERVED
+            © 2026 prime digital counsultant ALL RIGHTS RESERVED
           </p>
         </div>
       </div>

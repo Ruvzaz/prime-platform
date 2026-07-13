@@ -6,6 +6,30 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, X, Edit } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
+export function ChallengeDashboardFilter({ challenges, currentFilter }: { challenges: {id: string, name: string}[], currentFilter: string }) {
+  const router = useRouter();
+  
+  return (
+    <select
+      className="h-10 rounded-md border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary min-w-[200px]"
+      value={currentFilter}
+      onChange={(e) => {
+        if (e.target.value === 'ALL') {
+          router.push('/admin/challenges');
+        } else {
+          router.push(`/admin/challenges?challengeId=${e.target.value}`);
+        }
+      }}
+    >
+      <option value="ALL">All Challenges</option>
+      {challenges.map(c => (
+        <option key={c.id} value={c.id}>{c.name}</option>
+      ))}
+    </select>
+  );
+}
 
 export function CreateChallengeForm() {
   const [isOpen, setIsOpen] = useState(false);

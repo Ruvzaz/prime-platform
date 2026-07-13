@@ -1,14 +1,70 @@
-
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+// Helper to parse multiple email accounts from environment variables
+function getEmailAccounts() {
+  // Fallback to single user if GMAIL_USERS is not set
+  const users = (process.env.GMAIL_USERS || process.env.GMAIL_USER || '').split(',').map(u => u.trim()).filter(Boolean);
+  const passes = (process.env.GMAIL_APP_PASSWORDS || process.env.GMAIL_APP_PASSWORD || '').split(',').map(p => p.trim()).filter(Boolean);
+  
+  const accounts = [];
+  for (let i = 0; i < Math.min(users.length, passes.length); i++) {
+    accounts.push({ user: users[i], pass: passes[i] });
+  }
+  return accounts;
+}
 
+const emailAccounts = getEmailAccounts();
+let currentAccountIndex = 0; // Remembers the currently active working account
+
+async function sendMailWithFallback(mailOptions: any) {
+  if (emailAccounts.length === 0) {
+    console.warn("No Gmail credentials configured. Skipping email.");
+    throw new Error("Missing Gmail credentials");
+  }
+
+  let lastError;
+  const originalFrom = mailOptions.from || '"Prime Digital (CTF System)"';
+  const fromName = originalFrom.split('<')[0].trim(); // Extract display name
+
+  // Try each available account once
+  for (let attempt = 0; attempt < emailAccounts.length; attempt++) {
+    const account = emailAccounts[currentAccountIndex];
+    
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: account.user,
+        pass: account.pass,
+      },
+    });
+
+    try {
+      // Gmail requires the 'from' email to match the authenticated user
+      const currentMailOptions = {
+        ...mailOptions,
+        from: `${fromName} <${account.user}>`
+      };
+
+      const info = await transporter.sendMail(currentMailOptions);
+      console.log(`✅ Email sent successfully to ${mailOptions.to} via: ${account.user}`);
+      return info;
+    } catch (error: any) {
+      console.warn(`⚠️ Failed to send email via ${account.user}:`, error.message);
+      lastError = error;
+      
+      // If failed, immediately switch to the next backup account
+      currentAccountIndex = (currentAccountIndex + 1) % emailAccounts.length;
+      
+      if (attempt < emailAccounts.length - 1) {
+        console.log(`🔄 Switching to backup email account: ${emailAccounts[currentAccountIndex].user}`);
+      }
+    }
+  }
+  
+  // If we loop through all accounts and they all fail
+  console.error("❌ ALL EMAIL ACCOUNTS FAILED.");
+  throw lastError || new Error("All email accounts failed to send.");
+}
 
 export const sendRegistrationEmail = async (
   email: string,
@@ -21,33 +77,24 @@ export const sendRegistrationEmail = async (
   attachmentUrl?: string | null,
   generateQr?: boolean
 ) => {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    console.warn("GMAIL_USER or GMAIL_APP_PASSWORD not found. Skipping confirmation email.");
-    return { success: false, error: "Missing Gmail credentials" };
-  }
-
   try {
     const qrImageUrl = `https://quickchart.io/qr?text=${encodeURIComponent(refCode)}&size=200&margin=2`;
     
     let emailAttachments: any[] = [];
     if (attachmentUrl) {
-        // Extract original filename from the R2 path
         const rawFilename = attachmentUrl.split('/').pop() || 'attachment.file';
-        
         let filename = rawFilename;
         const parts = rawFilename.split('_');
         if (parts.length >= 3) {
-            // New format: YYYYMMDD_UUID_filename.ext
             filename = parts.slice(2).join('_');
         } else {
-            // Fallback for old format: uuid-filename.ext
             const dashIndex = rawFilename.indexOf('-');
             filename = dashIndex !== -1 ? rawFilename.substring(dashIndex + 1) : rawFilename;
         }
         
         emailAttachments.push({
             filename: filename,
-            path: attachmentUrl // Nodemailer supports streaming directly from a URL path
+            path: attachmentUrl
         });
     }
 
@@ -65,8 +112,8 @@ export const sendRegistrationEmail = async (
             <img src="${qrImageUrl}" alt="QR Code: ${refCode}" width="200" height="200" style="border: 1px solid #eee; border-radius: 8px;" />
           </div>` : '';
 
-    const info = await transporter.sendMail({
-      from: `"ระบบลงทะเบียน" <${process.env.GMAIL_USER}>`,
+    const info = await sendMailWithFallback({
+      from: `"ระบบลงทะเบียน"`,
       to: email,
       subject: emailSubject,
       attachments: emailAttachments.length > 0 ? emailAttachments : undefined,
@@ -89,7 +136,6 @@ export const sendRegistrationEmail = async (
         </div>
       `,
     });
-    console.log("Confirmation email sent: %s", info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error("Failed to send confirmation email:", error);
@@ -98,14 +144,12 @@ export const sendRegistrationEmail = async (
 };
 
 export const sendVerificationEmail = async (email: string, token: string) => {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    return { success: false, error: "Missing Gmail credentials" };
-  }
   try {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const verifyUrl = `${appUrl}/auth/verify?token=${token}`;
-    const info = await transporter.sendMail({
-      from: `"Prime Digital (CTF System)" <${process.env.GMAIL_USER}>`,
+    
+    const info = await sendMailWithFallback({
+      from: `"Prime Digital (CTF System)"`,
       to: email,
       subject: "Verify your email for CTF Platform",
       html: `
@@ -140,9 +184,6 @@ export const sendTeamCompleteEmail = async (
   challengeName: string,
   members: { title?: string | null; firstName?: string | null; lastName?: string | null; email: string }[]
 ) => {
-  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-    return { success: false, error: "Missing Gmail credentials" };
-  }
   try {
     const toEmails = members.map(m => m.email).join(', ');
     const memberListHtml = members.map(m => {
@@ -161,8 +202,8 @@ export const sendTeamCompleteEmail = async (
     const safeRegion = escapeHtml(region);
     const safeChallenge = escapeHtml(challengeName);
 
-    const info = await transporter.sendMail({
-      from: `"Prime Digital (CTF System)" <${process.env.GMAIL_USER}>`,
+    const info = await sendMailWithFallback({
+      from: `"Prime Digital (CTF System)"`,
       to: toEmails,
       subject: `Team Complete: ${teamName} (${challengeName})`,
       html: `
@@ -197,3 +238,29 @@ export const sendTeamCompleteEmail = async (
     return { success: false, error };
   }
 };
+
+export const sendPasswordResetEmail = async (email: string, token: string) => {
+  try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const resetUrl = `${appUrl}/auth/reset-password?token=${token}`;
+    
+    const info = await sendMailWithFallback({
+      from: `"Prime Digital (CTF System)"`,
+      to: email,
+      subject: "Password Reset Request",
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
+          <h2 style="color: #333;">Password Reset Request</h2>
+          <p>We received a request to reset the password for the account associated with this email address.</p>
+          <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: #fff; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">Reset Password</a>
+          <p style="margin-top: 30px; font-size: 12px; color: #888;">If you didn't request a password reset, you can safely ignore this email. The link will expire in 1 hour.</p>
+        </div>
+      `,
+    });
+    return { success: true, messageId: info.messageId };
+  } catch (error) {
+    console.error("Failed to send password reset email:", error);
+    return { success: false, error };
+  }
+};
+

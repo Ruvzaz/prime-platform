@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-import { sendVerificationEmail } from '@/lib/email';
+import { sendVerificationEmail, sendPasswordResetEmail } from '@/lib/email';
 import crypto from 'crypto';
 import { signIn, signOut, auth } from '@/auth';
 import { AuthError } from 'next-auth';
@@ -280,3 +280,102 @@ export async function updateParticipantProfile(prevState: any, formData: FormDat
     return { error: "An unexpected error occurred." };
   }
 }
+
+export async function requestPasswordReset(prevState: any, formData: FormData) {
+  try {
+    const email = formData.get('email') as string;
+    if (!email) return { error: "Email is required" };
+
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() }
+    });
+
+    if (!user) {
+      // Return success even if user not found to prevent email enumeration
+      return { success: true, message: "If an account exists, a password reset link has been sent to the email." };
+    }
+
+    // Rate Limiting Check: Prevent spamming emails
+    const existingToken = await prisma.verificationToken.findFirst({
+      where: { identifier: user.email }
+    });
+
+    if (existingToken) {
+      // If the token expires in more than 59 minutes, it was created less than 1 minute ago
+      const timeRemainingMs = existingToken.expires.getTime() - Date.now();
+      if (timeRemainingMs > 59 * 60 * 1000) {
+        return { error: "Please wait 60 seconds before requesting another reset link." };
+      }
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 1 * 60 * 60 * 1000); // 1 hour
+
+    // Delete existing tokens for this email
+    await prisma.verificationToken.deleteMany({
+      where: { identifier: user.email }
+    });
+
+    await prisma.verificationToken.create({
+      data: {
+        identifier: user.email,
+        token,
+        expires
+      }
+    });
+
+    await sendPasswordResetEmail(user.email, token);
+
+    return { success: true, message: "If an account exists, a password reset link has been sent to the email." };
+  } catch (error) {
+    console.error("Password reset request error:", error);
+    return { error: "An unexpected error occurred." };
+  }
+}
+
+export async function resetPasswordWithToken(prevState: any, formData: FormData) {
+  try {
+    const token = formData.get('token') as string;
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+
+    if (!token) return { error: "Invalid token" };
+    if (!password) return { error: "Password is required" };
+    if (password !== confirmPassword) return { error: "Passwords do not match" };
+
+    // Validate password strength
+    if (password.length < 8) return { error: "Password must be at least 8 characters" };
+    if (!/[a-z]/.test(password)) return { error: "Password must contain at least one lowercase letter" };
+    if (!/[A-Z]/.test(password)) return { error: "Password must contain at least one uppercase letter" };
+    if (!/[0-9]/.test(password)) return { error: "Password must contain at least one number" };
+
+    const verificationToken = await prisma.verificationToken.findUnique({
+      where: { token }
+    });
+
+    if (!verificationToken) {
+      return { error: "Invalid or expired reset token." };
+    }
+
+    if (new Date() > verificationToken.expires) {
+      return { error: "Reset token has expired. Please request a new one." };
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    await prisma.user.update({
+      where: { email: verificationToken.identifier },
+      data: { password: hashedPassword }
+    });
+
+    await prisma.verificationToken.delete({
+      where: { token }
+    });
+
+    return { success: true, message: "Password reset successful! You can now log in." };
+  } catch (error) {
+    console.error("Password reset error:", error);
+    return { error: "An unexpected error occurred." };
+  }
+}
+

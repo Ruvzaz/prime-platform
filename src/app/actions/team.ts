@@ -4,6 +4,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { sendTeamCompleteEmail } from '@/lib/email';
+import { sendDiscordLog } from '@/lib/discord-logger';
 import crypto from 'crypto';
 import { z } from 'zod';
 
@@ -65,6 +66,16 @@ export async function joinTeamWithToken(token: string) {
         userId,
         status: 'PENDING'
       }
+    });
+
+    await sendDiscordLog({
+      category: 'TEAM',
+      title: 'User Joined Team (Pending)',
+      description: `**${session.user.name || session.user.email}** requested to join team **${team.name}**.`,
+      color: 0xf39c12, // Orange
+      fields: [
+        { name: 'Challenge', value: team.challenge.name, inline: true },
+      ],
     });
 
     return { success: true, challengeSlug: team.challenge.slug };
@@ -151,6 +162,18 @@ export async function createTeam(challengeId: string, prevState: any, formData: 
       });
     });
 
+    await sendDiscordLog({
+      category: 'TEAM',
+      title: 'New Team Created',
+      description: `**${session.user.name || session.user.email}** created team **${name}**.`,
+      color: 0x2ecc71, // Green
+      fields: [
+        { name: 'Challenge', value: challenge.name, inline: true },
+        { name: 'Organization', value: organization, inline: true },
+        { name: 'Region', value: region, inline: true },
+      ],
+    });
+
     revalidatePath(`/challenge/${challenge.slug}`);
     return { success: true, message: 'Team created successfully!' };
   } catch (error) {
@@ -178,23 +201,39 @@ export async function processMemberAction(teamId: string, memberId: string, acti
     if (team.leaderId !== userId) return { error: 'Only the team leader can manage members.' };
 
     if (action === 'APPROVE') {
-      // Check max team size
-      const currentApprovedCount = await prisma.teamMember.count({
-        where: { teamId, status: 'APPROVED' }
+      const txResult = await prisma.$transaction(async (tx) => {
+        // 1. Lock the Team row to prevent Race Conditions (TOCTOU)
+        await tx.team.update({
+          where: { id: teamId },
+          data: { updatedAt: new Date() }
+        });
+
+        // 2. Check max team size securely inside the lock
+        const currentApprovedCount = await tx.teamMember.count({
+          where: { teamId, status: 'APPROVED' }
+        });
+        
+        if (currentApprovedCount >= team.challenge.maxTeamSize) {
+          return { error: `Team is already full (Max ${team.challenge.maxTeamSize} members).` };
+        }
+
+        // 3. Update the member status
+        const result = await tx.teamMember.updateMany({
+          where: { id: memberId, teamId: teamId },
+          data: { status: 'APPROVED' }
+        });
+
+        if (result.count === 0) return { error: 'Member not found in this team.' };
+
+        return { success: true, newCount: currentApprovedCount + 1 };
       });
-      if (currentApprovedCount >= team.challenge.maxTeamSize) {
-         return { error: `Team is already full (Max ${team.challenge.maxTeamSize} members).` };
+
+      if ('error' in txResult) {
+        return txResult; // Return the error gracefully to the UI
       }
 
-      const result = await prisma.teamMember.updateMany({
-        where: { id: memberId, teamId: teamId },
-        data: { status: 'APPROVED' }
-      });
-      
-      if (result.count === 0) return { error: 'Member not found in this team.' };
-
-      // Check if team just became full
-      if (currentApprovedCount + 1 === team.challenge.maxTeamSize) {
+      // Check if team just became full after this successful approval
+      if (txResult.newCount === team.challenge.maxTeamSize) {
         const fullTeam = await prisma.team.findUnique({
           where: { id: teamId },
           include: {
@@ -239,6 +278,16 @@ export async function processMemberAction(teamId: string, memberId: string, acti
         where: { id: memberId }
       });
     }
+
+    await sendDiscordLog({
+      category: 'TEAM',
+      title: `Team Member ${action}`,
+      description: `**${session.user.name || session.user.email}** ${action.toLowerCase()}ed a member in team **${team.name}**.`,
+      color: action === 'APPROVE' ? 0x2ecc71 : 0xe74c3c, // Green for approve, Red for reject/remove
+      fields: [
+        { name: 'Challenge', value: team.challenge.name, inline: true },
+      ],
+    });
 
     revalidatePath(`/challenge/${team.challenge.slug}`);
     return { success: true };

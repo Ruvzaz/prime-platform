@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { logout } from "@/app/actions/auth"
 import { auth } from "@/auth"
-import { LayoutDashboard, Calendar, Users, LogOut, QrCode, Table, Search, Bell, Settings, ActivitySquare, Shield } from "lucide-react"
+import { LayoutDashboard, Calendar, Users, LogOut, QrCode, Table, Search, Bell, Settings, ActivitySquare, Shield, UserCog } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -17,6 +17,9 @@ import {
   SidebarProvider,
   SidebarTrigger,
   SidebarInset,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
 } from "@/components/ui/sidebar"
 
 import { cookies } from "next/headers"
@@ -86,69 +89,86 @@ function AppSidebar({ userName, userRole }: { userName?: string | null; userRole
           </div>
         </Link>
       </SidebarHeader>
-      <SidebarContent className="px-3">
-        <SidebarMenu className="gap-1 mt-4">
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Dashboard" className="h-11 px-4">
-              <Link href="/admin/dashboard" prefetch={true}>
-                <LayoutDashboard className="h-5 w-5" />
-                <span className="font-medium">Dashboard</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Events" className="h-11 px-4">
-              <Link href="/admin/events" prefetch={true}>
-                <Calendar className="h-5 w-5" />
-                <span className="font-medium">Events</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Registrations" className="h-11 px-4">
-              <Link href="/admin/registrations" prefetch={true}>
-                <Users className="h-5 w-5" />
-                <span className="font-medium">Registrations</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="CTF Challenges" className="h-11 px-4">
-              <Link href="/admin/challenges" prefetch={true}>
-                <Shield className="h-5 w-5 text-primary" />
-                <span className="font-medium">CTF Challenges</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+      <SidebarContent className="group-data-[state=expanded]:px-3">
+        <SidebarGroup className="group-data-[collapsible=icon]:pb-1">
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Events</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-1">
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Dashboard" className="h-11 px-4">
+                  <Link href="/admin/dashboard" prefetch={true}>
+                    <LayoutDashboard className="h-5 w-5" />
+                    <span className="font-medium">Dashboard</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Events" className="h-11 px-4">
+                  <Link href="/admin/events" prefetch={true}>
+                    <Calendar className="h-5 w-5" />
+                    <span className="font-medium">Events</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Registrations" className="h-11 px-4">
+                  <Link href="/admin/registrations" prefetch={true}>
+                    <Users className="h-5 w-5" />
+                    <span className="font-medium">Registrations</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Responses" className="h-11 px-4">
+                  <Link href="/admin/responses" prefetch={true}>
+                    <Table className="h-5 w-5" />
+                    <span className="font-medium">Responses</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Activity Logs" className="h-11 px-4">
+                  <Link href="/admin/logs" prefetch={true}>
+                    <ActivitySquare className="h-5 w-5" />
+                    <span className="font-medium">Activity Logs</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Scan QR" className="h-11 px-4">
+                  <Link href="/check-in" target="_blank" prefetch={false}>
+                    <QrCode className="h-5 w-5" />
+                    <span className="font-medium">Scan QR</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Responses" className="h-11 px-4">
-              <Link href="/admin/responses" prefetch={true}>
-                <Table className="h-5 w-5" />
-                <span className="font-medium">Responses</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Activity Logs" className="h-11 px-4">
-              <Link href="/admin/logs" prefetch={true}>
-                <ActivitySquare className="h-5 w-5" />
-                <span className="font-medium">Activity Logs</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Scan QR" className="h-11 px-4">
-              <Link href="/check-in" target="_blank" prefetch={false}>
-                <QrCode className="h-5 w-5" />
-                <span className="font-medium">Scan QR</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <SidebarGroup className="group-data-[collapsible=icon]:pt-0">
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Challenge</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-1">
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="CTF Challenges" className="h-11 px-4">
+                  <Link href="/admin/challenges" prefetch={true}>
+                    <Shield className="h-5 w-5 text-primary" />
+                    <span className="font-medium">CTF Challenges</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Accounts" className="h-11 px-4">
+                  <Link href="/admin/accounts" prefetch={true}>
+                    <UserCog className="h-5 w-5" />
+                    <span className="font-medium">Accounts</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-3 group-data-[state=collapsed]:p-1.5 transition-all duration-300">
         <div className="p-3 group-data-[state=collapsed]:p-1 rounded-2xl bg-secondary/50 border border-border/50 backdrop-blur-sm transition-all duration-300">
