@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { auth } from "@/auth";
 import {
   DropdownMenu,
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   UserCircle,
+  User,
   LogOut,
   Shield,
   ShieldCheck,
@@ -41,7 +43,7 @@ export async function ChallengeNavbar() {
           href="/challenge"
           className="flex items-center gap-2 font-black text-2xl tracking-tighter text-[#dee3e9] hover:opacity-80 transition-opacity"
         >
-          <Shield className="w-8 h-8 text-red-500" />
+          <Image src="/ICON IMAGE.png" alt="NCSA Logo" width={48} height={48} className="object-contain" />
           <span className="">
             N
             <span className="text-blue-500">
@@ -59,8 +61,8 @@ export async function ChallengeNavbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <div className="flex items-center gap-3 px-3 py-1.5 rounded bg-[#161c21] border border-[#3b494b] cursor-pointer hover:border-red-500/50 transition-colors">
-                  <div className="flex items-center justify-center w-8 h-8 rounded bg-red-500/10 text-red-500 font-bold text-sm shrink-0 font-mono">
-                    {session.user.name?.[0]?.toUpperCase() || "U"}
+                  <div className="flex items-center justify-center w-10 h-10 rounded bg-red-500/10 shrink-0 text-red-500">
+                    <User className="w-5 h-5" />
                   </div>
                   <div className="hidden sm:block text-right pr-2">
                     <p className="font-bold text-sm leading-none text-[#dee3e9] uppercase tracking-wide">
@@ -91,7 +93,7 @@ export async function ChallengeNavbar() {
                 >
                   <Link href={myTeamLink}>
                     <Users className="w-4 h-4 mr-2" />
-                    <span>My Squad</span>
+                    <span>My Team</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -100,7 +102,7 @@ export async function ChallengeNavbar() {
                 >
                   <Link href="/challenge/profile">
                     <UserCog className="w-4 h-4 mr-2" />
-                    <span>Diagnostics</span>
+                    <span>My Profile</span>
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
