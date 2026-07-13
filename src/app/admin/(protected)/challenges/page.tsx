@@ -7,6 +7,7 @@ import {
   ChallengeStatusToggle,
   EditChallengeForm,
   ChallengeDashboardFilter,
+  ExportDataButton,
 } from "./components/ClientActions";
 
 export default async function AdminChallengesPage(props: any) {
@@ -64,11 +65,12 @@ export default async function AdminChallengesPage(props: any) {
             Manage challenge categories and monitor registration metrics.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <ChallengeDashboardFilter 
             challenges={challenges.map(c => ({ id: c.id, name: c.name }))} 
             currentFilter={filterChallengeId} 
           />
+          <ExportDataButton currentFilter={filterChallengeId} />
           <CreateChallengeForm />
         </div>
       </div>

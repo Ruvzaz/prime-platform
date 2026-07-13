@@ -5,7 +5,7 @@ import { createChallenge, toggleChallengeStatus, updateChallenge } from '@/app/a
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, X, Edit } from 'lucide-react';
+import { Plus, X, Edit, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export function ChallengeDashboardFilter({ challenges, currentFilter }: { challenges: {id: string, name: string}[], currentFilter: string }) {
@@ -28,6 +28,21 @@ export function ChallengeDashboardFilter({ challenges, currentFilter }: { challe
         <option key={c.id} value={c.id}>{c.name}</option>
       ))}
     </select>
+  );
+}
+
+export function ExportDataButton({ currentFilter }: { currentFilter: string }) {
+  return (
+    <Button 
+      variant="outline" 
+      onClick={() => {
+        window.location.href = `/api/admin/export?challengeId=${currentFilter}`;
+      }}
+      className="flex items-center gap-2"
+    >
+      <Download className="w-4 h-4" />
+      Export to Excel
+    </Button>
   );
 }
 

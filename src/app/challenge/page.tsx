@@ -193,7 +193,7 @@ export default async function ChallengeLandingPage() {
               <span className="text-blue-500">
                 C
                 <span className="text-red-500">
-                  S<span className="text-white">A</span>
+                  S<span className="text-white">A </span>
                 </span>
               </span>
               CTF

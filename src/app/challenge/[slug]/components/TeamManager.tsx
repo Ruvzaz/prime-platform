@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useActionState, useState, useTransition } from "react";
 import { createTeam, processMemberAction } from "@/app/actions/team";
 import { Button } from "@/components/ui/button";
@@ -267,8 +269,8 @@ function CreateTeamForm({ action }: { action: any }) {
   return (
     <div className="max-w-md mx-auto mt-12 bg-[#161c21]/80 backdrop-blur-md p-8 rounded-xl border border-[#3b494b] shadow-[0_0_20px_rgba(255,0,0,0.05)]">
       <div className="text-center mb-6">
-        <div className="w-16 h-16 mx-auto mb-4 bg-red-500/10 rounded-xl flex items-center justify-center border border-red-500/30">
-          <Shield className="w-8 h-8 text-red-500" />
+        <div className="w-20 h-20 mx-auto mb-4 bg-red-500/10 rounded-xl flex items-center justify-center border border-red-500/30 overflow-hidden">
+          <Image src="/ICON IMAGE.png" alt="Form Your Team" width={60} height={60} className="object-contain" />
         </div>
         <h2 className="text-2xl font-black uppercase tracking-tighter text-[#dee3e9]">
           Form Your Team
@@ -283,7 +285,7 @@ function CreateTeamForm({ action }: { action: any }) {
           <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
           <div className="text-[10px] font-mono uppercase tracking-widest text-amber-500">
             <p className="font-bold mb-1">[ SYSTEM WARNING ]</p>
-            <p>1 Member = 1 Squad constraint active. Proceed with caution.</p>
+            <p>1 Member = 1 Team constraint active. Proceed with caution.</p>
           </div>
         </div>
       </div>
@@ -294,7 +296,7 @@ function CreateTeamForm({ action }: { action: any }) {
             htmlFor="name"
             className="font-mono text-xs uppercase tracking-widest text-[#849495]"
           >
-            Squad Designation *
+            Team Name *
           </Label>
           <Input
             id="name"
