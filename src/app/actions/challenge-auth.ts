@@ -7,6 +7,7 @@ import { sendVerificationEmail, sendPasswordResetEmail } from '@/lib/email';
 import crypto from 'crypto';
 import { signIn, signOut, auth } from '@/auth';
 import { AuthError } from 'next-auth';
+import { headers } from 'next/headers';
 
 const registerSchema = z.object({
   title: z.string().min(1, "Title is required").max(50),
@@ -51,6 +52,29 @@ export async function registerParticipant(prevState: any, formData: FormData) {
         data: rawData
       };
     }
+
+    // --- RATE LIMITING ---
+    const headersList = await headers();
+    const ip = headersList.get('x-forwarded-for') || '127.0.0.1';
+    
+    const recentAttempts = await prisma.activityLog.count({
+      where: {
+        type: 'RATE_LIMIT',
+        action: 'REGISTER_EMAIL',
+        description: ip,
+        createdAt: {
+          gte: new Date(Date.now() - 60 * 60 * 1000) // 1 Hour window
+        }
+      }
+    });
+
+    if (recentAttempts >= 20) {
+      return { 
+        error: "Too many registration attempts from this IP address. Please try again later.",
+        data: rawData
+      };
+    }
+    // ---------------------
 
     const { title, firstName, lastName, gender, institution, educationLevel, phoneNumber, password, username } = validated.data;
     const email = validated.data.email.toLowerCase();
@@ -110,6 +134,16 @@ export async function registerParticipant(prevState: any, formData: FormData) {
 
     // Send Email
     await sendVerificationEmail(email, token);
+
+    // Log the action to deduct rate limit quota
+    await prisma.activityLog.create({
+      data: {
+        type: 'RATE_LIMIT',
+        action: 'REGISTER_EMAIL',
+        description: ip,
+        metadata: { email }
+      }
+    });
 
     return { success: true, message: "Registration successful. Please check your email to verify your account." };
   } catch (error) {
@@ -286,6 +320,26 @@ export async function requestPasswordReset(prevState: any, formData: FormData) {
     const email = formData.get('email') as string;
     if (!email) return { error: "Email is required" };
 
+    // --- RATE LIMITING ---
+    const headersList = await headers();
+    const ip = headersList.get('x-forwarded-for') || '127.0.0.1';
+    
+    const recentResets = await prisma.activityLog.count({
+      where: {
+        type: 'RATE_LIMIT',
+        action: 'PASSWORD_RESET',
+        description: ip,
+        createdAt: {
+          gte: new Date(Date.now() - 60 * 60 * 1000) // 1 Hour window
+        }
+      }
+    });
+
+    if (recentResets >= 10) {
+      return { error: "Too many password reset requests from this IP address. Please try again later." };
+    }
+    // ---------------------
+
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() }
     });
@@ -325,6 +379,16 @@ export async function requestPasswordReset(prevState: any, formData: FormData) {
     });
 
     await sendPasswordResetEmail(user.email, token);
+
+    // Log the action to deduct rate limit quota
+    await prisma.activityLog.create({
+      data: {
+        type: 'RATE_LIMIT',
+        action: 'PASSWORD_RESET',
+        description: ip,
+        metadata: { email: user.email }
+      }
+    });
 
     return { success: true, message: "If an account exists, a password reset link has been sent to the email." };
   } catch (error) {
