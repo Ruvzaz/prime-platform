@@ -66,16 +66,16 @@ export function ViewTeamsDialog({
                         <h4 className="font-bold text-base text-white uppercase truncate tracking-wide">{team.name}</h4>
                         <div className="flex items-center gap-1.5 text-xs font-mono text-[#849495] mt-1">
                           <User className="w-3 h-3 text-red-500" />
-                          <span className="truncate">CMDR: {team.leader?.username || 'Unknown'}</span>
+                          <span className="truncate">Leader: {team.leader?.username || 'Unknown'}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Stats Footer */}
                     <div className="mt-auto pt-3 border-t border-[#3b494b] flex items-center justify-between font-mono text-xs uppercase tracking-widest">
-                      <span className="text-[#849495]">Operatives</span>
+                      <span className="text-[#849495]">จำนวนสมาชิก</span>
                       <span className="text-white bg-[#161c21] px-2 py-1 rounded border border-[#3b494b]">
-                        {team._count.members} <span className="text-red-500">OPs</span>
+                        {team._count.members} <span className="text-red-500">คน</span>
                       </span>
                     </div>
 
