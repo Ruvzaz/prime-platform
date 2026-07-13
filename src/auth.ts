@@ -67,7 +67,7 @@ export const { auth, signIn, signOut, handlers } = NextAuth({
     async signIn({ user, account, profile }) {
       if (account?.provider === 'google') {
         // If they sign in with Google, automatically verify their email if not already
-        if (user.id && !user.emailVerified) {
+        if (user.id && !(user as any).emailVerified) {
           await prisma.user.update({
             where: { id: user.id },
             data: { emailVerified: new Date() }
