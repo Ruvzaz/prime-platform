@@ -8,6 +8,7 @@ import crypto from 'crypto';
 import { signIn, signOut, auth } from '@/auth';
 import { AuthError } from 'next-auth';
 import { headers } from 'next/headers';
+import { revalidatePath } from 'next/cache';
 
 const registerSchema = z.object({
   title: z.string().min(1, "Title is required").max(50),
@@ -16,7 +17,7 @@ const registerSchema = z.object({
   gender: z.string().min(1, "Gender is required").max(20),
   institution: z.string().min(1, "Institution is required").max(150),
   educationLevel: z.string().min(1, "Education level is required").max(100),
-  phoneNumber: z.string().min(9, "Valid phone number is required").max(20),
+  phoneNumber: z.string().min(9, "Valid phone number is required").max(10, "Phone number must not exceed 10 digits"),
   email: z.string().email("Invalid email address").max(150),
   username: z.string().min(3, "Username must be at least 3 characters").max(50),
   password: z.string().min(8, "Password must be at least 8 characters (Security Policy)")
@@ -36,7 +37,7 @@ const updateProfileSchema = z.object({
   gender: z.string().min(1, "Gender is required").max(20),
   institution: z.string().min(1, "Institution is required").max(150),
   educationLevel: z.string().min(1, "Education level is required").max(100),
-  phoneNumber: z.string().min(9, "Valid phone number is required").max(20),
+  phoneNumber: z.string().min(9, "Valid phone number is required").max(10, "Phone number must not exceed 10 digits"),
   username: z.string().min(3, "Username must be at least 3 characters").max(50),
 });
 
@@ -307,6 +308,9 @@ export async function updateParticipantProfile(prevState: any, formData: FormDat
         username
       }
     });
+
+    revalidatePath('/challenge/profile');
+    revalidatePath('/challenge');
 
     return { success: true, message: "Profile updated successfully!" };
   } catch (error) {

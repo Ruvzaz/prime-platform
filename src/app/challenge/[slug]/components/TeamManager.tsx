@@ -3,6 +3,7 @@
 import Image from "next/image";
 
 import { useActionState, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { createTeam, processMemberAction } from "@/app/actions/team";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +46,7 @@ export function TeamManager({
   myMembership: any;
   currentUser: any;
 }) {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -67,6 +69,8 @@ export function TeamManager({
       );
       if (res.error) {
         alert(res.error);
+      } else {
+        router.refresh();
       }
     });
   };
