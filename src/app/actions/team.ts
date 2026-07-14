@@ -297,3 +297,31 @@ export async function processMemberAction(teamId: string, memberId: string, acti
     return { error: "Failed to process member action." };
   }
 }
+
+export async function regenerateTeamInviteToken(teamId: string) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return { error: "Unauthorized" };
+
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: { challenge: true }
+    });
+
+    if (!team) return { error: "Team not found." };
+    if (team.leaderId !== session.user.id) return { error: "Only the team leader can generate a new link." };
+
+    const newToken = crypto.randomBytes(16).toString('hex');
+
+    await prisma.team.update({
+      where: { id: teamId },
+      data: { inviteToken: newToken }
+    });
+
+    revalidatePath(`/challenge/${team.challenge.slug}`);
+    return { success: true, message: "New recruitment link generated successfully." };
+  } catch (error) {
+    console.error("Regenerate Token Error:", error);
+    return { error: "An unexpected error occurred." };
+  }
+}

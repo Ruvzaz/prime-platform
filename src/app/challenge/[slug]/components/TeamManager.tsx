@@ -2,9 +2,9 @@
 
 import Image from "next/image";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createTeam, processMemberAction } from "@/app/actions/team";
+import { createTeam, processMemberAction, regenerateTeamInviteToken } from "@/app/actions/team";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,7 @@ import {
   Clock,
   AlertTriangle,
   ArrowLeft,
+  RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -49,12 +50,36 @@ export function TeamManager({
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [origin, setOrigin] = useState("");
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+
 
   const handleCopyInvite = (token: string) => {
     const inviteUrl = `${window.location.origin}/invite/${token}`;
     navigator.clipboard.writeText(inviteUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleRegenerateLink = async () => {
+    if (!confirm("Are you sure you want to generate a new recruitment link? The old link will stop working immediately.")) return;
+    
+    setIsRegenerating(true);
+    try {
+      const result = await regenerateTeamInviteToken(myMembership?.team?.id);
+      if (result?.error) {
+        alert(result.error);
+      } else {
+        router.refresh();
+      }
+    } finally {
+      setIsRegenerating(false);
+    }
   };
 
   const handleMemberAction = (
@@ -134,7 +159,7 @@ export function TeamManager({
           <div className="flex flex-col sm:flex-row gap-2">
             <Input
               readOnly
-              value={`https://primeevent.online/invite/${team.inviteToken}`}
+              value={origin ? `${origin}/invite/${team.inviteToken}` : ""}
               className="bg-[#0e1418] border-[#3b494b] text-red-500 font-mono text-sm flex-1 h-11 focus-visible:ring-red-500"
             />
             <button
@@ -147,6 +172,14 @@ export function TeamManager({
                 <Copy className="w-4 h-4 mr-2" />
               )}
               {copied ? "COPIED" : "COPY"}
+            </button>
+            <button
+              onClick={handleRegenerateLink}
+              disabled={isRegenerating}
+              className="shrink-0 sm:w-12 h-11 px-0 flex items-center justify-center font-mono text-xs uppercase tracking-widest border border-[#3b494b] text-[#849495] font-bold hover:bg-[#3b494b]/20 hover:text-[#dee3e9] transition-colors rounded disabled:opacity-50"
+              title="Regenerate Link"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRegenerating ? "animate-spin" : ""}`} />
             </button>
           </div>
         </div>
