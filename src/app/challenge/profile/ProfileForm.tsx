@@ -94,9 +94,8 @@ export function ProfileForm({ defaultValues }: { defaultValues: any }) {
               {state?.details?.phoneNumber && <p className="text-xs text-red-500 font-mono">{state.details.phoneNumber[0]}</p>}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="username" className="font-mono text-xs uppercase tracking-widest text-[#849495]">Username *</Label>
-              <Input id="username" type="text" name="username" defaultValue={defaultValues.username || ''} required className="h-11 bg-[#0e1418] border-[#3b494b] text-[#dee3e9] focus-visible:ring-red-500 focus-visible:border-red-500 font-mono text-sm" />
-              {state?.details?.username && <p className="text-xs text-red-500 font-mono">{state.details.username[0]}</p>}
+              <Label className="font-mono text-xs uppercase tracking-widest text-[#849495]">Username (Restricted)</Label>
+              <Input id="username" type="text" value={defaultValues.username || ''} disabled className="h-11 bg-[#0e1418]/50 border-[#3b494b]/50 text-[#849495] font-mono opacity-70 cursor-not-allowed" />
             </div>
           </div>
 

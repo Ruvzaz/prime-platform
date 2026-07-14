@@ -30,7 +30,7 @@ const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
-const updateProfileSchema = z.object({
+const profileCompleteSchema = z.object({
   title: z.string().min(1, "Title is required").max(50),
   firstName: z.string().min(2, "First name must be at least 2 characters").max(100),
   lastName: z.string().min(2, "Last name must be at least 2 characters").max(100),
@@ -40,6 +40,8 @@ const updateProfileSchema = z.object({
   phoneNumber: z.string().min(9, "Valid phone number is required").max(10, "Phone number must not exceed 10 digits"),
   username: z.string().min(3, "Username must be at least 3 characters").max(50),
 });
+
+const updateProfileSchema = profileCompleteSchema.omit({ username: true });
 
 export async function registerParticipant(prevState: any, formData: FormData) {
   try {
@@ -220,7 +222,7 @@ export async function completeGoogleProfile(prevState: any, formData: FormData) 
     if (!session?.user?.id) return { error: "Unauthorized" };
 
     const rawData = Object.fromEntries(formData.entries());
-    const validated = updateProfileSchema.safeParse(rawData);
+    const validated = profileCompleteSchema.safeParse(rawData);
 
     if (!validated.success) {
       return { 
@@ -232,15 +234,17 @@ export async function completeGoogleProfile(prevState: any, formData: FormData) 
     const { title, firstName, lastName, gender, institution, educationLevel, phoneNumber, username } = validated.data;
     const name = `${firstName} ${lastName}`;
 
-    const existingUser = await prisma.user.findFirst({
-      where: { 
-        username: { equals: username, mode: 'insensitive' },
-        id: { not: session.user.id }
-      }
-    });
+    if (username) {
+      const existingUser = await prisma.user.findFirst({
+        where: { 
+          username: { equals: username, mode: 'insensitive' },
+          id: { not: session.user.id }
+        }
+      });
 
-    if (existingUser) {
-      return { error: "Username is already taken." };
+      if (existingUser) {
+        return { error: "Username is already taken." };
+      }
     }
 
     await prisma.user.update({
@@ -280,19 +284,8 @@ export async function updateParticipantProfile(prevState: any, formData: FormDat
       };
     }
 
-    const { title, firstName, lastName, gender, institution, educationLevel, phoneNumber, username } = validated.data;
+    const { title, firstName, lastName, gender, institution, educationLevel, phoneNumber } = validated.data;
     const name = `${firstName} ${lastName}`;
-
-    const existingUser = await prisma.user.findFirst({
-      where: { 
-        username: { equals: username, mode: 'insensitive' },
-        id: { not: session.user.id }
-      }
-    });
-
-    if (existingUser) {
-      return { error: "Username is already taken." };
-    }
 
     await prisma.user.update({
       where: { id: session.user.id },
@@ -304,8 +297,7 @@ export async function updateParticipantProfile(prevState: any, formData: FormDat
         gender,
         institution,
         educationLevel,
-        phoneNumber,
-        username
+        phoneNumber
       }
     });
 
