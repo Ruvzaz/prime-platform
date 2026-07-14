@@ -253,13 +253,14 @@ export async function processMemberAction(teamId: string, memberId: string, acti
             email: m.user.email
           }));
           
-          await sendTeamCompleteEmail(
-            fullTeam.name,
-            fullTeam.organization || "-",
-            fullTeam.region || "-",
-            fullTeam.challenge.name,
-            memberList
-          );
+          // Temporarily disabled for manual batch processing (Flow 1)
+          // await sendTeamCompleteEmail(
+          //   fullTeam.name,
+          //   fullTeam.organization || "-",
+          //   fullTeam.region || "-",
+          //   fullTeam.challenge.name,
+          //   memberList
+          // );
         }
       }
     } else if (action === 'REJECT') {

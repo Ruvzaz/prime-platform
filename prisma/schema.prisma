@@ -248,6 +248,7 @@ model Team {
   inviteToken String @unique @default(cuid())
   organization String?
   region      String?
+  isCompleteEmailSent Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

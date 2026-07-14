@@ -149,15 +149,26 @@ export const sendVerificationEmail = async (email: string, token: string) => {
     const verifyUrl = `${appUrl}/auth/verify?token=${token}`;
     
     const info = await sendMailWithFallback({
-      from: `"Prime Digital (CTF System)"`,
+      from: `"NCSA CTF System"`,
       to: email,
-      subject: "Verify your email for CTF Platform",
+      subject: "Verify your email for NCSA CTF",
       html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
-          <h2 style="color: #333;">Email Verification</h2>
-          <p>Please verify your email address to complete your registration for the Capture The Flag (CTF) platform.</p>
-          <a href="${verifyUrl}" style="display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: #fff; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">Verify Email Address</a>
-          <p style="margin-top: 30px; font-size: 12px; color: #888;">If you didn't request this registration, you can safely ignore this email.</p>
+        <div style="font-family: Arial, sans-serif; max-width: 550px; margin: 0 auto; background-color: #ffffff; border: 2px solid #e0e7ff; border-radius: 6px; padding: 40px;">
+          <h2 style="margin: 0 0 20px 0; font-size: 24px; font-weight: bold; color: #000000;">Thailand Cyber Top Talent 2026</h2>
+          <p style="margin: 0 0 30px 0; font-size: 16px; line-height: 1.6; color: #333333;">
+            สวัสดีครับ,<br><br>กรุณายืนยันอีเมลของคุณเพื่อเสร็จสิ้นการสมัครเข้าร่วมการแข่งขัน
+          </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verifyUrl}" style="display: inline-block; padding: 14px 40px; background-color: transparent; color: #5c73f2; text-decoration: none; border: 2px solid #5c73f2; border-radius: 6px; font-size: 16px; font-weight: bold;">Verify Email Address</a>
+          </div>
+          <p style="margin-top: 30px; font-size: 13px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+            หากคุณไม่ได้ทำการลงทะเบียน กรุณาเพิกเฉยต่ออีเมลฉบับนี้
+          </p>
+          <div style="margin-top: 20px; font-size: 13px; color: #475569; background-color: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <p style="margin: 0 0 5px 0;"><strong style="color: #0f172a;">Contact info</strong></p>
+            <p style="margin: 0 0 5px 0;">Line OA : <span style="color: #059669; font-weight: bold;">@thnca</span></p>
+            <p style="margin: 0;">ติดต่อภายในระยะเวลาทำการ 09.00-17.00 น.</p>
+          </div>
         </div>
       `,
     });
@@ -191,9 +202,9 @@ export const sendTeamCompleteEmail = async (
       const fname = escapeHtml(m.firstName || '');
       const lname = escapeHtml(m.lastName || '');
       const email = escapeHtml(m.email);
-      return `<li style="margin-bottom: 8px;">
-        <strong>${title} ${fname} ${lname}</strong><br />
-        <span style="color: #666; font-size: 14px;">${email}</span>
+      return `<li style="margin-bottom: 12px;">
+        <strong style="color: #0f172a; font-size: 15px;">${title} ${fname} ${lname}</strong><br />
+        <span style="color: #64748b; font-size: 13px;">${email}</span>
       </li>`;
     }).join('');
 
@@ -203,32 +214,40 @@ export const sendTeamCompleteEmail = async (
     const safeChallenge = escapeHtml(challengeName);
 
     const info = await sendMailWithFallback({
-      from: `"Prime Digital (CTF System)"`,
+      from: `"NCSA CTF System"`,
       to: toEmails,
       subject: `Team Complete: ${teamName} (${challengeName})`,
       html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
-          <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="color: #4f46e5; margin-bottom: 5px;">Team Registration Complete!</h2>
-            <p style="color: #666; font-size: 14px; margin-top: 0;">Your team has reached the required 3 members.</p>
-          </div>
+        <div style="font-family: Arial, sans-serif; max-width: 550px; margin: 0 auto; background-color: #ffffff; border: 2px solid #e0e7ff; border-radius: 6px; padding: 40px;">
+          <h2 style="margin: 0 0 10px 0; font-size: 24px; font-weight: bold; color: #000000; text-align: center;">Team Registration Complete!</h2>
+          <p style="margin: 0 0 25px 0; font-size: 16px; line-height: 1.6; color: #333333; text-align: center;">
+            ยินดีด้วย! ทีมของคุณมีสมาชิกครบตามจำนวนที่กำหนดแล้ว
+          </p>
           
-          <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <h3 style="margin-top: 0; color: #333; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 8px;">Team Details</h3>
-            <p style="margin: 8px 0;"><strong>Challenge:</strong> ${safeChallenge}</p>
-            <p style="margin: 8px 0;"><strong>Team Name:</strong> ${safeTeamName}</p>
-            <p style="margin: 8px 0;"><strong>Organization:</strong> ${safeOrg}</p>
-            <p style="margin: 8px 0;"><strong>Region:</strong> ${safeRegion}</p>
+          <div style="background-color: #f8fafc; padding: 20px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+            <h3 style="margin-top: 0; color: #0f172a; font-size: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">ข้อมูลทีม (Team Details)</h3>
+            <p style="margin: 8px 0; color: #475569;"><strong style="color: #333333;">รายการแข่งขัน:</strong> ${safeChallenge}</p>
+            <p style="margin: 8px 0; color: #475569;"><strong style="color: #333333;">ชื่อทีม:</strong> ${safeTeamName}</p>
+            <p style="margin: 8px 0; color: #475569;"><strong style="color: #333333;">หน่วยงาน:</strong> ${safeOrg}</p>
+            <p style="margin: 8px 0; color: #475569;"><strong style="color: #333333;">ภูมิภาค:</strong> ${safeRegion}</p>
           </div>
 
-          <div style="background-color: #f9fafb; padding: 15px; border-radius: 8px;">
-            <h3 style="margin-top: 0; color: #333; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 8px;">Team Members</h3>
+          <div style="background-color: #f8fafc; padding: 20px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <h3 style="margin-top: 0; color: #0f172a; font-size: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">สมาชิก (Team Members)</h3>
             <ul style="list-style-type: none; padding: 0; margin: 0;">
               ${memberListHtml}
             </ul>
           </div>
           
-          <p style="margin-top: 30px; font-size: 12px; color: #888; text-align: center;">This is an automated message from the Prime Digital CTF Platform.</p>
+          <p style="margin-top: 30px; font-size: 13px; color: #64748b; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+            อีเมลนี้ส่งอัตโนมัติจากระบบ Thailand Cyber Top Talent
+          </p>
+          
+          <div style="margin-top: 20px; font-size: 13px; color: #475569; background-color: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: left;">
+            <p style="margin: 0 0 5px 0;"><strong style="color: #0f172a;">Contact info</strong></p>
+            <p style="margin: 0 0 5px 0;">Line OA : <span style="color: #059669; font-weight: bold;">@thnca</span></p>
+            <p style="margin: 0;">ติดต่อภายในระยะเวลาทำการ 09.00-17.00 น.</p>
+          </div>
         </div>
       `,
     });
@@ -245,15 +264,26 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
     const resetUrl = `${appUrl}/auth/reset-password?token=${token}`;
     
     const info = await sendMailWithFallback({
-      from: `"Prime Digital (CTF System)"`,
+      from: `"NCSA CTF System"`,
       to: email,
       subject: "Password Reset Request",
       html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 10px;">
-          <h2 style="color: #333;">Password Reset Request</h2>
-          <p>We received a request to reset the password for the account associated with this email address.</p>
-          <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background-color: #4f46e5; color: #fff; text-decoration: none; border-radius: 5px; margin-top: 20px; font-weight: bold;">Reset Password</a>
-          <p style="margin-top: 30px; font-size: 12px; color: #888;">If you didn't request a password reset, you can safely ignore this email. The link will expire in 1 hour.</p>
+        <div style="font-family: Arial, sans-serif; max-width: 550px; margin: 0 auto; background-color: #ffffff; border: 2px solid #e0e7ff; border-radius: 6px; padding: 40px;">
+          <h2 style="margin: 0 0 20px 0; font-size: 24px; font-weight: bold; color: #000000;">Thailand Cyber Top Talent 2026</h2>
+          <p style="margin: 0 0 30px 0; font-size: 16px; line-height: 1.6; color: #333333;">
+            เราได้รับคำขอให้รีเซ็ตรหัสผ่านสำหรับบัญชีที่เชื่อมโยงกับอีเมลนี้
+          </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" style="display: inline-block; padding: 14px 40px; background-color: transparent; color: #5c73f2; text-decoration: none; border: 2px solid #5c73f2; border-radius: 6px; font-size: 16px; font-weight: bold;">Reset Password</a>
+          </div>
+          <p style="margin-top: 30px; font-size: 13px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+            หากคุณไม่ได้ทำรายการนี้ กรุณาเพิกเฉยต่ออีเมลฉบับนี้ ลิงก์จะมีอายุการใช้งาน 1 ชั่วโมง
+          </p>
+          <div style="margin-top: 20px; font-size: 13px; color: #475569; background-color: #f8fafc; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <p style="margin: 0 0 5px 0;"><strong style="color: #0f172a;">Contact info</strong></p>
+            <p style="margin: 0 0 5px 0;">Line OA : <span style="color: #059669; font-weight: bold;">@thnca</span></p>
+            <p style="margin: 0;">ติดต่อภายในระยะเวลาทำการ 09.00-17.00 น.</p>
+          </div>
         </div>
       `,
     });

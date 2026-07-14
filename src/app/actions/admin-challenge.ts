@@ -3,6 +3,7 @@
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import { sendTeamCompleteEmail } from '@/lib/email';
 
 async function checkAdmin() {
   const session = await auth();
@@ -133,5 +134,112 @@ export async function adminRemoveMember(memberId: string) {
     return { success: true };
   } catch (error) {
     return { error: 'Failed to remove member' };
+  }
+}
+
+export async function sendCompleteEmailToTeam(teamId: string) {
+  try {
+    await checkAdmin();
+    
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: {
+        challenge: true,
+        members: {
+          where: { status: 'APPROVED' },
+          include: { user: true }
+        }
+      }
+    });
+
+    if (!team) return { error: 'Team not found' };
+    if (team.isCompleteEmailSent) return { error: 'Email already sent to this team' };
+    if (team.members.length < team.challenge.maxTeamSize) return { error: 'Team is not full yet' };
+
+    const memberList = team.members.map(m => ({
+      title: m.user.title,
+      firstName: m.user.firstName,
+      lastName: m.user.lastName,
+      email: m.user.email
+    }));
+    
+    await sendTeamCompleteEmail(
+      team.name,
+      team.organization || "-",
+      team.region || "-",
+      team.challenge.name,
+      memberList
+    );
+
+    await prisma.team.update({
+      where: { id: teamId },
+      data: { isCompleteEmailSent: true }
+    });
+
+    revalidatePath(`/admin/challenges/${team.challengeId}/broadcast`);
+    revalidatePath(`/admin/challenges/${team.challengeId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to send team email:", error);
+    return { error: 'Failed to send email' };
+  }
+}
+
+export async function sendPendingCompleteEmails(challengeId: string) {
+  try {
+    await checkAdmin();
+    
+    const challenge = await prisma.challenge.findUnique({
+      where: { id: challengeId }
+    });
+    
+    if (!challenge) return { error: 'Challenge not found' };
+
+    const pendingTeams = await prisma.team.findMany({
+      where: {
+        challengeId,
+        isCompleteEmailSent: false,
+      },
+      include: {
+        members: {
+          where: { status: 'APPROVED' },
+          include: { user: true }
+        }
+      }
+    });
+
+    let sentCount = 0;
+
+    for (const team of pendingTeams) {
+      if (team.members.length === challenge.maxTeamSize) {
+        const memberList = team.members.map(m => ({
+          title: m.user.title,
+          firstName: m.user.firstName,
+          lastName: m.user.lastName,
+          email: m.user.email
+        }));
+        
+        await sendTeamCompleteEmail(
+          team.name,
+          team.organization || "-",
+          team.region || "-",
+          challenge.name,
+          memberList
+        );
+
+        await prisma.team.update({
+          where: { id: team.id },
+          data: { isCompleteEmailSent: true }
+        });
+        
+        sentCount++;
+      }
+    }
+
+    revalidatePath(`/admin/challenges/${challengeId}`);
+    return { success: true, count: sentCount };
+  } catch (error) {
+    console.error("Failed to send pending emails:", error);
+    return { error: 'Failed to process pending emails' };
   }
 }
