@@ -8,6 +8,18 @@ import { createTeam, processMemberAction, regenerateTeamInviteToken } from "@/ap
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useFormStatus } from "react-dom";
 import {
   Shield,
@@ -67,14 +79,13 @@ export function TeamManager({
   };
 
   const handleRegenerateLink = async () => {
-    if (!confirm("Are you sure you want to generate a new recruitment link? The old link will stop working immediately.")) return;
-    
     setIsRegenerating(true);
     try {
       const result = await regenerateTeamInviteToken(myMembership?.team?.id);
       if (result?.error) {
-        alert(result.error);
+        toast.error(result.error);
       } else {
+        toast.success("Recruitment link regenerated successfully");
         router.refresh();
       }
     } finally {
@@ -93,8 +104,9 @@ export function TeamManager({
         action,
       );
       if (res.error) {
-        alert(res.error);
+        toast.error(res.error);
       } else {
+        toast.success("Team updated successfully");
         router.refresh();
       }
     });
@@ -173,14 +185,31 @@ export function TeamManager({
               )}
               {copied ? "COPIED" : "COPY"}
             </button>
-            <button
-              onClick={handleRegenerateLink}
-              disabled={isRegenerating}
-              className="shrink-0 sm:w-12 h-11 px-0 flex items-center justify-center font-mono text-xs uppercase tracking-widest border border-[#3b494b] text-[#849495] font-bold hover:bg-[#3b494b]/20 hover:text-[#dee3e9] transition-colors rounded disabled:opacity-50"
-              title="Regenerate Link"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRegenerating ? "animate-spin" : ""}`} />
-            </button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  disabled={isRegenerating}
+                  className="shrink-0 sm:w-12 h-11 px-0 flex items-center justify-center font-mono text-xs uppercase tracking-widest border border-[#3b494b] text-[#849495] font-bold hover:bg-[#3b494b]/20 hover:text-[#dee3e9] transition-colors rounded disabled:opacity-50"
+                  title="Regenerate Link"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isRegenerating ? "animate-spin" : ""}`} />
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-[#0a0e11] border-[#3b494b]">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-[#dee3e9] font-mono tracking-wide uppercase">Generate New Link?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-[#849495] font-mono">
+                    Are you sure you want to generate a new recruitment link? The old link will stop working immediately.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="bg-transparent border-[#3b494b] text-[#849495] hover:bg-[#3b494b]/20 hover:text-[#dee3e9] font-mono uppercase tracking-widest">Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleRegenerateLink} className="bg-red-500 text-white hover:bg-red-600 font-mono uppercase tracking-widest">
+                    Generate
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       )}
