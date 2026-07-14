@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, X, Edit, Download } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export function ChallengeDashboardFilter({ challenges, currentFilter }: { challenges: {id: string, name: string}[], currentFilter: string }) {
   const router = useRouter();
@@ -57,8 +58,9 @@ export function CreateChallengeForm() {
     const res = await createChallenge(formData);
     setLoading(false);
     if (res.error) {
-      alert(res.error);
+      toast.error(res.error);
     } else {
+      toast.success("Challenge created successfully");
       setIsOpen(false);
     }
   }
@@ -121,8 +123,9 @@ export function EditChallengeForm({ challenge }: { challenge: any }) {
     const res = await updateChallenge(challenge.id, formData);
     setLoading(false);
     if (res.error) {
-      alert(res.error);
+      toast.error(res.error);
     } else {
+      toast.success("Challenge updated successfully");
       setIsOpen(false);
     }
   }

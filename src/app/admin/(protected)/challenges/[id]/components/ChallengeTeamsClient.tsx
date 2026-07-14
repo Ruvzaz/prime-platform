@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield, Users, Search, MapPin, Building, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Shield, Users, Search, MapPin, Building, ChevronLeft, ChevronRight, Mail } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { DeleteTeamButton, RemoveMemberButton } from '../../components/AdminTeamActions';
 import { EditUserModal } from './EditUserModal';
+import Link from 'next/link';
 
 export function ChallengeTeamsClient({ challenge }: { challenge: any }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,27 +49,39 @@ export function ChallengeTeamsClient({ challenge }: { challenge: any }) {
 
   return (
     <div className="space-y-6 mt-8">
-      {/* Filters Section */}
-      <div className="flex flex-col sm:flex-row gap-4 bg-card border rounded-xl p-4 shadow-sm">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search by team, member name, or email..." 
-            className="pl-9 h-11"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      {/* Actions & Filters Section */}
+      <div className="flex flex-col lg:flex-row justify-between gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 bg-card border rounded-xl p-4 shadow-sm flex-1">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search by team, member name, or email..." 
+              className="pl-9 h-11"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <select
+            className="h-11 rounded-md border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary min-w-[200px]"
+            value={regionFilter}
+            onChange={(e) => setRegionFilter(e.target.value)}
+          >
+            <option value="ALL">All Regions (ทุกภูมิภาค)</option>
+            {regions.slice(1).map(r => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
         </div>
-        <select
-          className="h-11 rounded-md border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary min-w-[200px]"
-          value={regionFilter}
-          onChange={(e) => setRegionFilter(e.target.value)}
-        >
-          <option value="ALL">All Regions (ทุกภูมิภาค)</option>
-          {regions.slice(1).map(r => (
-            <option key={r} value={r}>{r}</option>
-          ))}
-        </select>
+        
+        <div className="bg-card border rounded-xl p-4 shadow-sm flex items-center justify-center shrink-0">
+           <Link 
+             href={`/admin/challenges/${challenge.id}/broadcast`}
+             className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-medium transition-colors w-full lg:w-auto h-11"
+           >
+             <Mail className="w-5 h-5" />
+             Broadcast "Team Complete" Emails
+           </Link>
+        </div>
       </div>
 
       {/* Teams Grid */}

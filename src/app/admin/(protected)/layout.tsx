@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { logout } from "@/app/actions/auth"
 import { auth } from "@/auth"
-import { LayoutDashboard, Calendar, Users, LogOut, QrCode, Table, Search, Bell, Settings, ActivitySquare, Shield, UserCog } from "lucide-react"
+import { LayoutDashboard, Calendar, Users, LogOut, QrCode, Table, Search, Bell, Settings, ActivitySquare, Shield, UserCog, Mail } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -155,6 +155,14 @@ function AppSidebar({ userName, userRole }: { userName?: string | null; userRole
                   <Link href="/admin/challenges" prefetch={true}>
                     <Shield className="h-5 w-5 text-primary" />
                     <span className="font-medium">CTF Challenges</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Broadcast Emails" className="h-11 px-4">
+                  <Link href="/admin/broadcast" prefetch={true}>
+                    <Mail className="h-5 w-5 text-indigo-500" />
+                    <span className="font-medium">Broadcast Emails</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
