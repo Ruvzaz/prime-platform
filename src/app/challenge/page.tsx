@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Shield, Users, Terminal, ChevronRight } from "lucide-react";
 import { ViewTeamsDialog } from "./components/ViewTeamsDialog";
+import { InfoCarousel } from "./components/InfoCarousel";
 export const revalidate = 30; // แคชหน้าเว็บและดึงข้อมูลใหม่ทุกๆ 30 วินาที เพื่อประหยัด Database Connection
 export default async function ChallengeLandingPage() {
   // Fetch active challenges from database
@@ -74,6 +75,7 @@ export default async function ChallengeLandingPage() {
           <div className="w-[1px] h-16 bg-gradient-to-b from-red-500 to-transparent animate-bounce"></div>
         </div>
       </section>
+
 
       {/* Challenges Grid Section */}
       <section className="relative z-10 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -183,6 +185,9 @@ export default async function ChallengeLandingPage() {
           )}
         </div>
       </section>
+
+      {/* Info Carousel Section */}
+      <InfoCarousel />
 
       {/* Footer / Branding */}
       <div className="border-t border-[#3b494b] bg-[#090f13] py-8 relative z-10">
