@@ -43,6 +43,23 @@ const profileCompleteSchema = z.object({
 
 const updateProfileSchema = profileCompleteSchema.omit({ username: true });
 
+export async function acceptPrivacyPolicy() {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Unauthorized" };
+
+  try {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { privacyAcceptedAt: new Date() },
+    });
+    revalidatePath('/challenge');
+    return { success: true };
+  } catch (error) {
+    console.error("Error accepting privacy policy:", error);
+    return { error: "Failed to accept privacy policy" };
+  }
+}
+
 export async function registerParticipant(prevState: any, formData: FormData) {
   try {
     const rawData = Object.fromEntries(formData.entries());
