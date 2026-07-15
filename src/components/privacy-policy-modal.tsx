@@ -20,7 +20,7 @@ export function PrivacyPolicyModal({
 }) {
   const [accepted, setAccepted] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [showModal, setShowModal] = useState(isOpen);
+  const [showModal, setShowModal] = useState(false); // Default false to prevent SSR flash
 
   useEffect(() => {
     // If we are in post-auth mode (DB says not accepted), check if local storage has it

@@ -198,7 +198,16 @@ export async function processMemberAction(teamId: string, memberId: string, acti
     });
 
     if (!team) return { error: 'Team not found.' };
-    if (team.leaderId !== userId) return { error: 'Only the team leader can manage members.' };
+    if (team.leaderId !== userId) {
+      // Log suspected API tampering / Unauthorized access
+      await sendDiscordLog({
+        category: 'SECURITY',
+        title: 'Unauthorized Member Action Attempt',
+        description: `User **${session.user.email}** attempted to **${action}** a member in team **${team.name}** but is not the leader.`,
+        color: 0xff0000,
+      });
+      return { error: 'Only the team leader can manage members.' };
+    }
 
     if (action === 'APPROVE') {
       const txResult = await prisma.$transaction(async (tx) => {
@@ -309,7 +318,15 @@ export async function regenerateTeamInviteToken(teamId: string) {
     });
 
     if (!team) return { error: "Team not found." };
-    if (team.leaderId !== session.user.id) return { error: "Only the team leader can generate a new link." };
+    if (team.leaderId !== session.user.id) {
+      await sendDiscordLog({
+        category: 'SECURITY',
+        title: 'Unauthorized Token Regeneration Attempt',
+        description: `User **${session.user.email}** attempted to regenerate the invite token for team **${team.name}** but is not the leader.`,
+        color: 0xff0000,
+      });
+      return { error: "Only the team leader can generate a new link." };
+    }
 
     const newToken = crypto.randomBytes(16).toString('hex');
 

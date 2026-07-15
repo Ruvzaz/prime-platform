@@ -9,6 +9,8 @@ import { signIn, signOut, auth } from '@/auth';
 import { AuthError } from 'next-auth';
 import { headers } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { getRateLimit } from '@/lib/rate-limit';
+import { sendDiscordLog } from '@/lib/discord-logger';
 
 const registerSchema = z.object({
   title: z.string().min(1, "Title is required").max(50),
@@ -206,12 +208,37 @@ export async function verifyEmailToken(token: string) {
 
 export async function participantLogin(prevState: any, formData: FormData) {
   try {
+    const headersList = await headers();
+    const ip = headersList.get('x-forwarded-for') || 'unknown_ip';
+    
+    // Max 10 attempts per 5 minutes for Participant login
+    const isAllowed = await getRateLimit(`user_login_${ip}`, 10, 300000);
+    if (!isAllowed) {
+      await sendDiscordLog({
+        category: 'SECURITY',
+        title: 'Participant Bruteforce Attempt Detected',
+        description: `IP **${ip}** has exceeded the user login rate limit (10 attempts/5min).`,
+        color: 0xff0000,
+      });
+      return { error: 'Too many login attempts. Please try again later.' };
+    }
+
     const callbackUrl = formData.get('callbackUrl') as string || '/challenge';
     await signIn('credentials', { ...Object.fromEntries(formData), redirectTo: callbackUrl });
   } catch (error) {
     if (error instanceof AuthError) {
+      const email = formData.get('email') as string;
+      const headersList = await headers();
+      const ip = headersList.get('x-forwarded-for') || 'unknown_ip';
+
       switch (error.type) {
         case 'CredentialsSignin':
+          await sendDiscordLog({
+            category: 'SECURITY',
+            title: 'Failed Participant Login Attempt',
+            description: `IP **${ip}** attempted to login with email: **${email || 'UNKNOWN'}**`,
+            color: 0xffa500, // Orange
+          });
           return { error: 'Invalid email/password or email not verified.' };
         default:
           return { error: 'Something went wrong.' };

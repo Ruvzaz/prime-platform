@@ -1,4 +1,4 @@
-export type LogCategory = 'TEAM' | 'AUTH' | 'ADMIN' | 'SYSTEM';
+export type LogCategory = 'TEAM' | 'AUTH' | 'ADMIN' | 'SYSTEM' | 'SECURITY';
 
 interface DiscordField {
   name: string;
@@ -21,6 +21,7 @@ function getWebhookUrl(category: LogCategory): string | undefined {
     case 'AUTH': return process.env.DISCORD_WEBHOOK_AUTH;
     case 'ADMIN': return process.env.DISCORD_WEBHOOK_ADMIN;
     case 'SYSTEM': return process.env.DISCORD_WEBHOOK_SYSTEM;
+    case 'SECURITY': return process.env.DISCORD_WEBHOOK_SECURITY;
     default: return process.env.DISCORD_WEBHOOK_DEFAULT;
   }
 }
