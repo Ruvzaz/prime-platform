@@ -128,6 +128,18 @@ export function TeamManager({
     (m: any) => m.status === "PENDING",
   );
 
+  // Smart Auto-refresh: Only refresh when the user switches back to this tab
+  useEffect(() => {
+    if (!isLeader) return;
+    
+    const handleFocus = () => {
+      router.refresh();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [isLeader, router]);
+
   return (
     <div className="space-y-8">
       {/* Team Header */}
@@ -263,10 +275,21 @@ export function TeamManager({
         {/* Pending Approvals */}
         {(isLeader || myMembership.status === "PENDING") && (
           <div className="space-y-4">
-            <h3 className="text-lg font-bold font-mono uppercase tracking-widest text-[#dee3e9] flex items-center gap-2 border-b border-[#3b494b] pb-3">
-              <Clock className="w-5 h-5 text-amber-500" />
-              Pending Authorization
-            </h3>
+            <div className="flex items-center justify-between border-b border-[#3b494b] pb-3">
+              <h3 className="text-lg font-bold font-mono uppercase tracking-widest text-[#dee3e9] flex items-center gap-2">
+                <Clock className="w-5 h-5 text-amber-500" />
+                Pending Authorization
+              </h3>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => router.refresh()}
+                className="h-8 border-[#3b494b] bg-transparent text-[#849495] hover:bg-[#3b494b] hover:text-[#dee3e9] font-mono text-xs uppercase"
+              >
+                <RefreshCw className="w-3 h-3 md:mr-2" />
+                <span className="hidden md:inline">Refresh</span>
+              </Button>
+            </div>
             {pendingMembers.length === 0 ? (
               <div className="p-8 text-center text-[#849495] font-mono text-sm uppercase tracking-widest bg-[#161c21] rounded-xl border border-dashed border-[#3b494b]">
                 No pending requests.
