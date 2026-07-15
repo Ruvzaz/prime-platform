@@ -9,7 +9,8 @@ import { useFormStatus } from 'react-dom';
 import { AlertCircle, Shield, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { PrivacyPolicyModal } from '@/components/privacy-policy-modal';
 
 function RegisterButton() {
   const { pending } = useFormStatus();
@@ -32,6 +33,16 @@ function ParticipantRegisterContent() {
   const [state, dispatch] = useActionState(registerParticipant, undefined);
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/challenge';
+  const [hasAcceptedPrivacy, setHasAcceptedPrivacy] = useState(true);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+
+  useEffect(() => {
+    const accepted = localStorage.getItem("privacy_accepted");
+    if (accepted !== "true") {
+      setHasAcceptedPrivacy(false);
+      setShowPrivacyModal(true);
+    }
+  }, []);
   
   if (state?.success) {
     return (
@@ -52,6 +63,14 @@ function ParticipantRegisterContent() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#0e1418] text-[#dee3e9] p-4 relative overflow-hidden font-sans pt-12 pb-12">
+      <PrivacyPolicyModal 
+        isOpen={showPrivacyModal} 
+        mode="pre-auth" 
+        onAcceptClient={() => {
+          setHasAcceptedPrivacy(true);
+          setShowPrivacyModal(false);
+        }}
+      />
       {/* Background Cyber Effect */}
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay pointer-events-none" />
       <div className="fixed -top-40 -right-40 w-96 h-96 bg-red-500/10 rounded-full blur-[100px] pointer-events-none" />

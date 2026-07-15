@@ -24,6 +24,7 @@ model User {
   emailVerified DateTime?
   image         String?
   role          Role      @default(USER)
+  privacyAcceptedAt DateTime? // Track when they accepted privacy policy
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

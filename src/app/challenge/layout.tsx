@@ -2,6 +2,7 @@ import { ChallengeNavbar } from "@/components/layout/ChallengeNavbar";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ProfileCompletionModal } from "@/components/profile-completion-modal";
+import { PrivacyPolicyModal } from "@/components/privacy-policy-modal";
 
 export default async function ChallengeLayout({
   children,
@@ -11,6 +12,8 @@ export default async function ChallengeLayout({
   const session = await auth();
   let needsProfileCompletion = false;
 
+  let needsPrivacyAcceptance = false;
+
   if (session?.user?.email) {
     const user = await prisma.user.findUnique({
       where: { email: session.user.email }
@@ -18,6 +21,11 @@ export default async function ChallengeLayout({
     // If they registered via Google, they might not have a username or other required fields
     if (user && (!user.username || !user.firstName || !user.phoneNumber)) {
       needsProfileCompletion = true;
+    }
+    
+    // Check privacy policy acceptance
+    if (user && !user.privacyAcceptedAt) {
+      needsPrivacyAcceptance = true;
     }
   }
 
@@ -27,7 +35,8 @@ export default async function ChallengeLayout({
       <main className="flex-1 flex flex-col">
         {children}
       </main>
-      <ProfileCompletionModal isOpen={needsProfileCompletion} />
+      <PrivacyPolicyModal isOpen={needsPrivacyAcceptance} />
+      <ProfileCompletionModal isOpen={needsProfileCompletion && !needsPrivacyAcceptance} />
     </div>
   );
 }
