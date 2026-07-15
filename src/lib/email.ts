@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { sendDiscordLog } from '@/lib/discord-logger';
 
 // Helper to parse multiple email accounts from environment variables
 function getEmailAccounts() {
@@ -47,6 +48,18 @@ async function sendMailWithFallback(mailOptions: any) {
 
       const info = await transporter.sendMail(currentMailOptions);
       console.log(`✅ Email sent successfully to ${mailOptions.to} via: ${account.user}`);
+      
+      // Send Discord Log for successful email delivery
+      await sendDiscordLog({
+        category: 'EMAIL',
+        title: '✅ Email Delivery Success',
+        description: `Successfully sent email to **${mailOptions.to}**\n**Subject:** ${mailOptions.subject}`,
+        color: 0x2ecc71, // Green
+        fields: [
+          { name: 'Sender Account', value: account.user, inline: true }
+        ]
+      });
+      
       return info;
     } catch (error: any) {
       console.warn(`⚠️ Failed to send email via ${account.user}:`, error.message);
@@ -63,6 +76,18 @@ async function sendMailWithFallback(mailOptions: any) {
   
   // If we loop through all accounts and they all fail
   console.error("❌ ALL EMAIL ACCOUNTS FAILED.");
+  
+  // Send Discord Log for complete email failure
+  await sendDiscordLog({
+    category: 'EMAIL',
+    title: '❌ Email Delivery FAILED',
+    description: `Failed to send email to **${mailOptions.to}** after trying all backup accounts.\n**Subject:** ${mailOptions.subject}`,
+    color: 0xff0000, // Red
+    fields: [
+      { name: 'Error', value: lastError?.message || 'Unknown error' }
+    ]
+  });
+  
   throw lastError || new Error("All email accounts failed to send.");
 }
 
