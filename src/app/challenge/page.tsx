@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Shield, Users, Terminal, ChevronRight } from "lucide-react";
 import { ViewTeamsDialog } from "./components/ViewTeamsDialog";
 import { InfoCarousel } from "./components/InfoCarousel";
+import { StepGrid } from "./components/StepCarousel";
 export const revalidate = 30; // แคชหน้าเว็บและดึงข้อมูลใหม่ทุกๆ 30 วินาที เพื่อประหยัด Database Connection
 export default async function ChallengeLandingPage() {
   // Fetch active challenges from database
@@ -185,6 +186,9 @@ export default async function ChallengeLandingPage() {
           )}
         </div>
       </section>
+
+      {/* Step Grid Section */}
+      <StepGrid />
 
       {/* Info Carousel Section */}
       <InfoCarousel />
