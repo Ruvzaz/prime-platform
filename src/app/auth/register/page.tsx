@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFormStatus } from 'react-dom';
-import { AlertCircle, Shield, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, Shield, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
@@ -35,6 +35,8 @@ function ParticipantRegisterContent() {
   const callbackUrl = searchParams.get('callbackUrl') || '/challenge';
   const [hasAcceptedPrivacy, setHasAcceptedPrivacy] = useState(true);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     const accepted = localStorage.getItem("privacy_accepted");
@@ -153,7 +155,12 @@ function ParticipantRegisterContent() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="password" className="font-mono text-xs uppercase tracking-widest text-[#849495]">Password *</Label>
-              <Input id="password" type="password" name="password" defaultValue={state?.data?.password as string || ''} required className="h-11 bg-[#0e1418] border-[#3b494b] text-[#dee3e9] focus-visible:ring-red-500 focus-visible:border-red-500 font-mono text-sm" placeholder="••••••••" />
+              <div className="relative">
+                <Input id="password" type={showPassword ? "text" : "password"} name="password" defaultValue={state?.data?.password as string || ''} required className="h-11 bg-[#0e1418] border-[#3b494b] text-[#dee3e9] focus-visible:ring-red-500 focus-visible:border-red-500 font-mono text-sm pr-10" placeholder="••••••••" />
+                <button type="button" tabIndex={-1} onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#849495] hover:text-[#dee3e9] transition-colors focus:outline-none">
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               {state?.details?.password && (
                 <ul className="text-xs text-red-500 font-mono list-disc list-inside mt-1">
                   {state.details.password.map((err: string, i: number) => (
@@ -165,7 +172,12 @@ function ParticipantRegisterContent() {
 
             <div className="grid gap-2">
               <Label htmlFor="confirmPassword" className="font-mono text-xs uppercase tracking-widest text-[#849495]">Confirm Password *</Label>
-              <Input id="confirmPassword" type="password" name="confirmPassword" defaultValue={state?.data?.confirmPassword as string || ''} required className="h-11 bg-[#0e1418] border-[#3b494b] text-[#dee3e9] focus-visible:ring-red-500 focus-visible:border-red-500 font-mono text-sm" placeholder="••••••••" />
+              <div className="relative">
+                <Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} name="confirmPassword" defaultValue={state?.data?.confirmPassword as string || ''} required className="h-11 bg-[#0e1418] border-[#3b494b] text-[#dee3e9] focus-visible:ring-red-500 focus-visible:border-red-500 font-mono text-sm pr-10" placeholder="••••••••" />
+                <button type="button" tabIndex={-1} onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#849495] hover:text-[#dee3e9] transition-colors focus:outline-none">
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               {state?.details?.confirmPassword && <p className="text-xs text-red-500 font-mono">{state.details.confirmPassword[0]}</p>}
             </div>
           </div>

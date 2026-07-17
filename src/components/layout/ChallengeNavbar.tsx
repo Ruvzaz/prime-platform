@@ -26,7 +26,17 @@ export async function ChallengeNavbar() {
   const session = await auth();
 
   let myTeamLink = "/challenge";
+  let displayName = session?.user?.name || "OPERATIVE";
+
   if (session?.user?.id) {
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true }
+    });
+    if (dbUser?.name) {
+      displayName = dbUser.name;
+    }
+
     const membership = await prisma.teamMember.findFirst({
       where: { userId: session.user.id },
       include: { challenge: true },
@@ -66,7 +76,7 @@ export async function ChallengeNavbar() {
                   </div>
                   <div className="hidden sm:block text-right pr-2">
                     <p className="font-bold text-sm leading-none text-[#dee3e9] uppercase tracking-wide">
-                      {session.user.name}
+                      {displayName}
                     </p>
                     <div className="flex items-center gap-1.5 mt-1 justify-end">
                       {session.user.role === "ADMIN" && (
