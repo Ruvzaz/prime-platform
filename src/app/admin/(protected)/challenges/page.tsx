@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Shield, Eye, Users, MapPin } from "lucide-react";
+import { Shield, Eye, Users, MapPin, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,104 +22,26 @@ export default async function AdminChallengesPage(props: any) {
     orderBy: { createdAt: "desc" },
   });
 
-  const totalTeams = await prisma.team.count({
-    where: filterChallengeId !== 'ALL' ? { challengeId: filterChallengeId } : undefined
-  });
-  
-  const totalApplicants = await prisma.teamMember.count({
-    where: filterChallengeId !== 'ALL' ? { challengeId: filterChallengeId } : undefined
-  });
-  
-  const teamsByRegion = await prisma.team.groupBy({
-    by: ['region'],
-    where: filterChallengeId !== 'ALL' ? { challengeId: filterChallengeId } : undefined,
-    _count: {
-      id: true
-    }
-  });
-
-  const regionsMap: Record<string, number> = {
-    'กรุงเทพมหานครและปริมณฑล': 0,
-    'ภาคเหนือ': 0,
-    'ภาคกลาง ภาคตะวันออก และภาคตะวันตก': 0,
-    'ภาคตะวันออกเฉียงเหนือ': 0,
-    'ภาคใต้': 0,
-  };
-
-  teamsByRegion.forEach(item => {
-    if (item.region && item.region in regionsMap) {
-      regionsMap[item.region] = item._count.id;
-    } else if (item.region) {
-      regionsMap[item.region] = item._count.id;
-    }
-  });
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight">
-            CTF Challenges & Dashboard
+            CTF Challenges
           </h1>
           <p className="text-muted-foreground mt-1">
-            Manage challenge categories and monitor registration metrics.
+            Manage challenge categories, rules, and rulesets.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <ChallengeDashboardFilter 
-            challenges={challenges.map(c => ({ id: c.id, name: c.name }))} 
-            currentFilter={filterChallengeId} 
-          />
           <ExportDataButton currentFilter={filterChallengeId} />
+          <Button variant="outline" asChild>
+            <Link href="/admin/challenges/dashboard">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              View Dashboard
+            </Link>
+          </Button>
           <CreateChallengeForm />
-        </div>
-      </div>
-
-      {/* Dashboard Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
-        <div className="bg-card border rounded-xl p-6 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <Users className="w-5 h-5 text-blue-500" />
-            <h3 className="font-semibold text-muted-foreground">ผู้สมัครทั้งหมด</h3>
-          </div>
-          <p className="text-3xl font-bold">{totalApplicants} <span className="text-sm font-normal text-muted-foreground">คน</span></p>
-        </div>
-        
-        <div className="bg-card border rounded-xl p-6 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <Shield className="w-5 h-5 text-red-500" />
-            <h3 className="font-semibold text-muted-foreground">ทีมทั้งหมด</h3>
-          </div>
-          <p className="text-3xl font-bold">{totalTeams} <span className="text-sm font-normal text-muted-foreground">ทีม</span></p>
-        </div>
-
-        <div className="bg-card border rounded-xl p-6 shadow-sm lg:col-span-2">
-          <div className="flex items-center gap-3 mb-4">
-            <MapPin className="w-5 h-5 text-emerald-500" />
-            <h3 className="font-semibold text-muted-foreground">สถิติทีมแบ่งตามภูมิภาค</h3>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-6 text-sm">
-            <div className="flex justify-between border-b border-border/50 pb-1">
-              <span>กรุงเทพฯ และปริมณฑล</span> 
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">{regionsMap['กรุงเทพมหานครและปริมณฑล'] || 0} ทีม</span>
-            </div>
-            <div className="flex justify-between border-b border-border/50 pb-1">
-              <span>ภาคเหนือ</span> 
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">{regionsMap['ภาคเหนือ'] || 0} ทีม</span>
-            </div>
-            <div className="flex justify-between border-b border-border/50 pb-1">
-              <span className="truncate mr-2" title="ภาคกลาง ภาคตะวันออก และภาคตะวันตก">ภาคกลาง ตะวันออก และตะวันตก</span> 
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">{regionsMap['ภาคกลาง ภาคตะวันออก และภาคตะวันตก'] || 0} ทีม</span>
-            </div>
-            <div className="flex justify-between border-b border-border/50 pb-1">
-              <span>ภาคตะวันออกเฉียงเหนือ</span> 
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">{regionsMap['ภาคตะวันออกเฉียงเหนือ'] || 0} ทีม</span>
-            </div>
-            <div className="flex justify-between border-b border-border/50 pb-1">
-              <span>ภาคใต้</span> 
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">{regionsMap['ภาคใต้'] || 0} ทีม</span>
-            </div>
-          </div>
         </div>
       </div>
 
