@@ -132,6 +132,20 @@ export default async function ChallengeDashboardPage(props: any) {
     return result;
   });
 
+  const priorDateStr = "2026-07-15";
+  const zeroData: any = { date: priorDateStr, Total: 0 };
+  challenges.forEach((c) => {
+    if (filterChallengeId === "ALL" || filterChallengeId === c.id) {
+      zeroData[c.name] = 0;
+    }
+  });
+  
+  // Filter out any mock/test data before the official start date
+  const filteredRegistrationChartData = registrationChartData.filter(
+    (d) => d.date > priorDateStr
+  );
+  filteredRegistrationChartData.unshift(zeroData);
+
   const activeChallengeNames =
     filterChallengeId === "ALL"
       ? challenges.map((c) => c.name)
@@ -180,7 +194,7 @@ export default async function ChallengeDashboardPage(props: any) {
           </h3>
           <div className="dark-chart-wrapper">
             <RegistrationLineChart
-              data={registrationChartData}
+              data={filteredRegistrationChartData}
               challenges={activeChallengeNames}
             />
           </div>
