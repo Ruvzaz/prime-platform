@@ -6,21 +6,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, X, Edit, Download } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { toast } from 'sonner';
 
 export function ChallengeDashboardFilter({ challenges, currentFilter }: { challenges: {id: string, name: string}[], currentFilter: string }) {
   const router = useRouter();
+  const pathname = usePathname();
   
   return (
     <select
-      className="h-10 rounded-md border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary min-w-[200px]"
+      className="h-10 rounded-md border border-[#3b494b] bg-[#161c21] text-[#dee3e9] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 min-w-[200px]"
       value={currentFilter}
       onChange={(e) => {
         if (e.target.value === 'ALL') {
-          router.push('/admin/challenges');
+          router.push(pathname);
         } else {
-          router.push(`/admin/challenges?challengeId=${e.target.value}`);
+          router.push(`${pathname}?challengeId=${e.target.value}`);
         }
       }}
     >
@@ -39,7 +40,7 @@ export function ExportDataButton({ currentFilter }: { currentFilter: string }) {
       onClick={() => {
         window.location.href = `/api/admin/export?challengeId=${currentFilter}`;
       }}
-      className="flex items-center gap-2"
+      className="flex items-center gap-2 border-[#3b494b] bg-[#161c21] text-[#dee3e9] hover:bg-[#252f36] hover:text-white"
     >
       <Download className="w-4 h-4" />
       Export to Excel

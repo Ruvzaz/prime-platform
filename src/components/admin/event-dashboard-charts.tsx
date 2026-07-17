@@ -12,7 +12,9 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  LabelList
+  LabelList,
+  LineChart,
+  Line,
 } from "recharts"
 import { FieldStat } from "@/app/actions/dashboard"
 
@@ -203,6 +205,122 @@ export function SessionProgressBars({
         )
       })}
     </div>
+  )
+}
+
+export function RegistrationLineChart({ data, challenges }: { data: any[], challenges?: string[] }) {
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-6">
+         <p>ไม่มีข้อมูลการลงทะเบียน</p>
+      </div>
+    )
+  }
+
+  // Use a smooth blue line like the image, but adapted for dark theme
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <LineChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#3b494b" />
+        <XAxis 
+          dataKey="date" 
+          axisLine={false} 
+          tickLine={false} 
+          tick={{ fill: '#b9cacb', fontSize: 12 }} 
+          dy={10}
+        />
+        <YAxis 
+          allowDecimals={false} 
+          axisLine={false} 
+          tickLine={false} 
+          tick={{ fill: '#b9cacb', fontSize: 12 }}
+          width={40}
+        />
+        <Tooltip
+          contentStyle={{
+            borderRadius: '12px',
+            border: '1px solid #3b494b',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+            backgroundColor: 'rgba(22, 28, 33, 0.95)',
+            backdropFilter: 'blur(4px)',
+            color: '#dee3e9'
+          }}
+          labelStyle={{ fontWeight: '600', color: '#b9cacb', marginBottom: '4px' }}
+          itemStyle={{ fontWeight: '700' }}
+        />
+        <Legend verticalAlign="bottom" height={40} iconType="circle" wrapperStyle={{ fontSize: '12px', color: '#b9cacb', paddingTop: '10px' }} />
+        <Line 
+          type="monotone" 
+          dataKey={challenges && challenges.length > 0 ? "Total" : "count"} 
+          name="รวมทั้งหมด" 
+          stroke="#4f46e5" 
+          strokeWidth={4} 
+          dot={{ r: 6, fill: "#161c21", strokeWidth: 2, stroke: "#4f46e5" }} 
+          activeDot={{ r: 8, fill: "#4f46e5", stroke: "#fff" }}
+        />
+        {challenges?.map((c, idx) => {
+          const color = COLORS[(idx + 1) % COLORS.length]; // offset by 1 to avoid matching Total's blue
+          return (
+            <Line 
+              key={c}
+              type="monotone" 
+              dataKey={c} 
+              name={c} 
+              stroke={color} 
+              strokeWidth={2} 
+              strokeDasharray="5 5"
+              dot={{ r: 4, fill: "#161c21", strokeWidth: 2, stroke: color }} 
+              activeDot={{ r: 6 }}
+            />
+          );
+        })}
+      </LineChart>
+    </ResponsiveContainer>
+  )
+}
+
+export function RegionPieChart({ data }: { data: { name: string; value: number }[] }) {
+  if (!data || data.length === 0 || data.every(d => d.value === 0)) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-muted-foreground p-6">
+         <p>ไม่มีข้อมูลภูมิภาค</p>
+      </div>
+    )
+  }
+
+  // Similar to CheckInPieChart but for Regions
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <PieChart>
+        <Pie
+          data={data}
+          cx="50%"
+          cy="50%"
+          innerRadius={0} // Standard pie chart as per image
+          outerRadius={100}
+          dataKey="value"
+          animationDuration={1500}
+          label={({ name, percent = 0 }) => `${(percent * 100).toFixed(0)}%`}
+          labelLine={false}
+        >
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="#161c21" strokeWidth={3} />
+          ))}
+        </Pie>
+        <Tooltip 
+            contentStyle={{ 
+                borderRadius: '12px', 
+                border: '1px solid #3b494b', 
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+                backgroundColor: 'rgba(22, 28, 33, 0.9)',
+                backdropFilter: 'blur(4px)',
+                color: '#dee3e9'
+            }} 
+            itemStyle={{ color: '#dee3e9' }}
+        />
+        <Legend verticalAlign="bottom" height={40} iconType="circle" wrapperStyle={{ fontSize: '12px', color: '#b9cacb' }} />
+      </PieChart>
+    </ResponsiveContainer>
   )
 }
 
