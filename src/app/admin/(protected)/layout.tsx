@@ -2,8 +2,8 @@ import Link from "next/link"
 import { logout } from "@/app/actions/auth"
 import { auth } from "@/auth"
 import { LayoutDashboard, Calendar, Users, LogOut, QrCode, Table, Search, Bell, Settings, ActivitySquare, Shield, UserCog, Mail } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
+export const dynamic = "force-dynamic";
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Input } from "@/components/ui/input"
 import {

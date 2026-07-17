@@ -6,6 +6,8 @@ export const metadata = {
   title: 'Manage Accounts | Prime CTF',
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminAccountsPage() {
   const users = await prisma.user.findMany({
     orderBy: { createdAt: 'desc' },
