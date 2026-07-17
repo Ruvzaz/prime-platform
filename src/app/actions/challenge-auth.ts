@@ -345,8 +345,7 @@ export async function updateParticipantProfile(prevState: any, formData: FormDat
       }
     });
 
-    revalidatePath('/challenge/profile');
-    revalidatePath('/challenge');
+    revalidatePath('/challenge', 'layout');
 
     return { success: true, message: "Profile updated successfully!" };
   } catch (error) {
