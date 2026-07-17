@@ -139,10 +139,10 @@ export default async function ChallengeDashboardPage(props: any) {
       zeroData[c.name] = 0;
     }
   });
-  
+
   // Filter out any mock/test data before the official start date
   const filteredRegistrationChartData = registrationChartData.filter(
-    (d) => d.date > priorDateStr
+    (d) => d.date > priorDateStr,
   );
   filteredRegistrationChartData.unshift(zeroData);
 
@@ -153,14 +153,19 @@ export default async function ChallengeDashboardPage(props: any) {
           Boolean,
         ) as string[]);
 
+  const displayChallengeName =
+    filterChallengeId === "ALL"
+      ? "ภาพรวม"
+      : challenges.find((c) => c.id === filterChallengeId)?.name || "";
+
   const now = new Date();
-  const currentDateTimeFormatted = new Intl.DateTimeFormat('th-TH', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'Asia/Bangkok'
+  const currentDateTimeFormatted = new Intl.DateTimeFormat("th-TH", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Bangkok",
   }).format(now);
 
   return (
@@ -168,10 +173,21 @@ export default async function ChallengeDashboardPage(props: any) {
       <div className="flex items-center justify-between border-b border-[#3b494b] pb-6">
         <div>
           <h1 className="text-4xl font-black uppercase tracking-[0.15em] flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span className="text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]">Thailand</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">Cyber</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]">Top</span>
-            <span className="text-[#b9cacb]">Talent <span className="text-emerald-400 font-light tracking-widest drop-shadow-[0_0_10px_rgba(52,211,153,0.4)]">2026</span></span>
+            <span className="text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]">
+              Thailand
+            </span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+              Cyber
+            </span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+              Top
+            </span>
+            <span className="text-[#b9cacb]">
+              Talent{" "}
+              <span className="text-emerald-400 font-light tracking-widest drop-shadow-[0_0_10px_rgba(52,211,153,0.4)]">
+                2026
+              </span>
+            </span>
           </h1>
           <div className="flex items-center gap-2 mt-4 text-sm font-medium text-emerald-400/80 bg-emerald-400/10 w-fit px-3 py-1 rounded-full border border-emerald-400/20">
             <Clock className="w-4 h-4" />
@@ -179,15 +195,38 @@ export default async function ChallengeDashboardPage(props: any) {
           </div>
         </div>
         <div className="flex items-center gap-6 bg-white rounded-2xl px-6 py-3 shadow-lg shadow-[0_0_20px_rgba(0,0,0,0.5)]">
-          <img src="/NCSA_logo.png" alt="NCSA" className="h-16 xl:h-20 w-auto object-contain" />
-          <img src="/Huawei_logo.png" alt="Huawei" className="h-16 xl:h-20 w-auto object-contain" />
-          <img src="/TCTT_logo.png" alt="TCTT" className="h-16 xl:h-20 w-auto object-contain" />
-          <img src="/THNCA_logo.png" alt="THNCA" className="h-16 xl:h-20 w-auto object-contain scale-110 xl:scale-125 origin-center" />
+          <img
+            src="/NCSA_logo.png"
+            alt="NCSA"
+            className="h-16 xl:h-20 w-auto object-contain"
+          />
+          <img
+            src="/Huawei_logo.png"
+            alt="Huawei"
+            className="h-16 xl:h-20 w-auto object-contain"
+          />
+          <img
+            src="/TCTT_logo.png"
+            alt="TCTT"
+            className="h-16 xl:h-20 w-auto object-contain"
+          />
+          <img
+            src="/THNCA_logo.png"
+            alt="THNCA"
+            className="h-16 xl:h-20 w-auto object-contain scale-110 xl:scale-125 origin-center"
+          />
         </div>
       </div>
 
+      <div className="flex justify-end">
+        <ChallengeDashboardFilter
+          challenges={challenges.map((c) => ({ id: c.id, name: c.name }))}
+          currentFilter={filterChallengeId}
+        />
+      </div>
+
       {/* Top Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="bg-[#161c21] border border-[#3b494b] rounded-xl p-6 shadow-lg shadow-black/20 lg:col-span-3">
           <h3 className="font-bold text-[#b9cacb] mb-4 uppercase tracking-wider">
             สถิติจำนวนผู้ลงทะเบียนระบบในแต่ละวัน (สะสม)
@@ -216,6 +255,9 @@ export default async function ChallengeDashboardPage(props: any) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="relative overflow-hidden bg-[#161c21] border border-[#3b494b] rounded-xl p-8 shadow-lg shadow-black/20 group hover:border-blue-500/50 transition-colors flex flex-col justify-center min-h-[180px]">
           <div className="relative z-10">
+            <div className="inline-block mb-3 px-4 py-1.5 bg-blue-500/10 backdrop-blur-md border border-blue-500/30 rounded-2xl text-2xl xl:text-3xl font-black text-blue-400 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)] tracking-wide">
+              {displayChallengeName}
+            </div>
             <div className="flex items-center gap-3 mb-4">
               <Users className="w-6 h-6 text-blue-400" />
               <h3 className="text-lg font-semibold text-[#b9cacb] uppercase tracking-widest">
@@ -239,6 +281,9 @@ export default async function ChallengeDashboardPage(props: any) {
 
         <div className="relative overflow-hidden bg-[#161c21] border border-[#3b494b] rounded-xl p-8 shadow-lg shadow-black/20 group hover:border-red-500/50 transition-colors flex flex-col justify-center min-h-[180px]">
           <div className="relative z-10">
+            <div className="inline-block mb-3 px-4 py-1.5 bg-red-500/10 backdrop-blur-md border border-red-500/30 rounded-2xl text-2xl xl:text-3xl font-black text-red-400 drop-shadow-[0_0_15px_rgba(239,68,68,0.3)] tracking-wide">
+              {displayChallengeName}
+            </div>
             <div className="flex items-center gap-3 mb-4">
               <Shield className="w-6 h-6 text-red-400" />
               <h3 className="text-lg font-semibold text-[#b9cacb] uppercase tracking-widest">
