@@ -68,6 +68,13 @@ export default function LoginPage() {
           {/* Form */}
           <form action={dispatch} className="grid gap-5">
             <input type="hidden" name="callbackUrl" value={callbackUrl} />
+            
+            {/* Honeypot Field (Concept 5) - Hidden from humans, filled by bots */}
+            <div className="absolute left-[-9999px] top-[-9999px]" aria-hidden="true" tabIndex={-1}>
+              <Label htmlFor="website">Website</Label>
+              <Input id="website" type="text" name="website" tabIndex={-1} autoComplete="off" />
+            </div>
+
             <div className="grid gap-2">
               <Label htmlFor="email" className="text-sm font-medium">Email address</Label>
               <Input
