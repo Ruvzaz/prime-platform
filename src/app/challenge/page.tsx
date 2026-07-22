@@ -5,6 +5,7 @@ import { ViewTeamsDialog } from "./components/ViewTeamsDialog";
 import { InfoCarousel } from "./components/InfoCarousel";
 import { StepGrid } from "./components/StepCarousel";
 import { RegistrationCountdown } from "./components/RegistrationCountdown";
+import { AnnouncementModal } from "./components/AnnouncementModal";
 export const revalidate = 30; // แคชหน้าเว็บและดึงข้อมูลใหม่ทุกๆ 30 วินาที เพื่อประหยัด Database Connection
 export default async function ChallengeLandingPage() {
   // Fetch active challenges from database
@@ -41,6 +42,9 @@ export default async function ChallengeLandingPage() {
 
   return (
     <div className="min-h-screen bg-[#0e1418] text-[#dee3e9] relative overflow-hidden font-sans">
+      {/* Announcement Popup Modal */}
+      <AnnouncementModal />
+
       {/* Hero Section */}
       <section className="relative min-h-[70vh] flex items-center justify-center pt-16 overflow-hidden">
         {/* Dynamic Cyber Background */}
