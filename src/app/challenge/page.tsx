@@ -4,6 +4,7 @@ import { Shield, Users, Terminal, ChevronRight } from "lucide-react";
 import { ViewTeamsDialog } from "./components/ViewTeamsDialog";
 import { InfoCarousel } from "./components/InfoCarousel";
 import { StepGrid } from "./components/StepCarousel";
+import { RegistrationCountdown } from "./components/RegistrationCountdown";
 export const revalidate = 30; // แคชหน้าเว็บและดึงข้อมูลใหม่ทุกๆ 30 วินาที เพื่อประหยัด Database Connection
 export default async function ChallengeLandingPage() {
   // Fetch active challenges from database
@@ -68,6 +69,7 @@ export default async function ChallengeLandingPage() {
             <p className="max-w-2xl mx-auto text-lg text-[#b9cacb] font-light tracking-wide">
               การแข่งขันทักษะทางไซเบอร์ที่ยิ่งใหญ่ที่สุดในประเทศไทย
             </p>
+            <RegistrationCountdown />
           </div>
         </div>
 
