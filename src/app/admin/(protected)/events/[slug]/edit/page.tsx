@@ -9,9 +9,14 @@ export default async function EditEventPage({
 }: {
   params: Promise<{ slug: string }>
 }) {
-  const { slug: id } = await params
-  const event = await prisma.event.findUnique({
-    where: { id },
+  const { slug } = await params
+  const event = await prisma.event.findFirst({
+    where: {
+      OR: [
+        { id: slug },
+        { slug: slug }
+      ]
+    },
     include: {
       formFields: {
         orderBy: { order: 'asc' }

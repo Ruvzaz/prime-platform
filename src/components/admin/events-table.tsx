@@ -206,7 +206,7 @@ export function EventsTable({ initialEvents }: EventsTableProps) {
                       <DropdownMenuContent align="end" className="rounded-xl shadow-xl border-border/50">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem className="rounded-lg" asChild>
-                          <Link href={`/events/${event.slug}/dashboard`}>
+                          <Link href={`/admin/events/${event.slug}/dashboard`}>
                             <BarChart3 className="mr-2 h-4 w-4" />
                             Dashboard
                           </Link>
@@ -218,19 +218,19 @@ export function EventsTable({ initialEvents }: EventsTableProps) {
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem className="rounded-lg" asChild>
-                            <Link href={`/events/${event.id}/edit`}>
+                            <Link href={`/admin/events/${event.slug}/edit`}>
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Edit Event
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem className="rounded-lg" asChild>
-                            <Link href={`/events/${event.slug}/live`}>
+                            <Link href={`/admin/events/${event.slug}/live`}>
                                 <Sparkles className="mr-2 h-4 w-4 text-indigo-500" />
                                 Live Settings
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem className="rounded-lg" asChild>
-                             <Link href={`/events/${event.slug}`}>
+                             <Link href={`/events/${event.slug}`} target="_blank">
                                 <Globe className="mr-2 h-4 w-4" />
                                 Public Page
                              </Link>

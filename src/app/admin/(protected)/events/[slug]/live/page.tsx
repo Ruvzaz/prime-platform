@@ -15,8 +15,13 @@ export default async function LiveSettingsPage({
     redirect('/auth/login');
   }
 
-  const event = await prisma.event.findUnique({
-    where: { slug },
+  const event = await prisma.event.findFirst({
+    where: {
+      OR: [
+        { slug: slug },
+        { id: slug }
+      ]
+    },
     include: {
       liveConfig: true,
     },

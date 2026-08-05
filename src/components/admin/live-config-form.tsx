@@ -118,7 +118,7 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
       <div className="w-full lg:w-[450px] space-y-6">
         <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
-                <Link href={`/events/${eventSlug}/dashboard`}>
+                <Link href={`/admin/events/${eventSlug}/dashboard`}>
                     <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9 bg-white border border-border/40 shadow-sm">
                         <ArrowLeft className="w-4 h-4" />
                     </Button>

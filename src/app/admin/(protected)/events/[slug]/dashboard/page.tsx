@@ -53,7 +53,7 @@ export default async function EventDashboardPage({
                         </span>
                     </div>
                     
-                    <Link href={`/events/${slug}/live`}>
+                    <Link href={`/admin/events/${slug}/live`}>
                         <Button variant="outline" className="rounded-full gap-2 border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600">
                             <Sparkles className="w-4 h-4" />
                             Live Board Settings

@@ -26,8 +26,13 @@ export async function getEventDashboardStats(slug: string): Promise<EventDashboa
   }
 
   try {
-    const event = await prisma.event.findUnique({
-      where: { slug }, // Lookup by slug
+    const event = await prisma.event.findFirst({
+      where: {
+        OR: [
+          { slug },
+          { id: slug }
+        ]
+      },
       include: {
         formFields: {
           orderBy: { order: "asc" },
