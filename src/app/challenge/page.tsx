@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Shield, Users, Terminal, ChevronRight } from "lucide-react";
+import { Shield, Users, Terminal, ChevronRight, Megaphone } from "lucide-react";
 import { ViewTeamsDialog } from "./components/ViewTeamsDialog";
 import { InfoCarousel } from "./components/InfoCarousel";
 import { StepGrid } from "./components/StepCarousel";
@@ -190,6 +190,24 @@ export default async function ChallengeLandingPage() {
               </p>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Banner Poster Section */}
+      <section className="relative z-10 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="flex items-center gap-4 mb-12 border-b border-amber-500/20 pb-4">
+          <Megaphone className="w-6 h-6 text-amber-500" />
+          <h2 className="text-2xl font-bold uppercase tracking-widest text-[#dee3e9]">
+            แจ้งรายละเอียด
+          </h2>
+        </div>
+
+        <div className="relative w-full overflow-hidden rounded-xl border border-[#3b494b] shadow-[0_0_30px_rgba(59,73,75,0.2)] bg-[#161c21]">
+          <img
+            src="/AW_02.png"
+            alt="Thailand Cyber Top Talent 2026"
+            className="w-full h-auto object-contain rounded-xl"
+          />
         </div>
       </section>
 
