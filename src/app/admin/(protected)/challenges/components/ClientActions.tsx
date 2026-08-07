@@ -48,6 +48,21 @@ export function ExportDataButton({ currentFilter }: { currentFilter: string }) {
   );
 }
 
+export function ExportChallengeSysButton({ currentFilter }: { currentFilter: string }) {
+  return (
+    <Button 
+      variant="outline" 
+      onClick={() => {
+        window.location.href = `/api/admin/export-challenge-sys?challengeId=${currentFilter}`;
+      }}
+      className="flex items-center gap-2 border-[#3b494b] bg-[#161c21] text-[#dee3e9] hover:bg-[#252f36] hover:text-white"
+    >
+      <Download className="w-4 h-4" />
+      Export to Challenge Sys
+    </Button>
+  );
+}
+
 export function CreateChallengeForm() {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
