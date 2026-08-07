@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const challengeId = searchParams.get("challengeId") || "ALL";
 
-    // Fetch team members with user, team, and challenge info
+    // Fetch team members with user (including accounts), team, and challenge info
     const members = await prisma.teamMember.findMany({
       where: {
         ...(challengeId !== "ALL" ? { challengeId } : {}),
@@ -33,7 +33,11 @@ export async function GET(request: Request) {
         }
       },
       include: {
-        user: true,
+        user: {
+          include: {
+            accounts: true
+          }
+        },
         team: true,
         challenge: true,
       },
@@ -44,12 +48,17 @@ export async function GET(request: Request) {
       ]
     });
 
-    // Transform data for Challenge Sys format
+    // Transform data for Challenge Sys format (8 columns)
     const data = members.map((member) => {
       const u = member.user;
       const t = member.team;
 
+      const isGmailLogin = !u.password || u.accounts?.some((a) => a.provider === "google") ? "YES" : "NO";
+
+      const username = u.username || u.email.split("@")[0] || "";
+
       const fullName = u.name 
+        || [u.title, u.firstName, u.lastName].filter(Boolean).join(" ")
         || [u.firstName, u.lastName].filter(Boolean).join(" ") 
         || u.username 
         || u.email;
@@ -57,12 +66,14 @@ export async function GET(request: Request) {
       const affiliation = u.institution || t.organization || "";
 
       return {
-        name: fullName,
+        Username: username,
+        FullName: fullName,
         email: u.email,
         password: u.password || "",
         affiliation: affiliation,
         team_name: t.name,
-        ZONE: mapRegionToZone(t.region)
+        ZONE: mapRegionToZone(t.region),
+        is_gmail_login: isGmailLogin
       };
     });
 
