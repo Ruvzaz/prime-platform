@@ -8,6 +8,7 @@ import {
   EditChallengeForm,
   ChallengeDashboardFilter,
   ExportDataButton,
+  ExportChallengeSysButton,
 } from "./components/ClientActions";
 
 export default async function AdminChallengesPage(props: any) {
@@ -35,6 +36,7 @@ export default async function AdminChallengesPage(props: any) {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <ExportDataButton currentFilter={filterChallengeId} />
+          <ExportChallengeSysButton currentFilter={filterChallengeId} />
           <Button variant="outline" asChild>
             <Link href="/admin/challenges/dashboard">
               <BarChart3 className="w-4 h-4 mr-2" />
