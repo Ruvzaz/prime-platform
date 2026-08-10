@@ -6,6 +6,7 @@ import { InfoCarousel } from "./components/InfoCarousel";
 import { StepGrid } from "./components/StepCarousel";
 import { RegistrationCountdown } from "./components/RegistrationCountdown";
 import { AnnouncementModal } from "./components/AnnouncementModal";
+import { RegionInfoBox } from "./components/RegionInfoBox";
 export const revalidate = 30; // แคชหน้าเว็บและดึงข้อมูลใหม่ทุกๆ 30 วินาที เพื่อประหยัด Database Connection
 export default async function ChallengeLandingPage() {
   // Fetch active challenges from database
@@ -191,6 +192,9 @@ export default async function ChallengeLandingPage() {
             </div>
           )}
         </div>
+
+        {/* Region Info Box inside Challenges section */}
+        <RegionInfoBox />
       </section>
 
       {/* Banner Poster Section */}
