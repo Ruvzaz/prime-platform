@@ -40,32 +40,67 @@ export async function GET(request: Request) {
         },
         team: true,
         challenge: true,
-      },
-      orderBy: [
-        { challenge: { name: "asc" } },
-        { team: { name: "asc" } },
-        { joinedAt: "asc" }
-      ]
+      }
     });
 
-    // Transform data for Challenge Sys format (8 columns)
-    const data = members.map((member) => {
+    // Group members by teamId
+    const teamGroupsMap = new Map<string, typeof members>();
+    for (const member of members) {
+      const tId = member.teamId;
+      if (!teamGroupsMap.has(tId)) {
+        teamGroupsMap.set(tId, []);
+      }
+      teamGroupsMap.get(tId)!.push(member);
+    }
+
+    // Compute earliest joinedAt for each team and sort members inside team
+    const teamStats: { teamId: string; earliestJoinedAt: Date; members: typeof members }[] = [];
+
+    teamGroupsMap.forEach((teamMembers, teamId) => {
+      // Find minimum joinedAt date among team members (or team createdAt fallback)
+      const minJoinedAt = teamMembers.reduce((min, m) => {
+        const d = new Date(m.joinedAt);
+        return d < min ? d : min;
+      }, new Date(teamMembers[0].joinedAt));
+
+      // Sort members within the team by joinedAt ascending (earliest member first)
+      teamMembers.sort((a, b) => new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime());
+
+      teamStats.push({
+        teamId,
+        earliestJoinedAt: minJoinedAt,
+        members: teamMembers,
+      });
+    });
+
+    // Sort teams by earliestJoinedAt ascending (oldest team first, newly added teams at bottom)
+    teamStats.sort((a, b) => a.earliestJoinedAt.getTime() - b.earliestJoinedAt.getTime());
+
+    // Flatten sorted teams and assign sequential Team No. (1, 2, 3, ...)
+    const sortedMembers: { teamNo: number; member: (typeof members)[0] }[] = [];
+    teamStats.forEach((group, index) => {
+      const teamNo = index + 1;
+      for (const m of group.members) {
+        sortedMembers.push({ teamNo, member: m });
+      }
+    });
+
+    // Transform data for Challenge Sys format (9 columns with Team No.)
+    const data = sortedMembers.map(({ teamNo, member }) => {
       const u = member.user;
       const t = member.team;
 
       const isGmailLogin = !u.password || u.accounts?.some((a) => a.provider === "google") ? "YES" : "NO";
-
       const username = u.username || u.email.split("@")[0] || "";
-
       const fullName = u.name 
         || [u.title, u.firstName, u.lastName].filter(Boolean).join(" ")
         || [u.firstName, u.lastName].filter(Boolean).join(" ") 
         || u.username 
         || u.email;
-
       const affiliation = u.institution || t.organization || "";
 
       return {
+        "Team No.": teamNo,
         Username: username,
         FullName: fullName,
         email: u.email,
