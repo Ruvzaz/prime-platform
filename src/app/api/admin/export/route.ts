@@ -11,24 +11,68 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const challengeId = searchParams.get('challengeId') || 'ALL';
+    const challengeId = searchParams.get("challengeId") || "ALL";
 
     // Fetch team members with their user, team, and challenge info
     const members = await prisma.teamMember.findMany({
-      where: challengeId !== 'ALL' ? { challengeId } : undefined,
+      where: {
+        ...(challengeId !== "ALL" ? { challengeId } : {}),
+        user: {
+          role: { notIn: ["ADMIN", "STAFF"] }
+        }
+      },
       include: {
         user: true,
         team: true,
         challenge: true,
-      },
-      orderBy: [
-        { challenge: { name: 'asc' } },
-        { team: { name: 'asc' } }
-      ]
+      }
+    });
+
+    // Group members by teamId
+    const teamGroupsMap = new Map<string, typeof members>();
+    for (const member of members) {
+      const tId = member.teamId;
+      if (!teamGroupsMap.has(tId)) {
+        teamGroupsMap.set(tId, []);
+      }
+      teamGroupsMap.get(tId)!.push(member);
+    }
+
+    // Compute earliest joinedAt for each team and sort members inside team
+    const teamStats: { teamId: string; earliestJoinedAt: Date; members: typeof members }[] = [];
+
+    teamGroupsMap.forEach((teamMembers, teamId) => {
+      // Find minimum joinedAt date among team members
+      const minJoinedAt = teamMembers.reduce((min, m) => {
+        const d = new Date(m.joinedAt);
+        return d < min ? d : min;
+      }, new Date(teamMembers[0].joinedAt));
+
+      // Sort members within the team by joinedAt ascending (earliest member first)
+      teamMembers.sort((a, b) => new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime());
+
+      teamStats.push({
+        teamId,
+        earliestJoinedAt: minJoinedAt,
+        members: teamMembers,
+      });
+    });
+
+    // Sort teams by earliestJoinedAt ascending (oldest team first, newly added teams at bottom)
+    teamStats.sort((a, b) => a.earliestJoinedAt.getTime() - b.earliestJoinedAt.getTime());
+
+    // Flatten sorted teams and assign sequential Team No. (1, 2, 3, ...)
+    const sortedMembers: { teamNo: number; member: (typeof members)[0] }[] = [];
+    teamStats.forEach((group, index) => {
+      const teamNo = index + 1;
+      for (const m of group.members) {
+        sortedMembers.push({ teamNo, member: m });
+      }
     });
 
     // Transform data for Excel
-    const data = members.map((member) => ({
+    const data = sortedMembers.map(({ teamNo, member }) => ({
+      "Team No.": teamNo,
       "Challenge Name": member.challenge.name,
       "Team Name": member.team.name,
       "Team Organization": member.team.organization || "-",
@@ -42,7 +86,7 @@ export async function GET(request: Request) {
       "Phone Number": member.user.phoneNumber || "-",
       "Gender": member.user.gender || "-",
       "Institution": member.user.institution || "-",
-      "Joined At": new Date(member.joinedAt).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }),
+      "Joined At": new Date(member.joinedAt).toLocaleString("th-TH", { timeZone: "Asia/Bangkok" }),
     }));
 
     // Create workbook and worksheet
@@ -53,7 +97,7 @@ export async function GET(request: Request) {
     // Generate buffer
     const buf = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
 
-    const filename = challengeId === 'ALL' ? 'All_Challenges_Export' : `Challenge_${challengeId}_Export`;
+    const filename = challengeId === "ALL" ? "All_Challenges_Export" : `Challenge_${challengeId}_Export`;
 
     return new NextResponse(buf, {
       headers: {
