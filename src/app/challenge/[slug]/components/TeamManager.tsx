@@ -112,8 +112,30 @@ export function TeamManager({
     });
   };
 
+  // Check if registration deadline has passed
+  const isClosed = Date.now() > new Date("2026-08-12T23:59:59+07:00").getTime();
+
   // 1. User is NOT in a team for this challenge
   if (!myMembership) {
+    if (isClosed) {
+      return (
+        <div className="max-w-md mx-auto bg-[#161c21] p-8 rounded-xl border border-red-500/30 text-center shadow-xl">
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4 animate-pulse" />
+          <h3 className="text-xl font-bold font-mono uppercase tracking-widest text-[#dee3e9] mb-2">
+            Registration Closed
+          </h3>
+          <p className="text-sm text-[#849495] font-mono leading-relaxed mb-6">
+            ระบบปิดรับสมัครการแข่งขันแล้ว (Registration has officially ended).
+          </p>
+          <Link href="/challenge">
+            <Button variant="outline" className="font-mono text-xs uppercase tracking-widest border-[#3b494b] bg-[#161c21] text-[#dee3e9] hover:bg-[#252f36]">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Challenges
+            </Button>
+          </Link>
+        </div>
+      );
+    }
     const createWithChallenge = createTeam.bind(null, challenge.id);
     return <CreateTeamForm action={createWithChallenge} />;
   }

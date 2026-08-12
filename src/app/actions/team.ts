@@ -15,8 +15,18 @@ const createTeamSchema = z.object({
 });
 
 
+const REGISTRATION_DEADLINE = new Date("2026-08-12T23:59:59+07:00").getTime();
+
+function isRegistrationClosed(): boolean {
+  return Date.now() > REGISTRATION_DEADLINE;
+}
+
 export async function joinTeamWithToken(token: string) {
   try {
+    if (isRegistrationClosed()) {
+      return { error: 'การรับสมัครปิดแล้ว ไม่สามารถเข้าร่วมทีมได้ (Registration Closed)' };
+    }
+
     const session = await auth();
     if (!session?.user?.id) return { error: 'Unauthorized' };
     
@@ -101,6 +111,10 @@ export async function createTeam(challengeId: string, prevState: any, formData: 
     }
 
     const { name, organization, region } = validated.data;
+
+    if (isRegistrationClosed()) {
+      return { error: 'การรับสมัครปิดแล้ว ไม่สามารถสร้างทีมใหม่ได้ (Registration Closed)', data: rawData };
+    }
 
     // Check if Challenge exists and is active
     const challenge = await prisma.challenge.findUnique({ where: { id: challengeId } });
