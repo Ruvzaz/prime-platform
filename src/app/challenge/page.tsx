@@ -1,12 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Shield, Users, Terminal, ChevronRight, Megaphone } from "lucide-react";
+import { Shield, Users, Terminal, ChevronRight, Megaphone, Video, Calendar, Clock } from "lucide-react";
 import { ViewTeamsDialog } from "./components/ViewTeamsDialog";
 import { InfoCarousel } from "./components/InfoCarousel";
 import { StepGrid } from "./components/StepCarousel";
 import { RegistrationCountdown } from "./components/RegistrationCountdown";
 import { AnnouncementModal } from "./components/AnnouncementModal";
-import { RegionInfoBox } from "./components/RegionInfoBox";
 export const revalidate = 30; // แคชหน้าเว็บและดึงข้อมูลใหม่ทุกๆ 30 วินาที เพื่อประหยัด Database Connection
 export default async function ChallengeLandingPage() {
   // Fetch active challenges from database
@@ -181,20 +180,82 @@ export default async function ChallengeLandingPage() {
           ))}
 
           {challenges.length === 0 && (
-            <div className="col-span-full py-24 border border-[#3b494b] bg-[#161c21]/50 rounded-xl flex flex-col items-center justify-center text-center">
-              <Terminal className="w-12 h-12 text-[#3b494b] mb-4" />
-              <h3 className="text-xl font-mono uppercase tracking-widest text-[#849495]">
-                No Active Protocols
-              </h3>
-              <p className="text-sm text-[#849495]/70 mt-2">
-                Awaiting administrator activation sequence.
+            <div className="col-span-full bg-[#161c21]/90 border border-blue-500/30 rounded-2xl p-6 sm:p-10 shadow-2xl backdrop-blur-md relative overflow-hidden text-left">
+              {/* Decorative Accent Line */}
+              <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+              <div className="absolute -top-24 -right-24 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+              {/* Status Header */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-[#3b494b]/60">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+                    <Video className="w-5 h-5 animate-pulse" />
+                  </div>
+                  <div>
+                    <span className="font-mono text-[10px] text-blue-400 uppercase tracking-[0.25em] font-bold block mb-0.5">
+                      [ OFFICIAL BRIEFING SESSION ]
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-extrabold text-[#dee3e9] tracking-tight">
+                      Thailand Cyber Top Talent 2026
+                    </h3>
+                  </div>
+                </div>
+
+                <span className="px-4 py-1.5 bg-red-500/10 border border-red-500/30 rounded-full text-red-400 font-mono text-xs font-bold uppercase tracking-wider">
+                  ปิดรับสมัครแล้ว (Registration Closed)
+                </span>
+              </div>
+
+              <p className="text-base sm:text-lg text-[#dee3e9] mb-6 font-medium leading-relaxed">
+                ขอเชิญเข้าร่วม <span className="text-blue-400 font-bold">การประชุมชี้แจง รอบคัดเลือก</span>
               </p>
+
+              {/* Details Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6 font-mono text-xs">
+                <div className="p-4 rounded-xl bg-[#0e1418] border border-[#3b494b] flex items-center gap-3">
+                  <Calendar className="w-5 h-5 text-blue-400 shrink-0" />
+                  <div>
+                    <span className="text-[#849495] block text-[10px] uppercase">วันที่ (Date)</span>
+                    <span className="font-bold text-[#dee3e9] text-sm">14 สิงหาคม พ.ศ. 2569</span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-[#0e1418] border border-[#3b494b] flex items-center gap-3">
+                  <Clock className="w-5 h-5 text-blue-400 shrink-0" />
+                  <div>
+                    <span className="text-[#849495] block text-[10px] uppercase">เวลา (Time)</span>
+                    <span className="font-bold text-[#dee3e9] text-sm">16.30 - 18.00 น.</span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-[#0e1418] border border-[#3b494b] flex items-center gap-3 sm:col-span-2 md:col-span-1">
+                  <Video className="w-5 h-5 text-blue-400 shrink-0" />
+                  <div>
+                    <span className="text-[#849495] block text-[10px] uppercase">ช่องทาง (Platform)</span>
+                    <span className="font-bold text-blue-400 text-sm">Zoom Online</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Zoom Credentials Container */}
+              <div className="p-5 rounded-xl bg-blue-500/5 border border-blue-500/20 font-mono space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <span className="text-xs text-[#b9cacb] font-semibold">Zoom Meeting ID:</span>
+                  <span className="text-base font-black text-blue-400 tracking-wider bg-[#0e1418] px-4 py-1.5 rounded-lg border border-blue-500/30">
+                    857 7004 6451
+                  </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-blue-500/10">
+                  <span className="text-xs text-[#b9cacb] font-semibold">Passcode:</span>
+                  <span className="text-base font-black text-emerald-400 tracking-wider bg-[#0e1418] px-4 py-1.5 rounded-lg border border-emerald-500/30">
+                    043068
+                  </span>
+                </div>
+              </div>
             </div>
           )}
         </div>
-
-        {/* Region Info Box inside Challenges section */}
-        <RegionInfoBox />
       </section>
 
       {/* Banner Poster Section */}
