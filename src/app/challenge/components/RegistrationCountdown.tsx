@@ -78,9 +78,9 @@ export function RegistrationCountdown({
   // If time expired but Admin has active challenges open, show Open Badge
   if (timeLeft.isExpired) {
     return (
-      <div className="mt-8 inline-flex items-center gap-2 px-6 py-3 bg-emerald-500/10 border border-emerald-500/40 rounded-xl text-emerald-400 font-mono text-sm uppercase tracking-wider backdrop-blur-md shadow-[0_0_15px_rgba(52,211,153,0.15)]">
-        <CheckCircle2 className="w-5 h-5 text-emerald-400 animate-pulse" />
-        <span>เปิดรับสมัครเข้าร่วมการแข่งขัน (Registration Open)</span>
+      <div className="mt-8 inline-flex items-center gap-2 px-6 py-3 bg-red-500/10 border border-red-500/40 rounded-xl text-red-400 font-mono text-sm uppercase tracking-wider backdrop-blur-md shadow-[0_0_15px_rgba(52,211,153,0.15)]">
+        <CheckCircle2 className="w-5 h-5 text-red-400 animate-pulse" />
+        <span>ปิดรับสมัครเข้าร่วมการแข่งขัน (Registration Close)</span>
       </div>
     );
   }
