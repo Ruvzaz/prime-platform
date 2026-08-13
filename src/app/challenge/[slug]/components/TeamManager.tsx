@@ -112,8 +112,8 @@ export function TeamManager({
     });
   };
 
-  // Check if registration deadline has passed
-  const isClosed = Date.now() > new Date("2026-08-12T23:59:59+07:00").getTime();
+  // Check if registration is active (controlled by Admin)
+  const isClosed = !challenge.isActive;
 
   // 1. User is NOT in a team for this challenge
   if (!myMembership) {
@@ -125,7 +125,7 @@ export function TeamManager({
             Registration Closed
           </h3>
           <p className="text-sm text-[#849495] font-mono leading-relaxed mb-6">
-            ระบบปิดรับสมัครการแข่งขันแล้ว (Registration has officially ended).
+            การรับสมัครของรายการนี้ปิดอยู่ (Registration is currently closed by Administrator).
           </p>
           <Link href="/challenge">
             <Button variant="outline" className="font-mono text-xs uppercase tracking-widest border-[#3b494b] bg-[#161c21] text-[#dee3e9] hover:bg-[#252f36]">

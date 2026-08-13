@@ -74,7 +74,7 @@ export default async function ChallengeLandingPage() {
             <p className="max-w-2xl mx-auto text-lg text-[#b9cacb] font-light tracking-wide">
               การแข่งขันทักษะทางไซเบอร์ที่ยิ่งใหญ่ที่สุดในประเทศไทย
             </p>
-            <RegistrationCountdown />
+            <RegistrationCountdown hasActiveChallenges={challenges.length > 0} />
           </div>
         </div>
 
