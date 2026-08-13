@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, AlertCircle } from "lucide-react";
+import { Clock, AlertCircle, CheckCircle2 } from "lucide-react";
 
 interface TimeLeft {
   days: number;
@@ -13,7 +13,11 @@ interface TimeLeft {
 
 const TARGET_DATE = new Date("2026-08-12T23:59:59+07:00").getTime();
 
-export function RegistrationCountdown() {
+export function RegistrationCountdown({
+  hasActiveChallenges = true,
+}: {
+  hasActiveChallenges?: boolean;
+}) {
   const [mounted, setMounted] = useState(false);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({
     days: 0,
@@ -61,11 +65,22 @@ export function RegistrationCountdown() {
     );
   }
 
-  if (timeLeft.isExpired) {
+  // If Admin has turned off all challenges, show Closed
+  if (!hasActiveChallenges) {
     return (
       <div className="mt-8 inline-flex items-center gap-2 px-6 py-3 bg-red-500/10 border border-red-500/40 rounded-xl text-red-400 font-mono text-sm uppercase tracking-wider backdrop-blur-md">
         <AlertCircle className="w-5 h-5 text-red-500 animate-pulse" />
         <span>ปิดรับสมัครแล้ว (Registration Closed)</span>
+      </div>
+    );
+  }
+
+  // If time expired but Admin has active challenges open, show Open Badge
+  if (timeLeft.isExpired) {
+    return (
+      <div className="mt-8 inline-flex items-center gap-2 px-6 py-3 bg-emerald-500/10 border border-emerald-500/40 rounded-xl text-emerald-400 font-mono text-sm uppercase tracking-wider backdrop-blur-md shadow-[0_0_15px_rgba(52,211,153,0.15)]">
+        <CheckCircle2 className="w-5 h-5 text-emerald-400 animate-pulse" />
+        <span>เปิดรับสมัครเข้าร่วมการแข่งขัน (Registration Open)</span>
       </div>
     );
   }
@@ -75,7 +90,7 @@ export function RegistrationCountdown() {
       {/* Header Badge */}
       <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-xs sm:text-sm font-mono uppercase tracking-widest mb-4 backdrop-blur-md">
         <Clock className="w-4 h-4 text-red-500 animate-spin-slow" />
-        <span>ปิดรับสมัครวันที่ 12 สิงหาคม 2569 เวลา 23:59 น.</span>
+        <span>เปิดรับสมัครเข้าร่วมการแข่งขัน</span>
       </div>
 
       {/* Countdown Cards */}
