@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Shield, Users, Search, MapPin, Building, ChevronLeft, ChevronRight, Mail } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { DeleteTeamButton, RemoveMemberButton } from '../../components/AdminTeamActions';
+import { DeleteTeamButton, RemoveMemberButton, AddMemberButton } from '../../components/AdminTeamActions';
 import { EditUserModal } from './EditUserModal';
 import Link from 'next/link';
 
@@ -116,7 +116,12 @@ export function ChallengeTeamsClient({ challenge }: { challenge: any }) {
                     )}
                   </div>
                 </div>
-                <div className="md:ml-0">
+                <div className="md:ml-0 flex items-center gap-2">
+                  <AddMemberButton 
+                    teamId={team.id} 
+                    maxTeamSize={challenge.maxTeamSize} 
+                    currentCount={approvedMembers.length} 
+                  />
                   <DeleteTeamButton teamId={team.id} />
                 </div>
               </div>
