@@ -243,3 +243,84 @@ export async function sendPendingCompleteEmails(challengeId: string) {
     return { error: 'Failed to process pending emails' };
   }
 }
+
+export async function adminAddMemberToTeam(teamId: string, email: string) {
+  try {
+    await checkAdmin();
+    const cleanEmail = email.toLowerCase().trim();
+    if (!cleanEmail) return { error: 'กรุณากรอกอีเมล (Email is required)' };
+
+    // 1. Fetch team with challenge and current approved members
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: {
+        challenge: true,
+        members: {
+          where: { status: 'APPROVED' }
+        }
+      }
+    });
+
+    if (!team) return { error: 'ไม่พบทีมนี้ในระบบ (Team not found)' };
+
+    // 2. Capacity Check: Cannot exceed maxTeamSize
+    if (team.members.length >= team.challenge.maxTeamSize) {
+      return { 
+        error: `ทีมนี้สมาชิกเต็มแล้ว ไม่สามารถเพิ่มสมาชิกเกิน ${team.challenge.maxTeamSize} คนได้ (Team is full)` 
+      };
+    }
+
+    // 3. Find user by email
+    let user = await prisma.user.findUnique({
+      where: { email: cleanEmail }
+    });
+
+    // Auto-create user if email does not exist in system yet
+    if (!user) {
+      const usernameFallback = cleanEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
+      user = await prisma.user.create({
+        data: {
+          email: cleanEmail,
+          username: usernameFallback,
+          name: cleanEmail.split('@')[0],
+          institution: team.organization || undefined,
+        }
+      });
+    }
+
+    // 4. Check if user is already in ANY team for this challenge
+    const existingMembership = await prisma.teamMember.findUnique({
+      where: {
+        challengeId_userId: {
+          challengeId: team.challengeId,
+          userId: user.id
+        }
+      }
+    });
+
+    if (existingMembership) {
+      if (existingMembership.teamId === team.id) {
+        return { error: 'ผู้ใช้นี้อยู่ในทีมนี้เรียบร้อยแล้ว' };
+      }
+      return { error: 'ผู้ใช้นี้เป็นสมาชิกของทีมอื่นในการแข่งขันนี้แล้ว' };
+    }
+
+    // 5. Add user to TeamMember table with status APPROVED
+    await prisma.teamMember.create({
+      data: {
+        teamId: team.id,
+        challengeId: team.challengeId,
+        userId: user.id,
+        status: 'APPROVED'
+      }
+    });
+
+    revalidatePath(`/admin/challenges/${team.challengeId}`);
+    revalidatePath('/challenges');
+    return { success: true, message: `เพิ่มสมาชิก (${cleanEmail}) เข้าทีมเรียบร้อยแล้ว` };
+  } catch (error: any) {
+    console.error("Admin Add Member Error:", error);
+    return { error: 'เกิดข้อผิดพลาดในการเพิ่มสมาชิก' };
+  }
+}
+
