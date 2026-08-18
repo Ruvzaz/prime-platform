@@ -39,6 +39,9 @@ model User {
   // Challenge Team relations
   teamMemberships TeamMember[]
   ledTeams        Team[]       @relation("TeamLeader")
+
+  // E-Certificate relation
+  certificates Certificate[]
 }
 
 enum Role {
@@ -77,6 +80,7 @@ model Event {
   registrations Registration[]
   liveConfig    LiveConfig?
   activityLogs  ActivityLog[]
+  certificates  Certificate[]
 }
 
 model LiveConfig {
@@ -239,6 +243,7 @@ model Challenge {
 
   teams       Team[]
   teamMembers TeamMember[]
+  certificates Certificate[]
 }
 
 model Team {
@@ -286,3 +291,44 @@ model TeamMember {
   @@index([userId])
   @@index([challengeId])
 }
+
+// ==========================================
+// E-Certificate Models
+// ==========================================
+
+enum CertType {
+  CHALLENGE
+  EVENT
+}
+
+model Certificate {
+  id                 String   @id @default(cuid())
+  certCode           String   @unique // e.g. "CERT-2026-X8K9L2"
+  type               CertType @default(CHALLENGE)
+
+  email              String   // Recipient email to match logged-in user
+  recipientPrefix    String?  @default("")
+  recipientFirstName String
+  recipientLastName  String?  @default("")
+  recipientFullName  String
+
+  eventTitle         String   // e.g. "Thailand Cyber Top Talent 2026"
+  issueDate          String   // e.g. "31 สิงหาคม 2569"
+  status             String   @default("ACTIVE") // "ACTIVE" or "REVOKED"
+
+  challengeId        String?
+  challenge          Challenge? @relation(fields: [challengeId], references: [id], onDelete: SetNull)
+
+  eventId            String?
+  event              Event?     @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  userId             String?
+  user               User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([email])
+  @@index([certCode])
+}
+

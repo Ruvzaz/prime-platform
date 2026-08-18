@@ -11,6 +11,7 @@ import {
   ExportChallengeSysButton,
 } from "./components/ClientActions";
 import { ImportTeamsModal } from "./components/ImportTeamsModal";
+import { ImportCertModal } from "./components/ImportCertModal";
 
 export default async function AdminChallengesPage(props: any) {
   const searchParams = await Promise.resolve(props.searchParams);
@@ -36,6 +37,7 @@ export default async function AdminChallengesPage(props: any) {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <ImportCertModal />
           <ImportTeamsModal />
           <ExportDataButton currentFilter={filterChallengeId} />
           <ExportChallengeSysButton currentFilter={filterChallengeId} />
