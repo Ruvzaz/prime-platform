@@ -60,7 +60,7 @@ export function EventForm({ action, initialData }: EventFormProps) {
   useEffect(() => {
     if (state?.success) {
       const timer = setTimeout(() => {
-        router.push("/events");
+        router.push("/admin/events");
       }, 1500);
       return () => clearTimeout(timer);
     }

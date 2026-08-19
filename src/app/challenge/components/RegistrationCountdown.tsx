@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, AlertCircle, Video, Calendar } from "lucide-react";
+import { Clock, AlertCircle, Video, Calendar, Trophy } from "lucide-react";
 
 interface TimeLeft {
   days: number;
@@ -70,9 +70,13 @@ export function RegistrationCountdown({
   if (timeLeft.isExpired || !hasActiveChallenges) {
     return (
       <div className="mt-8 flex justify-center">
-        <div className="inline-flex items-center gap-2 px-6 py-2.5 bg-red-500/10 border border-red-500/40 rounded-full text-red-400 font-mono text-xs sm:text-sm uppercase tracking-wider backdrop-blur-md shadow-[0_0_15px_rgba(239,68,68,0.15)]">
-          <AlertCircle className="w-4 h-4 text-red-500 animate-pulse" />
-          <span>ปิดรับสมัครแล้ว (Registration Closed)</span>
+        <div className="relative group p-[1.5px] rounded-full bg-gradient-to-r from-red-500 via-amber-500 via-rose-500 to-red-500 animate-gradient-shift shadow-[0_0_25px_rgba(239,68,68,0.35)]">
+          <div className="inline-flex items-center gap-2.5 px-6 py-2.5 bg-[#161c21]/95 rounded-full backdrop-blur-md">
+            <Trophy className="w-4 h-4 text-amber-400 animate-pulse" />
+            <span className="font-mono text-xs sm:text-sm font-extrabold uppercase tracking-wider bg-gradient-to-r from-red-400 via-amber-300 via-rose-400 to-red-400 bg-clip-text text-transparent animate-gradient-shift">
+              การแข่งขัน Thailand Cyber Top Talent 2026
+            </span>
+          </div>
         </div>
       </div>
     );
