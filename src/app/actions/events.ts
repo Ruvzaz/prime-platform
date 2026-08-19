@@ -114,7 +114,8 @@ export async function createEvent(prevState: any, formData: FormData): Promise<A
       },
     });
 
-    revalidatePath("/events");
+    revalidatePath("/admin/events");
+    revalidatePath("/challenge");
     return successResult(event, "สร้างกิจกรรมสำเร็จแล้ว");
   } catch (error) {
     return handleActionError(error);
@@ -268,7 +269,8 @@ export async function updateEvent(prevState: any, formData: FormData) {
     return { success: false, message: "Failed to update event: " + (e instanceof Error ? e.message : "Unknown error"), data: rawData };
   }
 
-  revalidatePath("/events");
+  revalidatePath("/admin/events");
+  revalidatePath("/challenge");
   revalidatePath(`/events/${rawData.slug}`); // Public page
   return { success: true, message: "Event updated successfully!" };
 }
@@ -307,7 +309,8 @@ export async function deleteEvents(eventIds: string[]) {
       }
     });
 
-    revalidatePath("/events");
+    revalidatePath("/admin/events");
+    revalidatePath("/challenge");
     return { message: "Events deleted successfully" };
   } catch (error) {
     console.error("Failed to delete events:", error);
@@ -326,7 +329,8 @@ export async function toggleEventStatus(eventId: string, currentStatus: boolean)
       where: { id: eventId },
       data: { isActive: !currentStatus }
     });
-    revalidatePath("/events");
+    revalidatePath("/admin/events");
+    revalidatePath("/challenge");
     return { success: true, message: "Event status updated" };
   } catch (error) {
     console.error("Failed to toggle event status:", error);

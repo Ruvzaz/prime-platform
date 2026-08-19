@@ -188,4 +188,15 @@
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-400;
   }
+
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .animate-gradient-shift {
+    background-size: 200% 200%;
+    animation: gradient-shift 4s ease infinite;
+  }
 }

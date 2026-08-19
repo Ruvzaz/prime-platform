@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Users,
   UserCog,
+  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { participantLogout } from "@/app/actions/challenge-auth";
@@ -28,13 +29,26 @@ export async function ChallengeNavbar() {
   let myTeamLink = "/challenge";
   let displayName = session?.user?.name || "OPERATIVE";
 
+  let hasCertificates = false;
+
   if (session?.user?.id) {
     const dbUser = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { name: true }
+      select: { name: true, email: true }
     });
     if (dbUser?.name) {
       displayName = dbUser.name;
+    }
+
+    const userEmail = (dbUser?.email || session.user.email)?.toLowerCase().trim();
+    if (userEmail) {
+      const certCount = await prisma.certificate.count({
+        where: {
+          email: userEmail,
+          status: "ACTIVE",
+        },
+      });
+      hasCertificates = certCount > 0;
     }
 
     const membership = await prisma.teamMember.findFirst({
@@ -115,6 +129,17 @@ export async function ChallengeNavbar() {
                     <span>My Profile</span>
                   </Link>
                 </DropdownMenuItem>
+                {hasCertificates && (
+                  <DropdownMenuItem
+                    asChild
+                    className="focus:bg-red-500/10 focus:text-red-500 cursor-pointer font-mono text-sm uppercase tracking-wider"
+                  >
+                    <Link href="/certification">
+                      <Award className="w-4 h-4 mr-2" />
+                      <span>My Certificates</span>
+                    </Link>
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
 
