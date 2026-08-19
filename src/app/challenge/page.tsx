@@ -76,12 +76,12 @@ export default async function ChallengeLandingPage() {
   ]);
 
   return (
-    <div className="min-h-screen bg-[#0e1418] text-[#dee3e9] relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-[#0e1418] text-[#dee3e9] relative overflow-hidden font-sans flex flex-col">
       {/* Announcement Popup Modal */}
       <AnnouncementModal />
 
       {/* Hero Section */}
-      <section className="relative min-h-[70vh] flex items-center justify-center pt-16 overflow-hidden">
+      <section className="relative flex-1 min-h-[70vh] flex items-center justify-center pt-16 pb-12 overflow-hidden">
         {/* Dynamic Cyber Background */}
         <div className="absolute inset-0 z-0">
           <div
@@ -95,8 +95,8 @@ export default async function ChallengeLandingPage() {
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay pointer-events-none" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-10">
-          <div className="mb-10">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center my-auto">
+          <div className="mb-6">
             <span className="font-mono text-xs sm:text-sm text-red-500 uppercase tracking-[0.3em] sm:tracking-[0.5em] block mb-6 animate-pulse">
               [ Capture The Flag ]
             </span>
@@ -114,10 +114,12 @@ export default async function ChallengeLandingPage() {
           </div>
         </div>
 
-        {/* Bottom Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-70">
-          <div className="w-[1px] h-16 bg-gradient-to-b from-red-500 to-transparent animate-bounce"></div>
-        </div>
+        {/* Bottom Scroll Indicator (Only show if there are active challenges or events) */}
+        {(challenges.length > 0 || activeEvents.length > 0) && (
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center opacity-70">
+            <div className="w-[1px] h-12 bg-gradient-to-b from-red-500 to-transparent animate-bounce"></div>
+          </div>
+        )}
       </section>
 
       {/* Challenges Grid Section */}
@@ -322,7 +324,8 @@ export default async function ChallengeLandingPage() {
         </section>
       )}
 
-      {/* Banner Poster Section */}
+      {/* Temporarily hidden sections: แจ้งรายละเอียด, ขั้นตอนการสมัครการแข่งขัน, รายละเอียดการแข่งขัน */}
+      {/* 
       <section className="relative z-10 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="flex items-center gap-4 mb-12 border-b border-amber-500/20 pb-4">
           <Megaphone className="w-6 h-6 text-amber-500" />
@@ -340,14 +343,13 @@ export default async function ChallengeLandingPage() {
         </div>
       </section>
 
-      {/* Step Grid Section */}
       <StepGrid />
 
-      {/* Info Carousel Section */}
       <InfoCarousel />
+      */}
 
       {/* Footer / Branding */}
-      <div className="border-t border-[#3b494b] bg-[#090f13] py-8 relative z-10">
+      <footer className="mt-auto border-t border-[#3b494b] bg-[#090f13] py-8 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="font-black text-xl tracking-tighter text-[#dee3e9]">
@@ -365,7 +367,7 @@ export default async function ChallengeLandingPage() {
             © 2026 prime digital counsultant ALL RIGHTS RESERVED
           </p>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }

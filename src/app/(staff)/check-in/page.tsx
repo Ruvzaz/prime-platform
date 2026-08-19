@@ -127,10 +127,10 @@ function CheckInPageContent() {
       {/* Floating Back Button */}
       <div className="absolute top-4 left-4 z-50">
         <Button asChild variant="ghost" className="hidden sm:flex gap-2 text-muted-foreground hover:bg-muted">
-          <Link href="/dashboard"><ArrowLeft className="w-4 h-4" /> กลับสู่หน้าหลัก</Link>
+          <Link href="/admin/dashboard"><ArrowLeft className="w-4 h-4" /> กลับสู่หน้าหลัก</Link>
         </Button>
         <Button asChild variant="ghost" size="icon" className="sm:hidden text-muted-foreground hover:bg-muted">
-          <Link href="/dashboard"><ArrowLeft className="w-5 h-5" /></Link>
+          <Link href="/admin/dashboard"><ArrowLeft className="w-5 h-5" /></Link>
         </Button>
       </div>
 
