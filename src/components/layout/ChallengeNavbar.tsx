@@ -120,17 +120,6 @@ export async function ChallengeNavbar() {
                     <span>My Team</span>
                   </Link>
                 </DropdownMenuItem>
-                {hasCertificates && (
-                  <DropdownMenuItem
-                    asChild
-                    className="focus:bg-red-500/10 focus:text-red-500 cursor-pointer font-mono text-sm uppercase tracking-wider text-amber-400 font-bold"
-                  >
-                    <Link href="/certification">
-                      <Award className="w-4 h-4 mr-2" />
-                      <span>My Certificates</span>
-                    </Link>
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuItem
                   asChild
                   className="focus:bg-red-500/10 focus:text-red-500 cursor-pointer font-mono text-sm uppercase tracking-wider"
@@ -140,6 +129,17 @@ export async function ChallengeNavbar() {
                     <span>My Profile</span>
                   </Link>
                 </DropdownMenuItem>
+                {hasCertificates && (
+                  <DropdownMenuItem
+                    asChild
+                    className="focus:bg-red-500/10 focus:text-red-500 cursor-pointer font-mono text-sm uppercase tracking-wider"
+                  >
+                    <Link href="/certification">
+                      <Award className="w-4 h-4 mr-2" />
+                      <span>My Certificates</span>
+                    </Link>
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
 

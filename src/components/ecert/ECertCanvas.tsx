@@ -225,20 +225,20 @@ export function ECertCanvas({
       {/* Download Action Buttons */}
       {showDownloadBtn && !isRendering && (
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <Button
+          <button
             onClick={handleDownloadPNG}
-            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-xs uppercase tracking-widest font-bold shadow-lg transition-all rounded flex items-center gap-2"
+            className="font-mono text-xs uppercase tracking-widest font-bold px-6 py-2.5 bg-[#161c21] border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500 active:scale-95 transition-all duration-150 rounded flex items-center gap-2 shadow-[0_0_15px_rgba(52,211,153,0.1)]"
           >
-            <Download className="w-4 h-4" />
-            Download Image (PNG)
-          </Button>
-          <Button
+            <Download className="w-4 h-4 text-emerald-400" />
+            <span>Download Image (PNG)</span>
+          </button>
+          <button
             onClick={handleDownloadPDF}
-            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-mono text-xs uppercase tracking-widest font-bold shadow-lg transition-all rounded flex items-center gap-2"
+            className="font-mono text-xs uppercase tracking-widest font-bold px-6 py-2.5 bg-[#161c21] border border-red-500/40 text-red-400 hover:bg-red-500/10 hover:border-red-500 active:scale-95 transition-all duration-150 rounded flex items-center gap-2 shadow-[0_0_15px_rgba(239,68,68,0.1)]"
           >
-            <FileText className="w-4 h-4" />
-            Download PDF
-          </Button>
+            <FileText className="w-4 h-4 text-red-400" />
+            <span>Download PDF</span>
+          </button>
         </div>
       )}
     </div>

@@ -112,6 +112,21 @@ export function TeamManager({
     });
   };
 
+  const team = myMembership?.team;
+  const isLeader = Boolean(team && team.leaderId === currentUser?.id);
+
+  // Smart Auto-refresh: Only refresh when the user switches back to this tab
+  useEffect(() => {
+    if (!isLeader) return;
+    
+    const handleFocus = () => {
+      router.refresh();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [isLeader, router]);
+
   // Check if registration is active (controlled by Admin)
   const isClosed = !challenge.isActive;
 
@@ -141,26 +156,12 @@ export function TeamManager({
   }
 
   // 2. User IS in a team
-  const team = myMembership.team;
-  const isLeader = team.leaderId === currentUser.id;
   const approvedMembers = team.members.filter(
     (m: any) => m.status === "APPROVED",
   );
   const pendingMembers = team.members.filter(
     (m: any) => m.status === "PENDING",
   );
-
-  // Smart Auto-refresh: Only refresh when the user switches back to this tab
-  useEffect(() => {
-    if (!isLeader) return;
-    
-    const handleFocus = () => {
-      router.refresh();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [isLeader, router]);
 
   return (
     <div className="space-y-8">
