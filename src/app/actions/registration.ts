@@ -214,9 +214,7 @@ export async function getRegistrations(
   }
 
   try {
-    const where: any = {
-      event: { isActive: true }, // Exclude soft-deleted events
-    };
+    const where: any = {};
     
     if (eventId && eventId !== "all") {
       where.eventId = eventId;
@@ -420,9 +418,7 @@ export async function getRegistrationsForExport(
   }
 
   try {
-    const where: any = {
-      event: { isActive: true }, 
-    };
+    const where: any = {};
     
     if (eventId && eventId !== "all") {
       where.eventId = eventId;
