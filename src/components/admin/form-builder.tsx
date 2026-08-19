@@ -228,15 +228,30 @@ function SortableFieldItem({
 }
 
 export function FormBuilder({ onChange, initialFields = [] }: FormBuilderProps) {
-  // Ensure default fields are always present at the top
+  // Ensure default fields are present while preserving drag-and-drop order
   const mergeWithDefaults = (incoming: FormFieldConfig[]): FormFieldConfig[] => {
-    const defaults = DEFAULT_FIELDS.map(df => {
-      // Check if there's a matching existing field (by locked ID or prefixed ID)
-      const existing = incoming.find(f => f.id === df.id || f.id.startsWith(`${df.id}_`));
-      return existing ? { ...existing, locked: true } : { ...df };
+    if (!incoming || incoming.length === 0) {
+      return DEFAULT_FIELDS.map(df => ({ ...df, locked: true }));
+    }
+
+    // Sort incoming by order property if available
+    const sortedIncoming = [...incoming].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    // Mark default fields as locked while preserving their position
+    const result = sortedIncoming.map(f => {
+      const isDefault = DEFAULT_FIELDS.some(df => f.id === df.id || f.id.startsWith(`${df.id}_`));
+      return isDefault ? { ...f, locked: true } : f;
     });
-    const custom = incoming.filter(f => !DEFAULT_FIELDS.some(df => f.id === df.id || f.id.startsWith(`${df.id}_`)));
-    return [...defaults, ...custom];
+
+    // Append any missing default fields if not present
+    DEFAULT_FIELDS.forEach(df => {
+      const exists = result.some(f => f.id === df.id || f.id.startsWith(`${df.id}_`));
+      if (!exists) {
+        result.push({ ...df, order: result.length, locked: true });
+      }
+    });
+
+    return result.map((item, idx) => ({ ...item, order: idx }));
   }
 
   const [fields, setFields] = useState<FormFieldConfig[]>(mergeWithDefaults(initialFields))
@@ -266,7 +281,7 @@ export function FormBuilder({ onChange, initialFields = [] }: FormBuilderProps) 
 
   const removeField = (id: string) => {
     // Prevent removing locked/default fields
-    if (DEFAULT_FIELDS.some(df => df.id === id)) return;
+    if (DEFAULT_FIELDS.some(df => df.id === id || id.startsWith(`${df.id}_`))) return;
     setFields(fields.filter((f) => f.id !== id))
   }
 

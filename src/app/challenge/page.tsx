@@ -287,7 +287,9 @@ export default async function ChallengeLandingPage() {
                         <Calendar className="w-4 h-4 text-red-400 shrink-0" />
                         <span className="truncate">
                           {formatThaiDate(event.startDate)}
-                          {event.endDate && event.endDate !== event.startDate
+                          {event.endDate &&
+                          formatThaiDate(event.endDate) !==
+                            formatThaiDate(event.startDate)
                             ? ` - ${formatThaiDate(event.endDate)}`
                             : ""}
                         </span>
