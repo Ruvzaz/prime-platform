@@ -281,7 +281,7 @@ export async function getEvents() {
 
   try {
     const events = await prisma.event.findMany({
-      orderBy: { startDate: "desc" },
+      orderBy: [{ order: "asc" }, { startDate: "desc" }],
       include: {
         _count: {
           select: { registrations: true }
@@ -292,6 +292,31 @@ export async function getEvents() {
   } catch (error) {
     console.error("Failed to fetch events:", error);
     return [];
+  }
+}
+
+export async function updateEventsOrder(orderedIds: string[]) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    return { success: false, message: "Unauthorized" };
+  }
+
+  try {
+    await prisma.$transaction(
+      orderedIds.map((id, index) =>
+        prisma.event.update({
+          where: { id },
+          data: { order: index },
+        })
+      )
+    );
+
+    revalidatePath("/admin/events");
+    revalidatePath("/challenge");
+    return { success: true, message: "อัปเดตลำดับกิจกรรมสำเร็จ" };
+  } catch (error) {
+    console.error("Failed to update events order:", error);
+    return { success: false, message: "Failed to update events order" };
   }
 }
 
