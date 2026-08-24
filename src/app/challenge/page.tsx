@@ -65,7 +65,7 @@ export default async function ChallengeLandingPage() {
       },
     }),
     prisma.event.findMany({
-      where: { isActive: true },
+      where: { isActive: true, showOnChallenge: true },
       orderBy: [{ order: "asc" }, { startDate: "desc" }],
       include: {
         _count: {

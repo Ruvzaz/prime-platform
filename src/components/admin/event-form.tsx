@@ -31,6 +31,7 @@ interface EventFormProps {
     sendEmail?: boolean
     generateQr?: boolean
     isActive?: boolean
+    showOnChallenge?: boolean
     formFields: FormFieldConfig[]
   }
 }
@@ -175,6 +176,20 @@ export function EventForm({ action, initialData }: EventFormProps) {
                 id="isActive"
                 name="isActive"
                 defaultChecked={initialData?.isActive ?? true}
+              />
+            </div>
+
+            <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-background/50">
+              <div className="space-y-0.5">
+                <Label htmlFor="showOnChallenge" className="text-sm font-semibold">แสดงในหน้า /challenge</Label>
+                <p className="text-xs text-muted-foreground">
+                  แสดงการ์ดกิจกรรมนี้ในหน้ารวมรับสมัคร Challenge Portal
+                </p>
+              </div>
+              <Switch
+                id="showOnChallenge"
+                name="showOnChallenge"
+                defaultChecked={initialData?.showOnChallenge ?? true}
               />
             </div>
 

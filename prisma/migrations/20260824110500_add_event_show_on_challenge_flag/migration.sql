@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Event" ADD COLUMN IF NOT EXISTS "showOnChallenge" BOOLEAN NOT NULL DEFAULT true;

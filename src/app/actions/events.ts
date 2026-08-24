@@ -22,6 +22,7 @@ const eventSchema = z.object({
   sendEmail: z.boolean().default(true),
   generateQr: z.boolean().default(true),
   isActive: z.boolean().default(true),
+  showOnChallenge: z.boolean().default(true),
 });
 
 const formFieldSchema = z.array(z.object({
@@ -61,6 +62,7 @@ export async function createEvent(prevState: any, formData: FormData): Promise<A
       sendEmail: formData.get("sendEmail") === "on",
       generateQr: formData.get("generateQr") === "on",
       isActive: formData.get("isActive") === "on",
+      showOnChallenge: formData.get("showOnChallenge") === "on",
     };
 
     const data = eventSchema.parse(rawData);
@@ -88,6 +90,7 @@ export async function createEvent(prevState: any, formData: FormData): Promise<A
         sendEmail: data.sendEmail,
         generateQr: data.generateQr,
         isActive: data.isActive,
+        showOnChallenge: data.showOnChallenge,
         organizer: {
             connect: { id: session.user.id }
         },
@@ -149,6 +152,7 @@ export async function updateEvent(prevState: any, formData: FormData) {
     sendEmail: formData.get("sendEmail") === "on",
     generateQr: formData.get("generateQr") === "on",
     isActive: formData.get("isActive") === "on",
+    showOnChallenge: formData.get("showOnChallenge") === "on",
   };
 
   const parsedData = eventSchema.safeParse(rawData);
@@ -194,6 +198,7 @@ export async function updateEvent(prevState: any, formData: FormData) {
                 sendEmail: data.sendEmail,
                 generateQr: data.generateQr,
                 isActive: data.isActive,
+                showOnChallenge: data.showOnChallenge,
             }
         });
 
@@ -360,6 +365,26 @@ export async function toggleEventStatus(eventId: string, currentStatus: boolean)
   } catch (error) {
     console.error("Failed to toggle event status:", error);
     return { success: false, message: "Failed to update status" };
+  }
+}
+
+export async function toggleEventShowOnChallenge(eventId: string, currentStatus: boolean) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== 'ADMIN') {
+      return { success: false, message: "Unauthorized" };
+  }
+
+  try {
+    await prisma.event.update({
+      where: { id: eventId },
+      data: { showOnChallenge: !currentStatus }
+    });
+    revalidatePath("/admin/events");
+    revalidatePath("/challenge");
+    return { success: true, message: "Challenge visibility updated" };
+  } catch (error) {
+    console.error("Failed to toggle showOnChallenge:", error);
+    return { success: false, message: "Failed to update visibility" };
   }
 }
 

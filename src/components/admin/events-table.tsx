@@ -23,7 +23,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { deleteEvents, toggleEventStatus, updateEventsOrder } from "@/app/actions/events"
+import { deleteEvents, toggleEventStatus, toggleEventShowOnChallenge, updateEventsOrder } from "@/app/actions/events"
 import { useRouter } from "next/navigation"
 import { Switch } from "@/components/ui/switch"
 import {
@@ -50,6 +50,7 @@ interface Event {
   title: string
   slug: string
   isActive: boolean
+  showOnChallenge: boolean
   startDate: Date
   location: string | null
   _count: { registrations: number }
@@ -65,6 +66,7 @@ function SortableEventRow({
   toggleSelect,
   togglingId,
   handleToggleStatus,
+  handleToggleChallengeVisibility,
   openDeleteDialog,
 }: {
   event: Event
@@ -72,6 +74,7 @@ function SortableEventRow({
   toggleSelect: (id: string) => void
   togglingId: string | null
   handleToggleStatus: (id: string, currentStatus: boolean) => void
+  handleToggleChallengeVisibility: (id: string, currentStatus: boolean) => void
   openDeleteDialog: (ids: string[]) => void
 }) {
   const {
@@ -124,26 +127,39 @@ function SortableEventRow({
         </div>
       </TableCell>
       <TableCell>
-        <div className="flex items-center gap-3">
-          <Switch
-            checked={event.isActive}
-            disabled={togglingId === event.id}
-            onCheckedChange={() => handleToggleStatus(event.id, event.isActive)}
-            className="data-[state=checked]:bg-emerald-500 shadow-sm"
-          />
-          <Badge
-            variant="outline"
-            className={`
-              rounded-full px-3 py-0.5 border-none shadow-sm font-bold text-[10px]
-              ${
-                event.isActive
-                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400"
-                  : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
-              }
-            `}
-          >
-            {event.isActive ? "Active" : "Closed"}
-          </Badge>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={event.isActive}
+              disabled={togglingId === event.id}
+              onCheckedChange={() => handleToggleStatus(event.id, event.isActive)}
+              className="data-[state=checked]:bg-emerald-500 shadow-sm"
+            />
+            <Badge
+              variant="outline"
+              className={`
+                rounded-full px-2.5 py-0.5 border-none shadow-sm font-bold text-[10px]
+                ${
+                  event.isActive
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400"
+                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                }
+              `}
+            >
+              {event.isActive ? "Active" : "Closed"}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch
+              checked={event.showOnChallenge}
+              disabled={togglingId === event.id}
+              onCheckedChange={() => handleToggleChallengeVisibility(event.id, event.showOnChallenge)}
+              className="data-[state=checked]:bg-red-500 shadow-sm scale-90"
+            />
+            <span className="text-[10px] font-bold text-muted-foreground whitespace-nowrap">
+              {event.showOnChallenge ? "Show /challenge" : "Hidden"}
+            </span>
+          </div>
         </div>
       </TableCell>
       <TableCell className="text-slate-600 dark:text-slate-400 font-medium">
@@ -296,6 +312,13 @@ export function EventsTable({ initialEvents }: EventsTableProps) {
     router.refresh()
   }
 
+  const handleToggleChallengeVisibility = async (eventId: string, currentStatus: boolean) => {
+    setTogglingId(eventId)
+    await toggleEventShowOnChallenge(eventId, currentStatus)
+    setTogglingId(null)
+    router.refresh()
+  }
+
   return (
     <>
       <div className="relative">
@@ -382,6 +405,7 @@ export function EventsTable({ initialEvents }: EventsTableProps) {
                       toggleSelect={toggleSelect}
                       togglingId={togglingId}
                       handleToggleStatus={handleToggleStatus}
+                      handleToggleChallengeVisibility={handleToggleChallengeVisibility}
                       openDeleteDialog={openDeleteDialog}
                     />
                   ))}
