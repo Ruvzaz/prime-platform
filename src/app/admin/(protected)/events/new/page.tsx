@@ -1,10 +1,13 @@
 import { EventForm } from "@/components/admin/event-form"
 import { createEvent } from "@/app/actions/events"
+import { getAvailableEmailAccounts } from "@/lib/email"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 
 export default function NewEventPage() {
+  const availableSenders = getAvailableEmailAccounts()
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -21,7 +24,7 @@ export default function NewEventPage() {
         </div>
       </div>
 
-      <EventForm action={createEvent} />
+      <EventForm action={createEvent} availableSenders={availableSenders} />
     </div>
   )
 }

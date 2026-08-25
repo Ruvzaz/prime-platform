@@ -15,6 +15,7 @@ import { AdminFileUpload } from "@/components/admin/admin-file-upload"
 
 interface EventFormProps {
   action: (prevState: any, payload: FormData) => Promise<any> 
+  availableSenders?: string[]
   initialData?: {
     id?: string
     title: string
@@ -49,9 +50,16 @@ function SubmitButton({ isEditing }: { isEditing: boolean }) {
 
 
 
-export function EventForm({ action, initialData }: EventFormProps) {
+export function EventForm({ action, availableSenders = [], initialData }: EventFormProps) {
   const [formFields, setFormFields] = useState<FormFieldConfig[]>(initialData?.formFields || [])
   const isEditing = !!initialData?.id
+  
+  const sendersList = Array.from(
+    new Set([
+      ...availableSenders,
+      ...(initialData?.senderEmail ? [initialData.senderEmail] : []),
+    ])
+  ).filter(Boolean)
   
   // Initialize state for useActionState
   const initialState = { message: "", errors: {} };
@@ -241,8 +249,11 @@ export function EventForm({ action, initialData }: EventFormProps) {
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="">อัตโนมัติ (Default / Auto Fallback)</option>
-                    <option value="nongnamcha7734@gmail.com">nongnamcha7734@gmail.com</option>
-                    <option value="cybertoptalent2025@gmail.com">cybertoptalent2025@gmail.com</option>
+                    {sendersList.map((email) => (
+                      <option key={email} value={email}>
+                        {email}
+                      </option>
+                    ))}
                   </select>
                   <p className="text-xs text-muted-foreground">เลือกบัญชีอีเมลที่จะใช้เป็นผู้ส่งสำหรับกิจกรรมนี้ (หากไม่เลือก ระบบจะใช้บัญชีหลักและสำรองให้อัตโนมัติ)</p>
               </div>
