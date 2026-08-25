@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { EventForm } from "@/components/admin/event-form"
 import { updateEvent } from "@/app/actions/events"
+import { getAvailableEmailAccounts } from "@/lib/email"
 
 
 export default async function EditEventPage({
@@ -28,9 +29,7 @@ export default async function EditEventPage({
     notFound()
   }
 
-  // Wrapper to pass properly typings to useActionState if needed, 
-  // OR we can use the action directly in the form since it's a server action
-  // But EventForm is a CLIENT component, so we should pass the action.
+  const availableSenders = getAvailableEmailAccounts()
   
   // Transform data to match FormFieldConfig (ensure types match)
   const formattedEvent = {
@@ -50,13 +49,8 @@ export default async function EditEventPage({
           Update event details and registration form.
         </p>
       </div>
-      
-      {/* We pass the server action directly. Next.js handles the binding. */}
-      {/* However, useActionState is usually hooked inside the component. */}
-      {/* EventForm handles the form UI. We do need to handle the ACTION dispatch. */}
-      {/* Since EventForm is client, we can pass `updateEvent` as a prop. */}
-      
-      <EventForm action={updateEvent} initialData={formattedEvent} />
+
+      <EventForm action={updateEvent} availableSenders={availableSenders} initialData={formattedEvent} />
     </div>
   )
 }
