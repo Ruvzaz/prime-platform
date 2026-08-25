@@ -17,10 +17,27 @@ function getEmailAccounts() {
 const emailAccounts = getEmailAccounts();
 let currentAccountIndex = 0; // Remembers the currently active working account
 
-async function sendMailWithFallback(mailOptions: any) {
+export function getAvailableEmailAccounts(): string[] {
+  return emailAccounts.map(a => a.user);
+}
+
+async function sendMailWithFallback(mailOptions: any, preferredSenderEmail?: string | null) {
   if (emailAccounts.length === 0) {
     console.warn("No Gmail credentials configured. Skipping email.");
     throw new Error("Missing Gmail credentials");
+  }
+
+  // Determine account order to attempt
+  let orderedAccounts = [...emailAccounts];
+  if (preferredSenderEmail) {
+    const preferredIndex = emailAccounts.findIndex(a => a.user.toLowerCase() === preferredSenderEmail.trim().toLowerCase());
+    if (preferredIndex !== -1) {
+      const preferredAcc = emailAccounts[preferredIndex];
+      orderedAccounts = [preferredAcc, ...emailAccounts.filter((_, idx) => idx !== preferredIndex)];
+      console.log(`📧 Preferred sender account set: ${preferredAcc.user}`);
+    } else {
+      console.warn(`⚠️ Preferred sender email "${preferredSenderEmail}" is not found in configured accounts:`, emailAccounts.map(a => a.user));
+    }
   }
 
   let lastError;
@@ -28,8 +45,8 @@ async function sendMailWithFallback(mailOptions: any) {
   const fromName = originalFrom.split('<')[0].trim(); // Extract display name
 
   // Try each available account once
-  for (let attempt = 0; attempt < emailAccounts.length; attempt++) {
-    const account = emailAccounts[currentAccountIndex];
+  for (let attempt = 0; attempt < orderedAccounts.length; attempt++) {
+    const account = orderedAccounts[attempt];
     
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -65,11 +82,8 @@ async function sendMailWithFallback(mailOptions: any) {
       console.warn(`⚠️ Failed to send email via ${account.user}:`, error.message);
       lastError = error;
       
-      // If failed, immediately switch to the next backup account
-      currentAccountIndex = (currentAccountIndex + 1) % emailAccounts.length;
-      
-      if (attempt < emailAccounts.length - 1) {
-        console.log(`🔄 Switching to backup email account: ${emailAccounts[currentAccountIndex].user}`);
+      if (attempt < orderedAccounts.length - 1) {
+        console.log(`🔄 Switching to backup email account: ${orderedAccounts[attempt + 1].user}`);
       }
     }
   }
@@ -100,7 +114,8 @@ export const sendRegistrationEmail = async (
   customSubject?: string | null,
   customBody?: string | null,
   attachmentUrl?: string | null,
-  generateQr?: boolean
+  generateQr?: boolean,
+  senderEmail?: string | null
 ) => {
   try {
     const qrImageUrl = `https://quickchart.io/qr?text=${encodeURIComponent(refCode)}&size=200&margin=2`;
@@ -160,7 +175,7 @@ export const sendRegistrationEmail = async (
           <p><strong>Date:</strong> ${eventDate.toLocaleDateString()} at ${eventDate.toLocaleTimeString()}</p>
         </div>
       `,
-    });
+    }, senderEmail);
     return { success: true, messageId: info.messageId };
   } catch (error) {
     console.error("Failed to send confirmation email:", error);

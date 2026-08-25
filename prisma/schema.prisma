@@ -63,6 +63,7 @@ model Event {
   bannerUrl   String?
 
   // Custom Email configurations
+  senderEmail        String?
   emailSubject       String?
   emailBody          String?
   emailAttachmentUrl String?

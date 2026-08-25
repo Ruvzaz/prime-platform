@@ -28,6 +28,7 @@ interface EventFormProps {
     emailSubject?: string | null
     emailBody?: string | null
     emailAttachmentUrl?: string | null
+    senderEmail?: string | null
     sendEmail?: boolean
     generateQr?: boolean
     isActive?: boolean
@@ -229,6 +230,21 @@ export function EventForm({ action, initialData }: EventFormProps) {
                       defaultChecked={initialData?.generateQr ?? true}
                     />
                   </div>
+              </div>
+
+              <div className="space-y-2">
+                  <Label htmlFor="senderEmail">เลือกอีเมลผู้ส่ง (Sender Email Account)</Label>
+                  <select
+                    id="senderEmail"
+                    name="senderEmail"
+                    defaultValue={state?.data?.senderEmail ?? initialData?.senderEmail ?? ""}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">อัตโนมัติ (Default / Auto Fallback)</option>
+                    <option value="nongnamcha7734@gmail.com">nongnamcha7734@gmail.com</option>
+                    <option value="cybertoptalent2025@gmail.com">cybertoptalent2025@gmail.com</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground">เลือกบัญชีอีเมลที่จะใช้เป็นผู้ส่งสำหรับกิจกรรมนี้ (หากไม่เลือก ระบบจะใช้บัญชีหลักและสำรองให้อัตโนมัติ)</p>
               </div>
 
               <div className="space-y-2">
