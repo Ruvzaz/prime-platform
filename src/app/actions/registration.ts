@@ -111,7 +111,8 @@ async function sendConfirmationEmailSafe(email: string, name: string, event: any
             event.emailSubject, 
             event.emailBody, 
             event.emailAttachmentUrl,
-            event.generateQr
+            event.generateQr,
+            event.senderEmail
         );
         return true;
     } catch (e: any) {
@@ -147,7 +148,7 @@ export async function registerAttendee(prevState: any, formData: FormData): Prom
       select: { 
           id: true, title: true, startDate: true, emailSubject: true, 
           emailBody: true, emailAttachmentUrl: true, formFields: true,
-          sendEmail: true, generateQr: true
+          sendEmail: true, generateQr: true, senderEmail: true
       },
     });
 
