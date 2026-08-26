@@ -24,6 +24,7 @@ const eventSchema = z.object({
   generateQr: z.boolean().default(true),
   isActive: z.boolean().default(true),
   showOnChallenge: z.boolean().default(true),
+  showEventMeta: z.boolean().default(true),
 });
 
 const formFieldSchema = z.array(z.object({
@@ -65,6 +66,7 @@ export async function createEvent(prevState: any, formData: FormData): Promise<A
       generateQr: formData.get("generateQr") === "on",
       isActive: formData.get("isActive") === "on",
       showOnChallenge: formData.get("showOnChallenge") === "on",
+      showEventMeta: formData.get("showEventMeta") === "on",
     };
 
     const data = eventSchema.parse(rawData);
@@ -94,6 +96,7 @@ export async function createEvent(prevState: any, formData: FormData): Promise<A
         generateQr: data.generateQr,
         isActive: data.isActive,
         showOnChallenge: data.showOnChallenge,
+        showEventMeta: data.showEventMeta,
         organizer: {
             connect: { id: session.user.id }
         },
@@ -157,6 +160,7 @@ export async function updateEvent(prevState: any, formData: FormData) {
     generateQr: formData.get("generateQr") === "on",
     isActive: formData.get("isActive") === "on",
     showOnChallenge: formData.get("showOnChallenge") === "on",
+    showEventMeta: formData.get("showEventMeta") === "on",
   };
 
   const parsedData = eventSchema.safeParse(rawData);
@@ -204,6 +208,7 @@ export async function updateEvent(prevState: any, formData: FormData) {
                 generateQr: data.generateQr,
                 isActive: data.isActive,
                 showOnChallenge: data.showOnChallenge,
+                showEventMeta: data.showEventMeta,
             }
         });
 

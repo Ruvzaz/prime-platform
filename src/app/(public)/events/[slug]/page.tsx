@@ -62,22 +62,24 @@ export default async function EventRegistrationPage({
             {event.title}
           </h1>
 
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/50 text-xs font-medium bg-muted/50 text-foreground">
-              <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-              <span>{new Date(event.startDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-            </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/50 text-xs font-medium bg-muted/50 text-foreground">
-              <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-              <span>{new Date(event.startDate).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>
-            </div>
-            {event.location && (
+          {event.showEventMeta !== false && (
+            <div className="flex flex-wrap items-center gap-2.5">
               <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/50 text-xs font-medium bg-muted/50 text-foreground">
-                <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
-                <span>{event.location}</span>
+                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                <span>{new Date(event.startDate).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
               </div>
-            )}
-          </div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/50 text-xs font-medium bg-muted/50 text-foreground">
+                <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                <span>{new Date(event.startDate).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+              {event.location && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/50 text-xs font-medium bg-muted/50 text-foreground">
+                  <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span>{event.location}</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {event.description && (
             <p className="mt-6 text-muted-foreground text-sm leading-relaxed border-l-2 border-primary/30 pl-4 py-1">
