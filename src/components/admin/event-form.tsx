@@ -34,6 +34,7 @@ interface EventFormProps {
     generateQr?: boolean
     isActive?: boolean
     showOnChallenge?: boolean
+    showEventMeta?: boolean
     formFields: FormFieldConfig[]
   }
 }
@@ -199,6 +200,20 @@ export function EventForm({ action, availableSenders = [], initialData }: EventF
                 id="showOnChallenge"
                 name="showOnChallenge"
                 defaultChecked={initialData?.showOnChallenge ?? true}
+              />
+            </div>
+
+            <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-background/50">
+              <div className="space-y-0.5">
+                <Label htmlFor="showEventMeta" className="text-sm font-semibold">แสดง วัน เวลา และสถานที่ (Date, Time & Location)</Label>
+                <p className="text-xs text-muted-foreground">
+                  แสดงแท็ก วัน เวลา สถานที่ บนหน้าลงทะเบียน (ปิดหากกิจกรรมมีหลายรอบหรือไม่ต้องการระบุวันเวลาสถานที่บนหัวข้อ)
+                </p>
+              </div>
+              <Switch
+                id="showEventMeta"
+                name="showEventMeta"
+                defaultChecked={initialData?.showEventMeta ?? true}
               />
             </div>
 

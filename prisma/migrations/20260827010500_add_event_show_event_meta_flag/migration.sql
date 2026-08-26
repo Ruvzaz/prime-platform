@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Event" ADD COLUMN IF NOT EXISTS "showEventMeta" BOOLEAN NOT NULL DEFAULT true;
