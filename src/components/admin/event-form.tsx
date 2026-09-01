@@ -35,6 +35,7 @@ interface EventFormProps {
     isActive?: boolean
     showOnChallenge?: boolean
     showEventMeta?: boolean
+    hasCertificate?: boolean
     formFields: FormFieldConfig[]
   }
 }
@@ -251,6 +252,20 @@ export function EventForm({ action, availableSenders = [], initialData }: EventF
                       id="generateQr"
                       name="generateQr"
                       defaultChecked={initialData?.generateQr ?? true}
+                    />
+                  </div>
+
+                  <div className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-background/50 col-span-1 md:col-span-2">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="hasCertificate" className="text-sm font-semibold">แจกใบประกาศนียบัตร (E-Certificate)</Label>
+                      <p className="text-xs text-muted-foreground">
+                        เปิด/ปิด การแจกและรับใบประกาศสำหรับกิจกรรมนี้ (หากปิด กิจกรรมนี้จะไม่ปรากฏในหน้ารับใบประกาศ)
+                      </p>
+                    </div>
+                    <Switch
+                      id="hasCertificate"
+                      name="hasCertificate"
+                      defaultChecked={initialData?.hasCertificate ?? true}
                     />
                   </div>
               </div>

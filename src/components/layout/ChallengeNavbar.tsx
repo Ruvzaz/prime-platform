@@ -134,7 +134,7 @@ export async function ChallengeNavbar() {
                     asChild
                     className="focus:bg-red-500/10 focus:text-red-500 cursor-pointer font-mono text-sm uppercase tracking-wider"
                   >
-                    <Link href="/certification">
+                    <Link href="/certification/challenge">
                       <Award className="w-4 h-4 mr-2" />
                       <span>My Certificates</span>
                     </Link>

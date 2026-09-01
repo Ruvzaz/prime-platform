@@ -73,18 +73,23 @@ model Event {
   isActive        Boolean  @default(true)
   showOnChallenge Boolean  @default(true)
   showEventMeta   Boolean  @default(true)
+  hasCertificate  Boolean  @default(true)
   order           Int      @default(0)
   createdAt       DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt       DateTime @updatedAt
 
   organizerId String
   organizer   User   @relation(fields: [organizerId], references: [id])
+
+  certTemplateId String?
+  certTemplate   CertTemplate? @relation(fields: [certTemplateId], references: [id], onDelete: SetNull)
 
   formFields    FormField[]
   registrations Registration[]
   liveConfig    LiveConfig?
   activityLogs  ActivityLog[]
   certificates  Certificate[]
+  certTokens    EventCertToken[]
 }
 
 model LiveConfig {
@@ -335,4 +340,35 @@ model Certificate {
   @@index([email])
   @@index([certCode])
 }
+
+model EventCertToken {
+  id          String   @id @default(cuid())
+  token       String   @unique // 6-character unique claim token e.g. "A7K9X2"
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  isUsed      Boolean  @default(false)
+  claimedName String?  // Recipient's full name entered when claimed
+  claimedAt   DateTime?
+
+  certCode    String?  // Generated Certificate code when claimed
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([token])
+  @@index([eventId])
+}
+
+model CertTemplate {
+  id                 String   @id @default(cuid())
+  name               String
+  backgroundImageUrl String
+  layoutConfig       Json
+  isDefault          Boolean  @default(false)
+  events             Event[]
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
 

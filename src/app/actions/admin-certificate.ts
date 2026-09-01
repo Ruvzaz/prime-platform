@@ -20,7 +20,7 @@ export async function toggleCertificateStatus(certId: string, currentStatus: str
       data: { status: newStatus },
     });
     revalidatePath('/admin/certificates');
-    revalidatePath('/certification');
+    revalidatePath('/certification/challenge');
     return { success: true, newStatus };
   } catch (error: any) {
     console.error("Toggle Cert Status Error:", error);
@@ -35,7 +35,7 @@ export async function adminDeleteCertificate(certId: string) {
       where: { id: certId },
     });
     revalidatePath('/admin/certificates');
-    revalidatePath('/certification');
+    revalidatePath('/certification/challenge');
     return { success: true };
   } catch (error: any) {
     console.error("Delete Cert Error:", error);
@@ -110,7 +110,7 @@ export async function adminCreateCertificate(data: {
     });
 
     revalidatePath('/admin/certificates');
-    revalidatePath('/certification');
+    revalidatePath('/certification/challenge');
     return { success: true, certificate: cert };
   } catch (error: any) {
     console.error("Create Certificate Error:", error);

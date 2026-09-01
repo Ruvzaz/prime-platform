@@ -16,6 +16,7 @@ import {
   RefreshCw,
   Loader2,
   ExternalLink,
+  LayoutTemplate,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { toggleCertificateStatus, adminDeleteCertificate, adminCreateCertificate } from '@/app/actions/admin-certificate';
 import { ImportCertModal } from '../../challenges/components/ImportCertModal';
+import { EventTokensModal } from './EventTokensModal';
 import * as XLSX from 'xlsx';
 
 export function CertificatesClient({
@@ -181,6 +183,13 @@ export function CertificatesClient({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <Link href="/admin/certificates/templates">
+            <Button variant="outline" className="gap-2 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 font-bold">
+              <LayoutTemplate className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              จัดการแม่แบบ & ลากวางพิกัด (Templates Editor)
+            </Button>
+          </Link>
+          <EventTokensModal events={events} />
           <ImportCertModal />
 
           {/* Issue Single Certificate Modal */}
