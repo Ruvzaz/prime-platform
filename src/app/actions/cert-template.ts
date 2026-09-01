@@ -15,6 +15,9 @@ export async function getCertTemplates() {
         events: {
           select: { id: true, title: true, slug: true },
         },
+        challenges: {
+          select: { id: true, name: true, slug: true },
+        },
       },
     });
     return { success: true, templates };
@@ -34,6 +37,9 @@ export async function getCertTemplateById(id: string) {
       include: {
         events: {
           select: { id: true, title: true, slug: true },
+        },
+        challenges: {
+          select: { id: true, name: true, slug: true },
         },
       },
     });
