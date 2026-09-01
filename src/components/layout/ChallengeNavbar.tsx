@@ -90,6 +90,25 @@ export async function ChallengeNavbar() {
 
         {session?.user ? (
           <div className="flex items-center gap-2 sm:gap-4">
+            {/* Dedicated E-Certificates Navbar Button */}
+            <Link href="/certification/challenge">
+              <div className="flex items-center gap-3 px-3 py-1.5 rounded bg-[#161c21] border border-[#3b494b] cursor-pointer hover:border-red-500/50 transition-colors">
+                <div className="flex items-center justify-center w-10 h-10 rounded bg-red-500/10 shrink-0 text-red-500">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div className="hidden sm:block text-right pr-2">
+                  <p className="font-bold text-sm leading-none text-[#dee3e9] uppercase tracking-wide">
+                    E-Certificates
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-1 justify-end">
+                    <p className="text-[10px] text-[#849495] uppercase font-mono tracking-widest">
+                      My Certs
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <div className="flex items-center gap-3 px-3 py-1.5 rounded bg-[#161c21] border border-[#3b494b] cursor-pointer hover:border-red-500/50 transition-colors">
@@ -135,15 +154,6 @@ export async function ChallengeNavbar() {
                   <Link href="/challenge/profile">
                     <UserCog className="w-4 h-4 mr-2" />
                     <span>My Profile</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  asChild
-                  className="focus:bg-red-500/10 focus:text-red-500 cursor-pointer font-mono text-sm uppercase tracking-wider"
-                >
-                  <Link href="/certification/challenge">
-                    <Award className="w-4 h-4 mr-2" />
-                    <span>My Certificates</span>
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
