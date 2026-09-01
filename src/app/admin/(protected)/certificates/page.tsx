@@ -29,11 +29,18 @@ export default async function AdminCertificatesPage() {
     orderBy: { createdAt: "desc" },
   });
 
+  const users = await prisma.user.findMany({
+    select: { id: true, name: true, email: true, username: true },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
+
   return (
     <CertificatesClient
       certificates={certificates}
       challenges={challenges}
       events={events}
+      users={users}
     />
   );
 }

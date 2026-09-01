@@ -48,10 +48,12 @@ export function CertificatesClient({
   certificates,
   challenges,
   events,
+  users = [],
 }: {
   certificates: any[];
   challenges: any[];
   events: any[];
+  users?: any[];
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('ALL'); // ALL, CHALLENGE, EVENT
@@ -61,6 +63,7 @@ export function CertificatesClient({
   // Single cert modal state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createType, setCreateType] = useState<'CHALLENGE' | 'EVENT'>('CHALLENGE');
+  const [createUserId, setCreateUserId] = useState('');
   const [createEmail, setCreateEmail] = useState('');
   const [createName, setCreateName] = useState('');
   const [createChallengeId, setCreateChallengeId] = useState('');
@@ -125,6 +128,7 @@ export function CertificatesClient({
       email: createEmail,
       recipientFullName: createName,
       type: createType,
+      userId: createUserId || undefined,
       challengeId: createChallengeId || undefined,
       eventId: createEventId || undefined,
       issueDate: createIssueDate,
@@ -136,6 +140,7 @@ export function CertificatesClient({
     } else {
       toast.success('Certificate issued successfully!');
       setIsCreateOpen(false);
+      setCreateUserId('');
       setCreateEmail('');
       setCreateName('');
     }
@@ -269,6 +274,36 @@ export function CertificatesClient({
                         {events.map((e) => (
                           <SelectItem key={e.id} value={e.id}>
                             {e.title} (ID: {e.id.substring(0, 8)}...)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {users.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Select Target User (เลือกผู้ใช้ในระบบเพื่อระบุบัญชีอัตโนมัติ)
+                    </label>
+                    <Select
+                      value={createUserId}
+                      onValueChange={(val) => {
+                        setCreateUserId(val);
+                        const selected = users.find((u) => u.id === val);
+                        if (selected) {
+                          if (selected.email) setCreateEmail(selected.email);
+                          if (selected.name || selected.username) setCreateName(selected.name || selected.username);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="-- เลือกระบุผู้ใช้ที่มีในระบบ (หรือพิมพ์เองด้านล่าง) --" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {users.map((u) => (
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.name || u.username} ({u.email || "No Email"})
                           </SelectItem>
                         ))}
                       </SelectContent>

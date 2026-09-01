@@ -15,19 +15,36 @@ export default async function ChallengeUserCertificationPage() {
 
   const dbUser = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { name: true, email: true },
+    select: { name: true, email: true, username: true },
   });
 
   const userEmail = (dbUser?.email || session.user.email)?.toLowerCase().trim();
   const userName = (dbUser?.name || session.user.name)?.trim();
+  const username = dbUser?.username?.trim();
+  const cleanUsername = userEmail && userEmail.includes("@") ? userEmail.split("@")[0] : userEmail;
 
-  // Find user details & certificates issued to their email, userId, or recipient name
+  // Fetch user's approved team memberships to display team name and match challenge certificates
+  const userTeams = await prisma.teamMember.findMany({
+    where: {
+      userId: session.user.id,
+      status: "APPROVED",
+    },
+    include: { team: true },
+  });
+
+  const userChallengeIds = userTeams.map((tm) => tm.challengeId).filter(Boolean);
+  const teamMap = new Map(userTeams.map((tm) => [tm.challengeId, tm.team.name]));
+
+  // Find user details & certificates issued to their email, userId, recipient name, or challengeId
   const certificates = await prisma.certificate.findMany({
     where: {
       OR: [
-        ...(userEmail ? [{ email: { equals: userEmail, mode: "insensitive" as const } }] : []),
         { userId: session.user.id },
+        ...(userEmail ? [{ email: { equals: userEmail, mode: "insensitive" as const } }] : []),
+        ...(cleanUsername ? [{ email: { contains: cleanUsername, mode: "insensitive" as const } }] : []),
+        ...(username ? [{ email: { contains: username, mode: "insensitive" as const } }] : []),
         ...(userName ? [{ recipientFullName: { equals: userName, mode: "insensitive" as const } }] : []),
+        ...(userChallengeIds.length > 0 ? [{ challengeId: { in: userChallengeIds } }] : []),
       ],
       status: "ACTIVE",
     },
@@ -76,17 +93,6 @@ export default async function ChallengeUserCertificationPage() {
   const defaultTemplate = await prisma.certTemplate.findFirst({
     where: { isDefault: true },
   });
-
-  // Fetch user's approved team memberships to display team name on certificate
-  const userTeams = await prisma.teamMember.findMany({
-    where: {
-      userId: session.user.id,
-      status: "APPROVED",
-    },
-    include: { team: true },
-  });
-
-  const teamMap = new Map(userTeams.map((tm) => [tm.challengeId, tm.team.name]));
 
   return (
     <div className="min-h-screen bg-[#0e1418] text-[#dee3e9] font-sans">
