@@ -71,11 +71,12 @@ export async function POST(req: Request) {
       throw new Error(`ไม่สามารถสร้างไฟล์ในโฟลเดอร์แม่แบบได้: ${lastError?.message || "Permission denied"}`);
     }
 
-    // Return protected API route URL
-    const protectedUrl = `/api/ecert/template-image?file=${filename}`;
+    const base64DataUrl = `data:${file.type};base64,${buffer.toString("base64")}`;
+
+    // Return Base64 Data URL so template image is stored permanently in DB across Vercel serverless deployments
     return NextResponse.json({
       success: true,
-      url: protectedUrl,
+      url: base64DataUrl,
       filename,
       size: file.size,
     });
