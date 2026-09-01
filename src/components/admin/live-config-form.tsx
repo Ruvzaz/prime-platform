@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useEffect } from "react"
+import { useState, useTransition, useEffect, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -73,6 +73,17 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData, availab
     linkedEventIds: initialData?.linkedEventIds || [],
   })
 
+  const toggleLinkedEvent = (idToToggle: string) => {
+    setConfig((prev) => {
+      const current = prev.linkedEventIds || [];
+      const exists = current.includes(idToToggle);
+      const updated = exists
+        ? current.filter((id) => id !== idToToggle)
+        : [...current, idToToggle];
+      return { ...prev, linkedEventIds: updated };
+    });
+  };
+
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     setMessage(null)
@@ -119,6 +130,11 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData, availab
         sixth: rgb,
     };
   }
+
+  const bubbleColors = useMemo(
+    () => getBubbleColors(config.bubbleColor || '#4f46e5'),
+    [config.bubbleColor]
+  );
 
   return (
     <div className="flex flex-col lg:flex-row gap-8 min-h-[calc(100vh-160px)]">
@@ -342,15 +358,7 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData, availab
                           return (
                             <div
                               key={ev.id}
-                              onClick={() => {
-                                setConfig((prev) => {
-                                  const current = prev.linkedEventIds || [];
-                                  const updated = current.includes(ev.id)
-                                    ? current.filter((id) => id !== ev.id)
-                                    : [...current, ev.id];
-                                  return { ...prev, linkedEventIds: updated };
-                                });
-                              }}
+                              onClick={() => toggleLinkedEvent(ev.id)}
                               className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                                 isLinked
                                   ? "border-indigo-600 bg-indigo-50/60 shadow-sm"
@@ -363,15 +371,7 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData, availab
                               </div>
                               <Switch
                                 checked={isLinked}
-                                onCheckedChange={(val) => {
-                                  setConfig((prev) => {
-                                    const current = prev.linkedEventIds || [];
-                                    const updated = val
-                                      ? [...current.filter((id) => id !== ev.id), ev.id]
-                                      : current.filter((id) => id !== ev.id);
-                                    return { ...prev, linkedEventIds: updated };
-                                  });
-                                }}
+                                className="pointer-events-none"
                               />
                             </div>
                           );
@@ -419,7 +419,7 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData, availab
         <div className="flex-1 relative rounded-[3rem] bg-white border-8 border-white shadow-2xl overflow-hidden flex flex-col">
             <BubbleBackground 
                 className="absolute inset-0 z-10 bg-transparent"
-                colors={getBubbleColors(config.bubbleColor || '#4f46e5')}
+                colors={bubbleColors}
                 bubbleOpacity={config.bubbleOpacity ?? 0.1}
             />
             
@@ -480,5 +480,5 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData, availab
         </div>
       </div>
     </div>
-  )
+  );
 }
