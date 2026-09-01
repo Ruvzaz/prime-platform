@@ -79,12 +79,12 @@ function AppSidebar({ userName, userRole }: { userName?: string | null; userRole
             <img 
               src="/logo.svg" 
               alt="Prime Digital Consultant" 
-              className="h-9 w-auto object-contain dark:brightness-200 group-data-[state=collapsed]:hidden" 
+              className="h-9 w-auto object-contain mix-blend-multiply dark:brightness-200 group-data-[state=collapsed]:hidden" 
             />
             <img 
               src="/logo-icon.svg" 
               alt="P" 
-              className="h-6 w-6 object-contain dark:brightness-200 hidden group-data-[state=collapsed]:block" 
+              className="h-6 w-6 object-contain mix-blend-multiply dark:brightness-200 hidden group-data-[state=collapsed]:block" 
             />
           </div>
         </Link>

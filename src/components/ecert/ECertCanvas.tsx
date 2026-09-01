@@ -3,8 +3,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { jsPDF } from 'jspdf';
-import { Download, FileText, CheckCircle2, Loader2 } from 'lucide-react';
+import { Download, FileText, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { CertLayoutConfig } from '@/types/cert-template';
 
 export interface CertData {
   certCode: string;
@@ -12,9 +13,12 @@ export interface CertData {
   recipientFirstName?: string;
   recipientLastName?: string;
   recipientFullName: string;
+  teamName?: string;
   eventTitle?: string;
   issueDate?: string;
   verifyLink?: string;
+  backgroundImageUrl?: string | null;
+  layoutConfig?: CertLayoutConfig | null;
 }
 
 interface ECertCanvasProps {
@@ -63,54 +67,127 @@ export function ECertCanvas({
       canvas.width = width;
       canvas.height = height;
 
-      // Try loading protected template image
+      const layout = certData.layoutConfig;
+      const customBg = certData.backgroundImageUrl;
+
+      // Try loading custom or default template image
       const templateImg = new Image();
-      templateImg.src = '/api/ecert/template';
+      templateImg.src = customBg || '/api/ecert/template';
 
       const hasTemplate = await new Promise<boolean>((resolve) => {
         templateImg.onload = () => resolve(true);
         templateImg.onerror = () => resolve(false);
       });
 
-      if (isMounted) {
-        if (hasTemplate) {
-          // Draw image background base
-          ctx.drawImage(templateImg, 0, 0, width, height);
-        } else {
-          // Fallback High-Res Certificate Template Canvas Design
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(0, 0, width, height);
+      if (!isMounted) return;
 
-          // Outer Border Frame
-          ctx.strokeStyle = '#0f172a';
-          ctx.lineWidth = 16;
-          ctx.strokeRect(40, 40, width - 80, height - 80);
+      if (hasTemplate) {
+        // Draw image background base
+        ctx.drawImage(templateImg, 0, 0, width, height);
+      } else {
+        // Fallback High-Res Certificate Template Canvas Design
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
 
-          ctx.strokeStyle = '#d97706';
-          ctx.lineWidth = 6;
-          ctx.strokeRect(60, 60, width - 120, height - 120);
+        // Outer Border Frame
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 16;
+        ctx.strokeRect(40, 40, width - 80, height - 80);
 
-          // Inner Decorative Header Accent
-          ctx.fillStyle = '#0f172a';
-          ctx.fillRect(100, 100, width - 200, 6);
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 6;
+        ctx.strokeRect(60, 60, width - 120, height - 120);
 
-          // Header Text
-          ctx.font = "bold 42px 'Courier New', monospace";
-          ctx.fillStyle = '#d97706';
-          ctx.textAlign = 'center';
+        // Inner Decorative Header Accent
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(100, 100, width - 200, 6);
+
+        // Header Text
+        ctx.font = "bold 42px 'Courier New', monospace";
+        ctx.fillStyle = '#d97706';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('NATIONAL CYBER SECURITY AGENCY', 1000, 220);
+
+        ctx.font = "bold 60px 'Prompt', 'Sarabun', sans-serif";
+        ctx.fillStyle = '#0f172a';
+        ctx.fillText('ใบประกาศนียบัตร (CERTIFICATE OF ACHIEVEMENT)', 1000, 310);
+
+        ctx.font = "32px 'Prompt', 'Sarabun', sans-serif";
+        ctx.fillStyle = '#475569';
+        ctx.fillText('ขอมอบใบประกาศนียบัตรนี้เพื่อแสดงว่า', 1000, 460);
+      }
+
+      // RENDER WITH CUSTOM DYNAMIC LAYOUT CONFIG (IF PRESENT)
+      if (layout) {
+        // 1. Recipient Name
+        if (layout.showName !== false) {
+          const x = (layout.nameX / 100) * width;
+          const y = (layout.nameY / 100) * height;
+          ctx.font = `bold ${layout.nameFontSize || 56}px 'Prompt', 'Sarabun', sans-serif`;
+          ctx.textAlign = (layout.nameAlign as CanvasTextAlign) || 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText('NATIONAL CYBER SECURITY AGENCY', 1000, 220);
-
-          ctx.font = "bold 60px 'Prompt', 'Sarabun', sans-serif";
-          ctx.fillStyle = '#0f172a';
-          ctx.fillText('ใบประกาศนียบัตร (CERTIFICATE OF ACHIEVEMENT)', 1000, 310);
-
-          ctx.font = "32px 'Prompt', 'Sarabun', sans-serif";
-          ctx.fillStyle = '#475569';
-          ctx.fillText('ขอมอบใบประกาศนียบัตรนี้เพื่อแสดงว่า', 1000, 460);
+          ctx.fillStyle = layout.nameColor || '#0f172a';
+          ctx.fillText(displayName, x, y);
         }
 
-        // 1. Recipient Full Name (Centered horizontally at X = 1000px, Y = 640px)
+        // 1.5. Team Name (for CTF Challenge)
+        if (layout.showTeam && certData.teamName) {
+          const x = ((layout.teamX ?? 50) / 100) * width;
+          const y = ((layout.teamY ?? 58) / 100) * height;
+          ctx.font = `bold ${layout.teamFontSize || 32}px 'Prompt', 'Sarabun', sans-serif`;
+          ctx.textAlign = (layout.teamAlign as CanvasTextAlign) || 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = layout.teamColor || '#2563eb';
+          ctx.fillText(`ทีม ${certData.teamName}`, x, y);
+        }
+
+        // 2. Issue Date
+        if (layout.showDate && certData.issueDate) {
+          const x = (layout.dateX / 100) * width;
+          const y = (layout.dateY / 100) * height;
+          ctx.font = `${layout.dateFontSize || 28}px 'Prompt', 'Sarabun', sans-serif`;
+          ctx.textAlign = (layout.dateAlign as CanvasTextAlign) || 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = layout.dateColor || '#475569';
+          ctx.fillText(`ให้ไว้ ณ วันที่ ${certData.issueDate}`, x, y);
+        }
+
+        // 3. QR Code Verification
+        if (layout.showQr !== false) {
+          const qrSize = layout.qrSize || 140;
+          const x = (layout.qrX / 100) * width - qrSize / 2;
+          const y = (layout.qrY / 100) * height - qrSize / 2;
+          const verifyUrl = certData.verifyLink || `${window.location.origin}/verify-cert/${certData.certCode}`;
+
+          try {
+            const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
+              margin: 1,
+              width: qrSize,
+              color: { dark: '#0f172a', light: '#ffffff' },
+            });
+
+            const qrImg = new Image();
+            qrImg.src = qrDataUrl;
+            await new Promise((res) => { qrImg.onload = res; });
+            ctx.drawImage(qrImg, x, y, qrSize, qrSize);
+          } catch (e) {
+            console.error('QR rendering error:', e);
+          }
+        }
+
+        // 4. Certificate Code
+        if (layout.showCode !== false) {
+          const x = (layout.codeX / 100) * width;
+          const y = (layout.codeY / 100) * height;
+          ctx.font = `${layout.codeFontSize || 20}px 'Courier New', monospace`;
+          ctx.textAlign = (layout.codeAlign as CanvasTextAlign) || 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = layout.codeColor || '#64748b';
+          ctx.fillText(`Code: ${certData.certCode}`, x, y);
+        }
+      } else {
+        // FALLBACK STANDARD LAYOUT RENDERING
         const nameY = 640;
         ctx.font = "bold 65px 'Prompt', 'Sarabun', sans-serif";
         ctx.textAlign = 'left';
@@ -120,7 +197,6 @@ export function ECertCanvas({
         const nameX = Math.round(1000 - nameWidth / 2);
         ctx.fillText(displayName, nameX, nameY);
 
-        // Subtitle Event Title
         if (!hasTemplate) {
           const eventY = 780;
           ctx.font = "bold 36px 'Prompt', 'Sarabun', sans-serif";
@@ -130,7 +206,6 @@ export function ECertCanvas({
           ctx.fillText(eventText, Math.round(1000 - eventWidth / 2), eventY);
         }
 
-        // 2. Day Number (Centered horizontally at X = 945px, Y = 1006px)
         const dayNumber = extractDayNumber(certData.issueDate);
         const dayY = 1006;
         ctx.font = "bold 32px 'Prompt', 'Sarabun', sans-serif";
@@ -141,7 +216,6 @@ export function ECertCanvas({
         const dayX = Math.round(945 - dayWidth / 2);
         ctx.fillText(dayNumber, dayX, dayY);
 
-        // Full Issue Date (if fallback canvas)
         if (!hasTemplate && certData.issueDate) {
           ctx.font = "28px 'Prompt', 'Sarabun', sans-serif";
           ctx.fillStyle = '#475569';
@@ -149,7 +223,6 @@ export function ECertCanvas({
           ctx.fillText(dateText, Math.round(1000 - ctx.measureText(dateText).width / 2), 1140);
         }
 
-        // 3. QR Code Verification Badge (Position X = 1680px, Y = 1110px, Size 165x165px)
         const verifyUrl = certData.verifyLink || `${window.location.origin}/verify-cert/${certData.certCode}`;
         try {
           const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
@@ -166,15 +239,14 @@ export function ECertCanvas({
           console.error('QR rendering error:', e);
         }
 
-        // 4. Certificate Code Footnote Text
         ctx.font = "16px 'Courier New', monospace";
         ctx.fillStyle = '#64748b';
         ctx.textAlign = 'center';
         ctx.fillText(`Code: ${certData.certCode}`, 1762, 1290);
-
-        setIsRendering(false);
-        if (onRendered) onRendered();
       }
+
+      setIsRendering(false);
+      if (onRendered) onRendered();
     }
 
     drawCertificate();
@@ -184,61 +256,68 @@ export function ECertCanvas({
     };
   }, [certData, onRendered]);
 
-  const handleDownloadPNG = () => {
+  const handleDownloadImage = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const dataUrl = canvas.toDataURL('image/png');
+
+    const image = canvas.toDataURL('image/png', 1.0);
     const link = document.createElement('a');
-    link.download = `Certificate-${certData.certCode}.png`;
-    link.href = dataUrl;
+    link.download = `Certificate_${certData.certCode}.png`;
+    link.href = image;
     link.click();
   };
 
   const handleDownloadPDF = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const imgData = canvas.toDataURL('image/png');
+
+    const imgData = canvas.toDataURL('image/png', 1.0);
     const pdf = new jsPDF({
       orientation: 'landscape',
       unit: 'px',
       format: [2000, 1414],
     });
+
     pdf.addImage(imgData, 'PNG', 0, 0, 2000, 1414);
-    pdf.save(`Certificate-${certData.certCode}.pdf`);
+    pdf.save(`Certificate_${certData.certCode}.pdf`);
   };
 
   return (
-    <div className={`flex flex-col items-center gap-6 ${className}`}>
-      {/* Canvas Container with sleek styling */}
-      <div className="relative w-full max-w-[900px] aspect-[2000/1414] bg-[#0e1418] rounded-xl overflow-hidden shadow-2xl border border-[#3b494b]">
+    <div className={`flex flex-col items-center space-y-6 ${className}`}>
+      <div className="relative w-full max-w-4xl shadow-2xl rounded-2xl overflow-hidden border-2 border-slate-900/10 bg-slate-950/5 dark:bg-zinc-900">
         {isRendering && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#0e1418]/90 backdrop-blur-sm z-10 text-[#dee3e9]">
-            <Loader2 className="w-8 h-8 animate-spin text-red-500 mr-3" />
-            <span className="font-mono text-sm uppercase tracking-widest">
-              Generating High-Res Certificate...
-            </span>
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-900/40 backdrop-blur-sm text-white">
+            <Loader2 className="w-10 h-10 animate-spin text-amber-400 mb-2" />
+            <p className="font-mono text-sm uppercase tracking-wider font-semibold">
+              Generating High-Res E-Certificate...
+            </p>
           </div>
         )}
-        <canvas ref={canvasRef} className="w-full h-full object-contain" />
+
+        <canvas
+          ref={canvasRef}
+          className="w-full h-auto block bg-white"
+          style={{ aspectRatio: '2000 / 1414' }}
+        />
       </div>
 
-      {/* Download Action Buttons */}
       {showDownloadBtn && !isRendering && (
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          <button
-            onClick={handleDownloadPNG}
-            className="font-mono text-xs uppercase tracking-widest font-bold px-6 py-2.5 bg-[#161c21] border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500 active:scale-95 transition-all duration-150 rounded flex items-center gap-2 shadow-[0_0_15px_rgba(52,211,153,0.1)]"
+        <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+          <Button
+            onClick={handleDownloadImage}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-xs uppercase tracking-wider px-6 h-11 rounded-xl shadow-lg shadow-emerald-600/20 active:scale-95 transition-all"
           >
-            <Download className="w-4 h-4 text-emerald-400" />
-            <span>Download Image (PNG)</span>
-          </button>
-          <button
+            <Download className="w-4 h-4 mr-2" />
+            Download Image (PNG)
+          </Button>
+
+          <Button
             onClick={handleDownloadPDF}
-            className="font-mono text-xs uppercase tracking-widest font-bold px-6 py-2.5 bg-[#161c21] border border-red-500/40 text-red-400 hover:bg-red-500/10 hover:border-red-500 active:scale-95 transition-all duration-150 rounded flex items-center gap-2 shadow-[0_0_15px_rgba(239,68,68,0.1)]"
+            className="bg-amber-600 hover:bg-amber-700 text-white font-mono text-xs uppercase tracking-wider px-6 h-11 rounded-xl shadow-lg shadow-amber-600/20 active:scale-95 transition-all"
           >
-            <FileText className="w-4 h-4 text-red-400" />
-            <span>Download PDF</span>
-          </button>
+            <FileText className="w-4 h-4 mr-2" />
+            Download PDF
+          </Button>
         </div>
       )}
     </div>
