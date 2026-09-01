@@ -31,7 +31,13 @@ export async function GET(req: Request) {
     }
 
     if (!filePath) {
-      return new NextResponse("Template image file not found", { status: 404 });
+      // Fallback to static public/AW_01.png (NCSA CTF Red Template) if custom file is not on disk (e.g. Vercel serverless ephemeral disk)
+      const fallbackPath = path.join(process.cwd(), "public", "AW_01.png");
+      if (fs.existsSync(fallbackPath)) {
+        filePath = fallbackPath;
+      } else {
+        return new NextResponse("Template image file not found", { status: 404 });
+      }
     }
 
     // Determine Content-Type based on extension
