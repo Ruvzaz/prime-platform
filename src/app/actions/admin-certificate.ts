@@ -165,3 +165,123 @@ export async function adminCreateCertificate(data: {
     return { error: 'เกิดข้อผิดพลาดในการสร้างใบประกาศ' };
   }
 }
+
+/**
+ * Batch Sync & Repair All Certificates in DB & Purge Cache
+ */
+export async function syncAndUpdateAllCertificates() {
+  try {
+    const certs = await prisma.certificate.findMany();
+    let updatedCount = 0;
+
+    for (const cert of certs) {
+      const updateData: any = {};
+
+      // 1. Repair challengeId if null
+      if (!cert.challengeId && cert.eventTitle) {
+        const keyword = cert.eventTitle.includes("Open")
+          ? "Open"
+          : cert.eventTitle.includes("Senior")
+          ? "Senior"
+          : cert.eventTitle.includes("Junior")
+          ? "Junior"
+          : null;
+
+        if (keyword) {
+          const matchedCh = await prisma.challenge.findFirst({
+            where: { name: { contains: keyword, mode: "insensitive" } },
+          });
+          if (matchedCh) {
+            updateData.challengeId = matchedCh.id;
+          }
+        }
+      }
+
+      // 2. Repair userId if null
+      if (!cert.userId && cert.email) {
+        const user = await prisma.user.findFirst({
+          where: { email: { equals: cert.email.trim(), mode: "insensitive" } },
+        });
+        if (user) {
+          updateData.userId = user.id;
+        }
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await prisma.certificate.update({
+          where: { id: cert.id },
+          data: updateData,
+        });
+        updatedCount++;
+      }
+    }
+
+    revalidatePath("/admin/certificates");
+    revalidatePath("/certification/challenge");
+    revalidatePath("/challenge", "layout");
+    revalidatePath("/", "layout");
+
+    return { success: true, count: certs.length, updatedCount };
+  } catch (error: any) {
+    console.error("Batch sync certs error:", error);
+    return { success: false, error: error?.message || "ไม่สามารถอัปเดตข้อมูลใบประกาศได้" };
+  }
+}
+
+/**
+ * Sync & Repair Single Certificate in DB & Purge Cache
+ */
+export async function syncSingleCertificate(certId: string) {
+  try {
+    const cert = await prisma.certificate.findUnique({ where: { id: certId } });
+    if (!cert) return { success: false, error: "ไม่พบใบประกาศ" };
+
+    const updateData: any = {};
+
+    if (!cert.challengeId && cert.eventTitle) {
+      const keyword = cert.eventTitle.includes("Open")
+        ? "Open"
+        : cert.eventTitle.includes("Senior")
+        ? "Senior"
+        : cert.eventTitle.includes("Junior")
+        ? "Junior"
+        : null;
+
+      if (keyword) {
+        const matchedCh = await prisma.challenge.findFirst({
+          where: { name: { contains: keyword, mode: "insensitive" } },
+        });
+        if (matchedCh) {
+          updateData.challengeId = matchedCh.id;
+        }
+      }
+    }
+
+    if (!cert.userId && cert.email) {
+      const user = await prisma.user.findFirst({
+        where: { email: { equals: cert.email.trim(), mode: "insensitive" } },
+      });
+      if (user) {
+        updateData.userId = user.id;
+      }
+    }
+
+    if (Object.keys(updateData).length > 0) {
+      await prisma.certificate.update({
+        where: { id: cert.id },
+        data: updateData,
+      });
+    }
+
+    revalidatePath("/admin/certificates");
+    revalidatePath("/certification/challenge");
+    revalidatePath(`/verify-cert/${cert.certCode}`);
+    revalidatePath("/challenge", "layout");
+    revalidatePath("/", "layout");
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Sync single cert error:", error);
+    return { success: false, error: error?.message || "ไม่สามารถอัปเดตข้อมูลใบประกาศได้" };
+  }
+}

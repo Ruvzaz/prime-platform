@@ -39,7 +39,13 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { toggleCertificateStatus, adminDeleteCertificate, adminCreateCertificate } from '@/app/actions/admin-certificate';
+import {
+  toggleCertificateStatus,
+  adminDeleteCertificate,
+  adminCreateCertificate,
+  syncAndUpdateAllCertificates,
+  syncSingleCertificate,
+} from '@/app/actions/admin-certificate';
 import { ImportCertModal } from '../../challenges/components/ImportCertModal';
 import { EventTokensModal } from './EventTokensModal';
 import * as XLSX from 'xlsx';
@@ -59,6 +65,42 @@ export function CertificatesClient({
   const [typeFilter, setTypeFilter] = useState<string>('ALL'); // ALL, CHALLENGE, EVENT
   const [challengeIdFilter, setChallengeIdFilter] = useState<string>('ALL');
   const [eventIdFilter, setEventIdFilter] = useState<string>('ALL');
+
+  // Sync state
+  const [isSyncingAll, setIsSyncingAll] = useState(false);
+  const [syncingCertId, setSyncingCertId] = useState<string | null>(null);
+
+  async function handleSyncAll() {
+    setIsSyncingAll(true);
+    try {
+      const res = await syncAndUpdateAllCertificates();
+      if (res.success) {
+        toast.success(`อัปเดตข้อมูลและซิงก์แม่แบบใบประกาศเรียบร้อยแล้ว (${res.count} รายการ)`);
+      } else {
+        toast.error(res.error || "เกิดข้อผิดพลาดในการซิงก์ข้อมูล");
+      }
+    } catch (err) {
+      toast.error("ไม่สามารถเชื่อมต่อระบบซิงก์ข้อมูลได้");
+    } finally {
+      setIsSyncingAll(false);
+    }
+  }
+
+  async function handleSyncSingle(certId: string) {
+    setSyncingCertId(certId);
+    try {
+      const res = await syncSingleCertificate(certId);
+      if (res.success) {
+        toast.success("อัปเดตซิงก์ข้อมูลใบประกาศนี้เรียบร้อยแล้ว");
+      } else {
+        toast.error(res.error || "เกิดข้อผิดพลาดในการซิงก์");
+      }
+    } catch (err) {
+      toast.error("ไม่สามารถเชื่อมต่อระบบได้");
+    } finally {
+      setSyncingCertId(null);
+    }
+  }
 
   // Single cert modal state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -188,6 +230,19 @@ export function CertificatesClient({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <Button
+            onClick={handleSyncAll}
+            disabled={isSyncingAll}
+            className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm"
+          >
+            {isSyncingAll ? (
+              <Loader2 className="w-4 h-4 animate-spin text-white" />
+            ) : (
+              <RefreshCw className="w-4 h-4 text-white" />
+            )}
+            <span>ซิงก์อัปเดตแม่แบบทั้งหมด (Sync All)</span>
+          </Button>
+
           <Link href="/admin/certificates/templates">
             <Button variant="outline" className="gap-2 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 font-bold">
               <LayoutTemplate className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
@@ -513,13 +568,28 @@ export function CertificatesClient({
                         </span>
                       )}
                     </td>
-                    <td className="p-4 text-right space-x-2">
+                    <td className="p-4 text-right space-x-1">
                       {/* View / Verify */}
                       <Link href={`/verify-cert/${cert.certCode}`} target="_blank">
                         <Button variant="ghost" size="icon" title="View Verification Page">
                           <ExternalLink className="w-4 h-4 text-blue-500" />
                         </Button>
                       </Link>
+
+                      {/* Sync Single Certificate */}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleSyncSingle(cert.id)}
+                        disabled={syncingCertId === cert.id}
+                        title="Sync & Repair Certificate Linkage & Purge Cache"
+                      >
+                        {syncingCertId === cert.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+                        ) : (
+                          <RefreshCw className="w-4 h-4 text-emerald-500" />
+                        )}
+                      </Button>
 
                       {/* Toggle Status */}
                       <Button
@@ -528,7 +598,11 @@ export function CertificatesClient({
                         onClick={() => handleToggleStatus(cert.id, cert.status)}
                         title={cert.status === 'ACTIVE' ? 'Revoke Certificate' : 'Activate Certificate'}
                       >
-                        <RefreshCw className="w-4 h-4 text-amber-500" />
+                        {cert.status === 'ACTIVE' ? (
+                          <XCircle className="w-4 h-4 text-amber-500" />
+                        ) : (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        )}
                       </Button>
 
                       {/* Delete */}
