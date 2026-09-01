@@ -6,50 +6,36 @@ import Link from "next/link";
 import { ECertCanvas } from "@/components/ecert/ECertCanvas";
 import { ChallengeNavbar } from "@/components/layout/ChallengeNavbar";
 
+import { resolveUserForCert } from "@/lib/certificate";
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function ChallengeUserCertificationPage() {
   const session = await auth();
 
-  if (!session?.user?.email || !session?.user?.id) {
+  if (!session?.user) {
     redirect("/auth/login?callbackUrl=/certification/challenge");
   }
 
-  const dbUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { name: true, email: true, username: true },
-  });
+  const { resolvedUserId, userEmail, userName, certWhereClause } = await resolveUserForCert(session.user);
 
-  const userEmail = (dbUser?.email || session.user.email)?.toLowerCase().trim();
-  const userName = (dbUser?.name || session.user.name)?.trim();
-  const username = dbUser?.username?.trim();
-  const cleanUsername = userEmail && userEmail.includes("@") ? userEmail.split("@")[0] : userEmail;
+  // Fetch user's approved team memberships to display team name
+  const userTeams = resolvedUserId
+    ? await prisma.teamMember.findMany({
+        where: {
+          userId: resolvedUserId,
+          status: "APPROVED",
+        },
+        include: { team: true },
+      })
+    : [];
 
-  // Fetch user's approved team memberships to display team name and match challenge certificates
-  const userTeams = await prisma.teamMember.findMany({
-    where: {
-      userId: session.user.id,
-      status: "APPROVED",
-    },
-    include: { team: true },
-  });
-
-  const userChallengeIds = userTeams.map((tm) => tm.challengeId).filter(Boolean);
   const teamMap = new Map(userTeams.map((tm) => [tm.challengeId, tm.team.name]));
 
-  // Find user details & certificates issued to their email, userId, recipient name, or challengeId
+  // Find user details & certificates issued to their email, userId, or recipient name
   const certificates = await prisma.certificate.findMany({
-    where: {
-      OR: [
-        { userId: session.user.id },
-        ...(userEmail ? [{ email: { equals: userEmail, mode: "insensitive" as const } }] : []),
-        ...(cleanUsername ? [{ email: { contains: cleanUsername, mode: "insensitive" as const } }] : []),
-        ...(username ? [{ email: { contains: username, mode: "insensitive" as const } }] : []),
-        ...(userName ? [{ recipientFullName: { equals: userName, mode: "insensitive" as const } }] : []),
-      ],
-      status: "ACTIVE",
-    },
+    where: certWhereClause,
     include: {
       challenge: {
         include: { certTemplate: true },
@@ -172,7 +158,7 @@ export default async function ChallengeUserCertificationPage() {
                     recipientPrefix: cert.recipientPrefix || "",
                     recipientFirstName: cert.recipientFirstName || "",
                     recipientLastName: cert.recipientLastName || "",
-                    recipientFullName: displayName,
+                    recipientFullName: userName || cert.recipientFullName,
                     teamName: teamName,
                     eventTitle: cert.eventTitle,
                     issueDate: cert.issueDate,

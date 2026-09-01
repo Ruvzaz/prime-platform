@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { participantLogout } from "@/app/actions/challenge-auth";
 import { prisma } from "@/lib/prisma";
 import { unstable_noStore as noStore } from "next/cache";
+import { resolveUserForCert } from "@/lib/certificate";
 
 export async function ChallengeNavbar() {
   noStore();
@@ -33,39 +34,25 @@ export async function ChallengeNavbar() {
 
   let hasCertificates = false;
 
-  if (session?.user?.id) {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { name: true, email: true, username: true }
-    });
-    if (dbUser?.name) {
-      displayName = dbUser.name;
+  if (session?.user) {
+    const { resolvedUserId, userName, certWhereClause } = await resolveUserForCert(session.user);
+
+    if (userName) {
+      displayName = userName;
     }
 
-    const membership = await prisma.teamMember.findFirst({
-      where: { userId: session.user.id },
-      include: { challenge: true },
-    });
-    if (membership?.challenge) {
-      myTeamLink = `/challenge/${membership.challenge.slug}`;
+    if (resolvedUserId) {
+      const membership = await prisma.teamMember.findFirst({
+        where: { userId: resolvedUserId },
+        include: { challenge: true },
+      });
+      if (membership?.challenge) {
+        myTeamLink = `/challenge/${membership.challenge.slug}`;
+      }
     }
-
-    const userEmail = (dbUser?.email || session.user.email)?.toLowerCase().trim();
-    const userName = (dbUser?.name || session?.user?.name)?.trim();
-    const username = dbUser?.username?.trim();
-    const cleanUsername = userEmail && userEmail.includes("@") ? userEmail.split("@")[0] : userEmail;
 
     const certCount = await prisma.certificate.count({
-      where: {
-        OR: [
-          { userId: session.user.id },
-          ...(userEmail ? [{ email: { equals: userEmail, mode: "insensitive" as const } }] : []),
-          ...(cleanUsername ? [{ email: { contains: cleanUsername, mode: "insensitive" as const } }] : []),
-          ...(username ? [{ email: { contains: username, mode: "insensitive" as const } }] : []),
-          ...(userName ? [{ recipientFullName: { equals: userName, mode: "insensitive" as const } }] : []),
-        ],
-        status: "ACTIVE",
-      },
+      where: certWhereClause,
     });
     hasCertificates = certCount > 0;
   }
