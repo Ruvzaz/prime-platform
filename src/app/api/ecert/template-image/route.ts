@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";
+import os from "os";
 
 export async function GET(req: Request) {
   try {
@@ -14,10 +15,11 @@ export async function GET(req: Request) {
     // Security: Strict path sanitization to prevent Path Traversal attacks (../)
     const cleanFileName = path.basename(fileName);
 
-    // Search locations (Private storage first, then fallback for legacy public uploads)
+    // Search locations (Private storage -> Public legacy -> System temp)
     const locations = [
       path.join(process.cwd(), "private_uploads", "templates", cleanFileName),
       path.join(process.cwd(), "public", "uploads", "templates", cleanFileName),
+      path.join(os.tmpdir(), "prime_templates", cleanFileName),
     ];
 
     let filePath: string | null = null;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import path from "path";
 import fs from "fs";
+import os from "os";
 import { auth } from "@/auth";
 
 export async function POST(req: Request) {
@@ -36,20 +37,41 @@ export async function POST(req: Request) {
     const ext = allowedExts.includes(rawExt) ? rawExt : "png";
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    const filename = `template_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
 
-    // Security: Store uploaded files in private_uploads directory (OUTSIDE public folder)
-    const uploadDir = path.join(process.cwd(), "private_uploads", "templates");
+    // Candidate directories in order of preference:
+    // 1. private_uploads/templates (Outside public root)
+    // 2. public/uploads/templates (Web root)
+    // 3. os.tmpdir()/prime_templates (System temp directory for serverless environments)
+    const candidateDirs = [
+      path.join(process.cwd(), "private_uploads", "templates"),
+      path.join(process.cwd(), "public", "uploads", "templates"),
+      path.join(os.tmpdir(), "prime_templates"),
+    ];
 
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    let savedPath: string | null = null;
+    let lastError: any = null;
+
+    for (const targetDir of candidateDirs) {
+      try {
+        if (!fs.existsSync(targetDir)) {
+          fs.mkdirSync(targetDir, { recursive: true });
+        }
+        const fullPath = path.join(targetDir, filename);
+        fs.writeFileSync(fullPath, buffer);
+        savedPath = fullPath;
+        break;
+      } catch (err: any) {
+        console.warn(`Failed writing to ${targetDir}:`, err?.message || err);
+        lastError = err;
+      }
     }
 
-    const filename = `template_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
-    const filePath = path.join(uploadDir, filename);
+    if (!savedPath) {
+      throw new Error(`ไม่สามารถสร้างไฟล์ในโฟลเดอร์แม่แบบได้: ${lastError?.message || "Permission denied"}`);
+    }
 
-    fs.writeFileSync(filePath, buffer);
-
-    // Return protected API route URL instead of direct static path
+    // Return protected API route URL
     const protectedUrl = `/api/ecert/template-image?file=${filename}`;
     return NextResponse.json({
       success: true,
@@ -59,6 +81,9 @@ export async function POST(req: Request) {
     });
   } catch (error: any) {
     console.error("Error uploading cert template image:", error);
-    return NextResponse.json({ error: "เกิดข้อผิดพลาดในการอัปโหลดไฟล์ภาพ" }, { status: 500 });
+    return NextResponse.json(
+      { error: error?.message || "เกิดข้อผิดพลาดในการอัปโหลดไฟล์ภาพ" },
+      { status: 500 }
+    );
   }
 }
