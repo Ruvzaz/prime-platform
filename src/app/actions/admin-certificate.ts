@@ -47,6 +47,7 @@ export async function adminCreateCertificate(data: {
   email: string;
   recipientFullName: string;
   type: 'CHALLENGE' | 'EVENT';
+  userId?: string;
   challengeId?: string;
   eventId?: string;
   eventTitle?: string;
@@ -55,6 +56,8 @@ export async function adminCreateCertificate(data: {
   try {
     await checkAdmin();
     const cleanEmail = data.email.toLowerCase().trim();
+    const cleanUsername = cleanEmail.includes("@") ? cleanEmail.split("@")[0] : cleanEmail;
+
     if (!cleanEmail || !data.recipientFullName.trim()) {
       return { error: 'กรุณากรอกอีเมลและชื่อ-นามสกุล' };
     }
@@ -67,30 +70,40 @@ export async function adminCreateCertificate(data: {
     }
     const certCode = `CERT-2026-${randomStr}`;
 
-    // Find user if available (by email or recipient name)
-    let user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: { equals: cleanEmail, mode: "insensitive" } },
-          { name: { equals: data.recipientFullName.trim(), mode: "insensitive" } },
-        ],
-      },
-    });
+    // Find user by explicit userId first, or search by email/username/name lookup
+    let user: any = null;
+    if (data.userId) {
+      user = await prisma.user.findUnique({ where: { id: data.userId } });
+    }
 
     if (!user) {
-      const usernameFallback = cleanEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
+      user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: { equals: cleanEmail, mode: "insensitive" } },
+            { username: { equals: cleanEmail, mode: "insensitive" } },
+            { username: { equals: cleanUsername, mode: "insensitive" } },
+            { name: { equals: data.recipientFullName.trim(), mode: "insensitive" } },
+          ],
+        },
+      });
+    }
+
+    if (!user) {
       user = await prisma.user.create({
         data: {
           email: cleanEmail,
-          username: usernameFallback,
+          username: cleanUsername,
           name: data.recipientFullName.trim(),
         },
       });
-    } else if (!user.name) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { name: data.recipientFullName.trim() },
-      });
+    } else {
+      if (!user.name) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { name: data.recipientFullName.trim() },
+        });
+      }
     }
 
     let resolvedEventTitle = data.eventTitle;

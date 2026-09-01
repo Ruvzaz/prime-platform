@@ -34,26 +34,11 @@ export async function ChallengeNavbar() {
   if (session?.user?.id) {
     const dbUser = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { name: true, email: true }
+      select: { name: true, email: true, username: true }
     });
     if (dbUser?.name) {
       displayName = dbUser.name;
     }
-
-    const userEmail = (dbUser?.email || session.user.email)?.toLowerCase().trim();
-    const userName = (dbUser?.name || session?.user?.name)?.trim();
-
-    const certCount = await prisma.certificate.count({
-      where: {
-        OR: [
-          ...(userEmail ? [{ email: { equals: userEmail, mode: "insensitive" as const } }] : []),
-          { userId: session.user.id },
-          ...(userName ? [{ recipientFullName: { equals: userName, mode: "insensitive" as const } }] : []),
-        ],
-        status: "ACTIVE",
-      },
-    });
-    hasCertificates = certCount > 0;
 
     const membership = await prisma.teamMember.findFirst({
       where: { userId: session.user.id },
@@ -62,6 +47,26 @@ export async function ChallengeNavbar() {
     if (membership?.challenge) {
       myTeamLink = `/challenge/${membership.challenge.slug}`;
     }
+
+    const userEmail = (dbUser?.email || session.user.email)?.toLowerCase().trim();
+    const userName = (dbUser?.name || session?.user?.name)?.trim();
+    const username = dbUser?.username?.trim();
+    const cleanUsername = userEmail && userEmail.includes("@") ? userEmail.split("@")[0] : userEmail;
+
+    const certCount = await prisma.certificate.count({
+      where: {
+        OR: [
+          { userId: session.user.id },
+          ...(userEmail ? [{ email: { equals: userEmail, mode: "insensitive" as const } }] : []),
+          ...(cleanUsername ? [{ email: { contains: cleanUsername, mode: "insensitive" as const } }] : []),
+          ...(username ? [{ email: { contains: username, mode: "insensitive" as const } }] : []),
+          ...(userName ? [{ recipientFullName: { equals: userName, mode: "insensitive" as const } }] : []),
+          ...(membership?.challengeId ? [{ challengeId: membership.challengeId }] : []),
+        ],
+        status: "ACTIVE",
+      },
+    });
+    hasCertificates = certCount > 0;
   }
 
   return (
