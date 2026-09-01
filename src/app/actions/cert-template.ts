@@ -163,8 +163,23 @@ export async function updateChallengeCertTemplate(data: {
       },
     });
 
+    // Auto-link existing orphan certificates matching this challenge's name
+    if (challenge.name) {
+      await prisma.certificate.updateMany({
+        where: {
+          challengeId: null,
+          eventTitle: { contains: challenge.name, mode: "insensitive" },
+        },
+        data: {
+          challengeId: challenge.id,
+        },
+      });
+    }
+
     revalidatePath("/admin/certificates");
     revalidatePath("/certification/challenge");
+    revalidatePath("/challenge", "layout");
+    revalidatePath("/", "layout");
 
     return { success: true, challenge };
   } catch (error: any) {
