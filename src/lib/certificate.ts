@@ -25,6 +25,7 @@ export async function resolveUserForCert(sessionUser: {
   const userName = (dbUser?.name || rawName)?.trim();
   const username = dbUser?.username?.trim();
   const cleanUsername = userEmail && userEmail.includes("@") ? userEmail.split("@")[0] : userEmail;
+  const cleanName = userName ? userName.replace(/^(นาย|นางสาว|นาง|\s)+/g, "").trim() : "";
 
   const certWhereClause = {
     OR: [
@@ -32,7 +33,8 @@ export async function resolveUserForCert(sessionUser: {
       ...(userEmail ? [{ email: { equals: userEmail, mode: "insensitive" as const } }] : []),
       ...(cleanUsername ? [{ email: { contains: cleanUsername, mode: "insensitive" as const } }] : []),
       ...(username ? [{ email: { contains: username, mode: "insensitive" as const } }] : []),
-      ...(userName ? [{ recipientFullName: { equals: userName, mode: "insensitive" as const } }] : []),
+      ...(userName ? [{ recipientFullName: { contains: userName, mode: "insensitive" as const } }] : []),
+      ...(cleanName ? [{ recipientFullName: { contains: cleanName, mode: "insensitive" as const } }] : []),
     ],
     status: "ACTIVE",
   };
