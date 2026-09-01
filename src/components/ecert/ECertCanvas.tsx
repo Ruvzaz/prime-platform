@@ -71,12 +71,14 @@ export function ECertCanvas({
       const layout = certData.layoutConfig;
       const customBg = certData.backgroundImageUrl;
 
-      // Try loading custom background image ONLY (No AW_01 fallback)
+      // Try loading custom background image safely
       const tryLoadImage = (src?: string | null): Promise<HTMLImageElement | null> => {
         return new Promise((resolve) => {
           if (!src) return resolve(null);
           const img = new Image();
-          img.crossOrigin = 'anonymous';
+          if (src.startsWith('http://') || src.startsWith('https://')) {
+            img.crossOrigin = 'anonymous';
+          }
           img.onload = () => resolve(img);
           img.onerror = () => resolve(null);
           img.src = src;

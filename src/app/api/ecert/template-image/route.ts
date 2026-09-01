@@ -51,6 +51,8 @@ export async function GET(req: Request) {
         "Content-Type": contentType,
         "Cache-Control": "public, max-age=86400, immutable",
         "X-Content-Type-Options": "nosniff",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET",
       },
     });
   } catch (error: any) {
