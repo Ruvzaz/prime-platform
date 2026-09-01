@@ -103,12 +103,13 @@ model LiveConfig {
   themeColor     String? @default("#000000")
 
   // Display Toggles
-  showStats     Boolean @default(true)
-  showLog       Boolean @default(true)
-  layoutMode    String  @default("standard") // "standard" or "fullscreen"
-  maskNames     Boolean @default(false)
-  bubbleColor   String? @default("#4f46e5")
-  bubbleOpacity Float?  @default(0.1)
+  showStats     Boolean  @default(true)
+  showLog       Boolean  @default(true)
+  layoutMode    String   @default("standard") // "standard" or "fullscreen"
+  maskNames     Boolean  @default(false)
+  bubbleColor   String?  @default("#4f46e5")
+  bubbleOpacity Float?   @default(0.1)
+  linkedEventIds String[] @default([])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

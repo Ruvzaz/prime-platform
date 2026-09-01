@@ -70,6 +70,14 @@ const BubbleBackground = memo(({
     <div
       ref={containerRef}
       data-slot="bubble-background"
+      style={{
+        '--first-color': colors.first,
+        '--second-color': colors.second,
+        '--third-color': colors.third,
+        '--fourth-color': colors.fourth,
+        '--fifth-color': colors.fifth,
+        '--sixth-color': colors.sixth,
+      } as React.CSSProperties}
       className={cn(
         'relative size-full overflow-hidden',
         className,
@@ -78,14 +86,6 @@ const BubbleBackground = memo(({
     >
       <style>
         {`
-            :root {
-              --first-color: ${colors.first};
-              --second-color: ${colors.second};
-              --third-color: ${colors.third};
-              --fourth-color: ${colors.fourth};
-              --fifth-color: ${colors.fifth};
-              --sixth-color: ${colors.sixth};
-            }
             @keyframes float-1 {
               0% { transform: translate(0, 0) scale(1) rotate(0deg); }
               33% { transform: translate(200px, -150px) scale(1.2) rotate(20deg); }

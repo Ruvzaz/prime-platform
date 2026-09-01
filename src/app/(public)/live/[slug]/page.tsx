@@ -364,7 +364,7 @@ export default function LiveBoardPage({ params }: { params: Promise<{ slug: stri
 
   const isFullscreen = data.event.liveConfig?.layoutMode === 'fullscreen';
   const themeColor = data.event.liveConfig?.themeColor || '#4f46e5';
-  const bubbleColors = getBubbleColors(themeColor);
+  const bubbleColors = useMemo(() => getBubbleColors(themeColor), [themeColor]);
 
   return (
     <div className="h-screen w-screen relative bg-slate-50 overflow-hidden select-none flex flex-col live-root text-slate-900">

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition, useEffect } from "react"
+import { useState, useTransition, useEffect, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,10 +43,17 @@ interface LiveBoardSettingsFormProps {
     maskNames?: boolean
     bubbleColor?: string | null
     bubbleOpacity?: number | null
+    linkedEventIds?: string[] | null
   } | null
+  availableEvents?: {
+    id: string
+    title: string
+    slug: string
+    startDate: Date
+  }[]
 }
 
-export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveBoardSettingsFormProps) {
+export function LiveBoardSettingsForm({ eventId, eventSlug, initialData, availableEvents = [] }: LiveBoardSettingsFormProps) {
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -63,7 +70,19 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
     maskNames: initialData?.maskNames || false,
     bubbleColor: initialData?.bubbleColor || '#4f46e5',
     bubbleOpacity: initialData?.bubbleOpacity ?? 0.1,
+    linkedEventIds: initialData?.linkedEventIds || [],
   })
+
+  const toggleLinkedEvent = (idToToggle: string) => {
+    setConfig((prev) => {
+      const current = prev.linkedEventIds || [];
+      const exists = current.includes(idToToggle);
+      const updated = exists
+        ? current.filter((id) => id !== idToToggle)
+        : [...current, idToToggle];
+      return { ...prev, linkedEventIds: updated };
+    });
+  };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -112,6 +131,11 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
     };
   }
 
+  const bubbleColors = useMemo(
+    () => getBubbleColors(config.bubbleColor || '#4f46e5'),
+    [config.bubbleColor]
+  );
+
   return (
     <div className="flex flex-col lg:flex-row gap-8 min-h-[calc(100vh-160px)]">
       {/* LEFT: CONFIGURATION PANEL */}
@@ -138,10 +162,11 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
           <form onSubmit={handleSubmit} className="flex flex-col h-full">
             <Tabs defaultValue="branding" className="w-full flex-1 flex flex-col">
               <div className="px-6 pt-6">
-                <TabsList className="grid grid-cols-3 w-full bg-slate-100/50 p-1 rounded-2xl h-11">
+                <TabsList className="grid grid-cols-4 w-full bg-slate-100/50 p-1 rounded-2xl h-11">
                   <TabsTrigger value="branding" className="rounded-xl font-bold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">Identity</TabsTrigger>
                   <TabsTrigger value="layout" className="rounded-xl font-bold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">Layout</TabsTrigger>
                   <TabsTrigger value="privacy" className="rounded-xl font-bold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">Privacy</TabsTrigger>
+                  <TabsTrigger value="linkedEvents" className="rounded-xl font-bold text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm">🔗 Linked</TabsTrigger>
                 </TabsList>
               </div>
 
@@ -308,6 +333,53 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
                         </div>
                     </div>
                 </TabsContent>
+
+                {/* LINKED EVENTS TAB */}
+                <TabsContent value="linkedEvents" className="mt-0 space-y-4">
+                  <div className="p-5 rounded-3xl bg-slate-50 border border-slate-100 space-y-4">
+                    <div className="space-y-1">
+                      <Label className="text-sm font-black flex items-center gap-2 text-indigo-900">
+                        <Users className="w-4 h-4 text-indigo-600" />
+                        Combined Multi-Event Live Check-In
+                      </Label>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        เลือก Event อื่นๆ เพื่อดึงยอดผู้ลงทะเบียน และสแกนเช็คอิน (Live Feed) มารวมแสดงผลในหน้า Live Board นี้พร้อมกัน!
+                      </p>
+                    </div>
+
+                    {availableEvents.length === 0 ? (
+                      <div className="p-6 text-center text-xs text-muted-foreground font-mono bg-white rounded-2xl border">
+                        ไม่มี Event อื่นๆ ในระบบให้เชื่อมโยง
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                        {availableEvents.map((ev) => {
+                          const isLinked = config.linkedEventIds.includes(ev.id);
+                          return (
+                            <div
+                              key={ev.id}
+                              onClick={() => toggleLinkedEvent(ev.id)}
+                              className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                                isLinked
+                                  ? "border-indigo-600 bg-indigo-50/60 shadow-sm"
+                                  : "border-slate-200 bg-white hover:border-slate-300"
+                              }`}
+                            >
+                              <div className="space-y-0.5">
+                                <div className="text-xs font-bold text-slate-900">{ev.title}</div>
+                                <div className="text-[10px] font-mono text-slate-400">/{ev.slug}</div>
+                              </div>
+                              <Switch
+                                checked={isLinked}
+                                className="pointer-events-none"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
               </div>
 
               <div className="p-6 pt-2 border-t border-slate-100 bg-slate-50/50">
@@ -347,7 +419,7 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
         <div className="flex-1 relative rounded-[3rem] bg-white border-8 border-white shadow-2xl overflow-hidden flex flex-col">
             <BubbleBackground 
                 className="absolute inset-0 z-10 bg-transparent"
-                colors={getBubbleColors(config.bubbleColor || '#4f46e5')}
+                colors={bubbleColors}
                 bubbleOpacity={config.bubbleOpacity ?? 0.1}
             />
             
@@ -408,5 +480,5 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData }: LiveB
         </div>
       </div>
     </div>
-  )
+  );
 }

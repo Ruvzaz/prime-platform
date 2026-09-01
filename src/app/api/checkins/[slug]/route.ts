@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
-import { extractAttendeeInfo, maskName, maskEmail } from "@/lib/attendee-utils";
+import { extractAttendeeInfo, maskEmail } from "@/lib/attendee-utils";
 
 export async function GET(
   request: NextRequest,
@@ -26,13 +26,24 @@ export async function GET(
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
 
+    const linkedIds: string[] = event.liveConfig?.linkedEventIds || [];
+    const allEventIds = Array.from(new Set([event.id, ...linkedIds]));
+
+    const linkedEvents = await prisma.event.findMany({
+      where: { id: { in: allEventIds } },
+      select: { id: true, title: true, formFields: true },
+    });
+
+    const eventMap = new Map<string, { title: string; formFields: any[] }>();
+    linkedEvents.forEach((e) => eventMap.set(e.id, { title: e.title, formFields: e.formFields }));
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const [checkIns, totalUniqueCheckIns, totalRegistrations] = await Promise.all([
       prisma.checkIn.findMany({
         where: {
-          registration: { eventId: event.id },
+          registration: { eventId: { in: allEventIds } },
           scannedAt: { gte: today },
         },
         orderBy: { scannedAt: "desc" },
@@ -44,29 +55,35 @@ export async function GET(
             select: {
               referenceCode: true,
               formData: true,
+              eventId: true,
             },
           },
         },
       }),
       prisma.checkIn.count({
         where: {
-          registration: { eventId: event.id },
+          registration: { eventId: { in: allEventIds } },
           scannedAt: { gte: today },
-        }
+        },
       }),
       prisma.registration.count({
-        where: { eventId: event.id }
-      })
+        where: { eventId: { in: allEventIds } },
+      }),
     ]);
 
     const data = checkIns.map((ci) => {
-      const { name, email } = extractAttendeeInfo(ci.registration.formData as Record<string, unknown>, event.formFields);
+      const targetEv = eventMap.get(ci.registration.eventId) || event;
+      const { name, email } = extractAttendeeInfo(
+        ci.registration.formData as Record<string, unknown>,
+        targetEv.formFields
+      );
       return {
         id: ci.id,
         referenceCode: ci.registration.referenceCode,
         name: name,
         email: maskEmail(email),
         scannedAt: ci.scannedAt.toISOString(),
+        eventTitle: targetEv.title,
       };
     });
 
@@ -80,7 +97,7 @@ export async function GET(
       },
       checkIns: data,
       total: totalUniqueCheckIns,
-      totalRegistrations: totalRegistrations
+      totalRegistrations: totalRegistrations,
     });
   } catch (error) {
     console.error("Failed to fetch check-ins:", error);
