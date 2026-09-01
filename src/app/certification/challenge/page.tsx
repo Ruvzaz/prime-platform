@@ -13,14 +13,21 @@ export default async function ChallengeUserCertificationPage() {
     redirect("/auth/login?callbackUrl=/certification/challenge");
   }
 
-  const userEmail = session.user.email.toLowerCase().trim();
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { name: true, email: true },
+  });
 
-  // Find user details & certificates issued to their email or userId
+  const userEmail = (dbUser?.email || session.user.email)?.toLowerCase().trim();
+  const userName = (dbUser?.name || session.user.name)?.trim();
+
+  // Find user details & certificates issued to their email, userId, or recipient name
   const certificates = await prisma.certificate.findMany({
     where: {
       OR: [
-        { email: userEmail },
+        ...(userEmail ? [{ email: { equals: userEmail, mode: "insensitive" as const } }] : []),
         { userId: session.user.id },
+        ...(userName ? [{ recipientFullName: { equals: userName, mode: "insensitive" as const } }] : []),
       ],
       status: "ACTIVE",
     },
@@ -35,9 +42,34 @@ export default async function ChallengeUserCertificationPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  // If user has no active certificates, block direct access and redirect to home
+  // If user has no active certificates, render a clear empty state screen
   if (certificates.length === 0) {
-    redirect("/challenge");
+    return (
+      <div className="min-h-screen bg-[#0e1418] text-[#dee3e9] font-sans flex flex-col">
+        <ChallengeNavbar />
+        <div className="flex-1 flex items-center justify-center p-6 text-center">
+          <div className="bg-[#161c21] border border-[#3b494b] p-8 sm:p-10 rounded-3xl max-w-md shadow-2xl space-y-5">
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+              <Award className="w-8 h-8" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-2xl font-black text-[#dee3e9]">
+                ยังไม่พบใบประกาศนียบัตรของคุณ
+              </h1>
+              <p className="text-xs text-[#849495] leading-relaxed font-mono">
+                บัญชี <strong className="text-red-400">{userEmail}</strong> ยังไม่มีใบประกาศนียบัตร CTF Challenge ในระบบ
+              </p>
+            </div>
+            <Link href="/challenge" className="block pt-2">
+              <button className="w-full font-mono text-xs uppercase tracking-widest px-5 py-3 border border-[#3b494b] bg-[#161c21] text-[#dee3e9] hover:bg-[#252f36] hover:border-red-500/50 active:scale-95 transition-all duration-150 rounded flex items-center justify-center gap-2">
+                <ArrowLeft className="w-4 h-4 text-red-500" />
+                <span>ย้อนกลับสู่หน้าหลัก Challenge</span>
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Fetch Default Template (as fallback)

@@ -131,15 +131,26 @@ export function ECertCanvas({
           ctx.fillText(displayName, x, y);
         }
 
-        // 1.5. Team Name (for CTF Challenge)
+        // 1.5. Team Name (for CTF Challenge with Max Width Ellipsis Truncation)
         if (layout.showTeam && certData.teamName) {
           const x = ((layout.teamX ?? 50) / 100) * width;
           const y = ((layout.teamY ?? 58) / 100) * height;
+          const maxW = ((layout.teamMaxWidth || 650) / 2000) * width;
           ctx.font = `bold ${layout.teamFontSize || 32}px 'Prompt', 'Sarabun', sans-serif`;
           ctx.textAlign = (layout.teamAlign as CanvasTextAlign) || 'center';
           ctx.textBaseline = 'middle';
           ctx.fillStyle = layout.teamColor || '#2563eb';
-          ctx.fillText(`ทีม ${certData.teamName}`, x, y);
+
+          let renderText = certData.teamName;
+          if (ctx.measureText(renderText).width > maxW) {
+            let truncated = renderText;
+            while (truncated.length > 0 && ctx.measureText(truncated + '...').width > maxW) {
+              truncated = truncated.slice(0, -1);
+            }
+            renderText = truncated ? truncated + '...' : renderText;
+          }
+
+          ctx.fillText(renderText, x, y);
         }
 
         // 2. Issue Date
