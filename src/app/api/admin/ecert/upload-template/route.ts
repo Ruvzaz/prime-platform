@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import os from "os";
 import { auth } from "@/auth";
+import { uploadToR2 } from "@/lib/storage";
 
 export async function POST(req: Request) {
   try {
@@ -39,44 +40,18 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const filename = `template_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
 
-    // Candidate directories in order of preference:
-    // 1. private_uploads/templates (Outside public root)
-    // 2. public/uploads/templates (Web root)
-    // 3. os.tmpdir()/prime_templates (System temp directory for serverless environments)
-    const candidateDirs = [
-      path.join(process.cwd(), "private_uploads", "templates"),
-      path.join(process.cwd(), "public", "uploads", "templates"),
-      path.join(os.tmpdir(), "prime_templates"),
-    ];
-
-    let savedPath: string | null = null;
-    let lastError: any = null;
-
-    for (const targetDir of candidateDirs) {
-      try {
-        if (!fs.existsSync(targetDir)) {
-          fs.mkdirSync(targetDir, { recursive: true });
-        }
-        const fullPath = path.join(targetDir, filename);
-        fs.writeFileSync(fullPath, buffer);
-        savedPath = fullPath;
-        break;
-      } catch (err: any) {
-        console.warn(`Failed writing to ${targetDir}:`, err?.message || err);
-        lastError = err;
-      }
+    // Upload directly to Cloudflare R2 Bucket under cert-templates folder
+    let imageUrl: string;
+    try {
+      imageUrl = await uploadToR2(file, "cert-templates");
+    } catch (r2Error: any) {
+      console.warn("Cloudflare R2 upload fallback to Base64:", r2Error?.message || r2Error);
+      imageUrl = `data:${file.type};base64,${buffer.toString("base64")}`;
     }
 
-    if (!savedPath) {
-      throw new Error(`ไม่สามารถสร้างไฟล์ในโฟลเดอร์แม่แบบได้: ${lastError?.message || "Permission denied"}`);
-    }
-
-    const base64DataUrl = `data:${file.type};base64,${buffer.toString("base64")}`;
-
-    // Return Base64 Data URL so template image is stored permanently in DB across Vercel serverless deployments
     return NextResponse.json({
       success: true,
-      url: base64DataUrl,
+      url: imageUrl,
       filename,
       size: file.size,
     });
