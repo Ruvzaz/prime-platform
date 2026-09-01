@@ -61,7 +61,6 @@ export async function ChallengeNavbar() {
           ...(cleanUsername ? [{ email: { contains: cleanUsername, mode: "insensitive" as const } }] : []),
           ...(username ? [{ email: { contains: username, mode: "insensitive" as const } }] : []),
           ...(userName ? [{ recipientFullName: { equals: userName, mode: "insensitive" as const } }] : []),
-          ...(membership?.challengeId ? [{ challengeId: membership.challengeId }] : []),
         ],
         status: "ACTIVE",
       },
