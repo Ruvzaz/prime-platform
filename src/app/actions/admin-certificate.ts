@@ -119,6 +119,26 @@ export async function adminCreateCertificate(data: {
       }
     }
 
+    let resolvedChallengeId = data.challengeId || null;
+    if (!resolvedChallengeId && resolvedEventTitle) {
+      const keyword = resolvedEventTitle.includes("Open")
+        ? "Open"
+        : resolvedEventTitle.includes("Senior")
+        ? "Senior"
+        : resolvedEventTitle.includes("Junior")
+        ? "Junior"
+        : null;
+
+      if (keyword) {
+        const matchedCh = await prisma.challenge.findFirst({
+          where: { name: { contains: keyword, mode: "insensitive" } },
+        });
+        if (matchedCh) {
+          resolvedChallengeId = matchedCh.id;
+        }
+      }
+    }
+
     const cert = await prisma.certificate.create({
       data: {
         certCode,
@@ -129,7 +149,7 @@ export async function adminCreateCertificate(data: {
         eventTitle: resolvedEventTitle,
         issueDate: data.issueDate || "31 สิงหาคม 2569",
         status: "ACTIVE",
-        challengeId: data.challengeId || null,
+        challengeId: resolvedChallengeId,
         eventId: data.eventId || null,
         userId: user.id,
       },

@@ -35,7 +35,8 @@ export async function ChallengeNavbar() {
   let hasCertificates = false;
 
   if (session?.user) {
-    const { resolvedUserId, userName, certWhereClause } = await resolveUserForCert(session.user);
+    const { resolvedUserId, userName, certWhereClause } =
+      await resolveUserForCert(session.user);
 
     if (userName) {
       displayName = userName;
@@ -64,7 +65,13 @@ export async function ChallengeNavbar() {
           href="/challenge"
           className="flex items-center gap-2 font-black text-2xl tracking-tighter text-[#dee3e9] hover:opacity-80 transition-opacity"
         >
-          <Image src="/ICON IMAGE.png" alt="NCSA Logo" width={48} height={48} className="object-contain" />
+          <Image
+            src="/ICON IMAGE.png"
+            alt="NCSA Logo"
+            width={48}
+            height={48}
+            className="object-contain"
+          />
           <span className="">
             N
             <span className="text-blue-500">
@@ -79,14 +86,6 @@ export async function ChallengeNavbar() {
 
         {session?.user ? (
           <div className="flex items-center gap-2 sm:gap-4">
-            <Link
-              href="/certification/challenge"
-              className="flex items-center gap-2 px-3 py-2 rounded bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/70 transition-all font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(239,68,68,0.15)]"
-            >
-              <Award className="w-4 h-4 text-red-500" />
-              <span>Certificates</span>
-            </Link>
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <div className="flex items-center gap-3 px-3 py-1.5 rounded bg-[#161c21] border border-[#3b494b] cursor-pointer hover:border-red-500/50 transition-colors">
