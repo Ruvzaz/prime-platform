@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import * as XLSX from "xlsx";
 import crypto from "crypto";
 
@@ -93,17 +94,27 @@ export async function POST(request: Request) {
           null;
       }
 
-      // Find existing user if available
-      let user = await prisma.user.findUnique({ where: { email } });
+      const cleanUsername = email.includes("@") ? email.split("@")[0] : email;
+
+      // Find existing user if available (by email, username, or full name)
+      let user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: { equals: email, mode: "insensitive" } },
+            { username: { equals: email, mode: "insensitive" } },
+            { username: { equals: cleanUsername, mode: "insensitive" } },
+            ...(fullNameInput ? [{ name: { equals: fullNameInput.trim(), mode: "insensitive" as const } }] : []),
+          ],
+        },
+      });
 
       if (!user) {
         // Auto-create stub user record for this recipient email
-        const usernameFallback = email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "_");
         user = await prisma.user.create({
           data: {
             email,
-            username: usernameFallback,
-            name: fullNameInput || [title, firstName, lastName].filter(Boolean).join(" ") || email.split("@")[0],
+            username: cleanUsername,
+            name: fullNameInput || [title, firstName, lastName].filter(Boolean).join(" ") || cleanUsername,
             title: title || undefined,
             firstName: firstName || undefined,
             lastName: lastName || undefined,
@@ -160,6 +171,11 @@ export async function POST(request: Request) {
 
       createdCertsCount++;
     }
+
+    revalidatePath('/admin/certificates');
+    revalidatePath('/certification/challenge');
+    revalidatePath('/challenge', 'layout');
+    revalidatePath('/', 'layout');
 
     return NextResponse.json({
       success: true,
