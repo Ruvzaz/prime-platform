@@ -105,7 +105,7 @@ export default async function CertTemplatesPage() {
                   <div>
                     <h3 className="font-bold text-base text-slate-900 dark:text-white">{tpl.name}</h3>
                     <p className="text-xs text-slate-500 font-mono mt-0.5">
-                      กิจกรรมที่ใช้งานอยู่: {tpl.events.length} Event(s)
+                      กิจกรรม/การแข่งขันที่ใช้งานอยู่: {(tpl.events?.length || 0) + ((tpl as any).challenges?.length || 0)} รายการ
                     </p>
                   </div>
 
