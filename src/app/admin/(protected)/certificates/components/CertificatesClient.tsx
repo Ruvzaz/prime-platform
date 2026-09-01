@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Award,
   Search,
@@ -17,6 +17,8 @@ import {
   Loader2,
   ExternalLink,
   LayoutTemplate,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -137,6 +139,21 @@ export function CertificatesClient({
 
     return matchesSearch && matchesType && matchesChallengeId && matchesEventId;
   });
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
+  // Reset page to 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, typeFilter, challengeIdFilter, eventIdFilter, pageSize]);
+
+  const totalFilteredCount = filteredCertificates.length;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredCount / pageSize));
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalFilteredCount);
+  const paginatedCertificates = filteredCertificates.slice(startIndex, endIndex);
 
   // Action handlers
   async function handleToggleStatus(certId: string, currentStatus: string) {
@@ -518,14 +535,14 @@ export function CertificatesClient({
               </tr>
             </thead>
             <tbody className="divide-y">
-              {filteredCertificates.length === 0 ? (
+              {totalFilteredCount === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-12 text-center text-muted-foreground font-mono">
                     No E-Certificates found matching your filters.
                   </td>
                 </tr>
               ) : (
-                filteredCertificates.map((cert) => (
+                paginatedCertificates.map((cert) => (
                   <tr key={cert.id} className="hover:bg-muted/30 transition-colors">
                     <td className="p-4 font-mono font-bold text-amber-500">
                       {cert.certCode}
@@ -622,6 +639,59 @@ export function CertificatesClient({
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Footer */}
+        {totalFilteredCount > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-t bg-muted/20 font-mono text-xs text-muted-foreground">
+            <div className="flex items-center gap-3">
+              <span>
+                แสดง <strong className="text-foreground">{startIndex + 1}</strong> - <strong className="text-foreground">{endIndex}</strong> จากทั้งหมด <strong className="text-amber-500 font-bold">{totalFilteredCount}</strong> รายการ
+              </span>
+              <div className="flex items-center gap-1.5 ml-2">
+                <span className="text-muted-foreground">ต่อหน้า:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="bg-background border border-input rounded px-2 py-1 text-foreground focus:outline-none focus:ring-1 focus:ring-amber-500"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                  <option value={500}>500</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="h-8 gap-1"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Previous
+              </Button>
+
+              <span className="px-2">
+                หน้า <strong className="text-foreground">{currentPage}</strong> / <strong className="text-foreground">{totalPages}</strong>
+              </span>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="h-8 gap-1"
+              >
+                Next
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
