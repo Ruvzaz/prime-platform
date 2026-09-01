@@ -105,7 +105,7 @@ export async function ChallengeNavbar() {
                 className="w-56 bg-[#161c21] border-[#3b494b] text-[#dee3e9]"
               >
                 <DropdownMenuLabel className="font-mono text-xs text-[#849495] uppercase tracking-widest">
-                  Neural Link
+                  Neural Link v2.0
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-[#3b494b]" />
                 <DropdownMenuItem
@@ -123,7 +123,7 @@ export async function ChallengeNavbar() {
                 >
                   <Link href="/challenge/profile">
                     <UserCog className="w-4 h-4 mr-2" />
-                    <span>My Profile</span>
+                    <span>My Profile v2</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -132,7 +132,7 @@ export async function ChallengeNavbar() {
                 >
                   <Link href="/certification/challenge">
                     <Award className="w-4 h-4 mr-2" />
-                    <span>My Certificates</span>
+                    <span>MY CERTIFICATES (PROD)</span>
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
