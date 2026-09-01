@@ -13,6 +13,7 @@ export interface CertLayoutConfig {
   teamFontSize?: number;
   teamColor?: string;
   teamAlign?: "left" | "center" | "right";
+  teamMaxWidth?: number; // in pixels at 2000x1414 resolution
 
   showDate: boolean;
   dateX: number;
@@ -49,6 +50,7 @@ export const DEFAULT_LAYOUT_CONFIG: CertLayoutConfig = {
   teamFontSize: 32,
   teamColor: "#2563eb",
   teamAlign: "center",
+  teamMaxWidth: 650,
 
   showDate: true,
   dateX: 50,

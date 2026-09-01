@@ -67,16 +67,29 @@ export async function adminCreateCertificate(data: {
     }
     const certCode = `CERT-2026-${randomStr}`;
 
-    // Find user if available
-    let user = await prisma.user.findUnique({ where: { email: cleanEmail } });
+    // Find user if available (by email or recipient name)
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: { equals: cleanEmail, mode: "insensitive" } },
+          { name: { equals: data.recipientFullName.trim(), mode: "insensitive" } },
+        ],
+      },
+    });
+
     if (!user) {
       const usernameFallback = cleanEmail.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
       user = await prisma.user.create({
         data: {
           email: cleanEmail,
           username: usernameFallback,
-          name: data.recipientFullName,
+          name: data.recipientFullName.trim(),
         },
+      });
+    } else if (!user.name) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { name: data.recipientFullName.trim() },
       });
     }
 
@@ -111,6 +124,8 @@ export async function adminCreateCertificate(data: {
 
     revalidatePath('/admin/certificates');
     revalidatePath('/certification/challenge');
+    revalidatePath('/challenge', 'layout');
+    revalidatePath('/', 'layout');
     return { success: true, certificate: cert };
   } catch (error: any) {
     console.error("Create Certificate Error:", error);

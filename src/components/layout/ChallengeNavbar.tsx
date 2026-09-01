@@ -41,11 +41,14 @@ export async function ChallengeNavbar() {
     }
 
     const userEmail = (dbUser?.email || session.user.email)?.toLowerCase().trim();
+    const userName = (dbUser?.name || session?.user?.name)?.trim();
+
     const certCount = await prisma.certificate.count({
       where: {
         OR: [
-          ...(userEmail ? [{ email: userEmail }] : []),
+          ...(userEmail ? [{ email: { equals: userEmail, mode: "insensitive" as const } }] : []),
           { userId: session.user.id },
+          ...(userName ? [{ recipientFullName: { equals: userName, mode: "insensitive" as const } }] : []),
         ],
         status: "ACTIVE",
       },

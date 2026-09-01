@@ -268,15 +268,16 @@ export function CertTemplateEditor({ initialTemplate }: CertTemplateEditorProps)
                   color: layout.teamColor ?? "#2563eb",
                   textAlign: layout.teamAlign ?? "center",
                   fontSize: `${((layout.teamFontSize || 32) / 2000) * 100}cqw`,
+                  maxWidth: `${((layout.teamMaxWidth || 650) / 2000) * 100}cqw`,
                   transform: "translate(-50%, -50%)",
                 }}
-                className={`absolute cursor-move px-3 py-1 rounded-lg border-2 font-bold transition-shadow ${
+                className={`absolute cursor-move px-3 py-1 rounded-lg border-2 font-bold transition-shadow overflow-hidden text-ellipsis whitespace-nowrap ${
                   activeElement === "team"
                     ? "border-purple-500 bg-purple-500/10 shadow-lg ring-2 ring-purple-500/30 z-30"
                     : "border-purple-400/50 bg-white/40 dark:bg-black/40 z-20"
                 }`}
               >
-                <span className="whitespace-nowrap font-sans">ทีม CyberDefender X (ตัวอย่างชื่อทีม)</span>
+                <span className="whitespace-nowrap font-sans truncate block max-w-full">CyberDefender X (ตัวอย่างชื่อทีม)</span>
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 text-white font-mono text-[9px] px-1.5 py-0.5 rounded shadow">
                   ชื่อทีม
                 </span>
@@ -571,13 +572,22 @@ export function CertTemplateEditor({ initialTemplate }: CertTemplateEditorProps)
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                  <div className="grid grid-cols-3 gap-2 text-xs font-mono">
                     <div>
                       <Label className="text-[10px] uppercase font-bold">ขนาดฟอนต์ (px)</Label>
                       <Input
                         type="number"
                         value={layout.teamFontSize ?? 32}
                         onChange={(e) => setLayout((p) => ({ ...p, teamFontSize: Number(e.target.value) }))}
+                        className="h-8 text-xs font-bold"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[10px] uppercase font-bold">ความกว้างสูงสุด (px)</Label>
+                      <Input
+                        type="number"
+                        value={layout.teamMaxWidth ?? 650}
+                        onChange={(e) => setLayout((p) => ({ ...p, teamMaxWidth: Number(e.target.value) }))}
                         className="h-8 text-xs font-bold"
                       />
                     </div>
