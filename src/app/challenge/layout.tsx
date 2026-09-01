@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { ProfileCompletionModal } from "@/components/profile-completion-modal";
 import { PrivacyPolicyModal } from "@/components/privacy-policy-modal";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function ChallengeLayout({
   children,
 }: {
