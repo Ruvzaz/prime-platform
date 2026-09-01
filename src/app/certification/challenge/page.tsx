@@ -27,7 +27,12 @@ export default async function ChallengeUserCertificationPage() {
           userId: resolvedUserId,
           status: "APPROVED",
         },
-        include: { team: true },
+        include: {
+          team: true,
+          challenge: {
+            include: { certTemplate: true },
+          },
+        },
       })
     : [];
 
@@ -77,10 +82,57 @@ export default async function ChallengeUserCertificationPage() {
     );
   }
 
-  // Fetch Default Template (as fallback)
-  const defaultTemplate = await prisma.certTemplate.findFirst({
-    where: { isDefault: true },
-  });
+  // Pre-resolve active templates for all certificates
+  const certsWithTemplates = await Promise.all(
+    certificates.map(async (cert) => {
+      let activeTemplate = cert.challenge?.certTemplate || cert.event?.certTemplate;
+
+      if (!activeTemplate) {
+        const matchedChallenge = userTeams.find((tm) => tm.challengeId === cert.challengeId)?.challenge;
+        if (matchedChallenge?.certTemplate) {
+          activeTemplate = matchedChallenge.certTemplate;
+        }
+      }
+
+      if (!activeTemplate) {
+        const challengeKeyword = cert.eventTitle.includes("Open")
+          ? "Open"
+          : cert.eventTitle.includes("Senior")
+          ? "Senior"
+          : cert.eventTitle.includes("Junior")
+          ? "Junior"
+          : null;
+
+        if (challengeKeyword) {
+          const targetChallenge = await prisma.challenge.findFirst({
+            where: {
+              name: { contains: challengeKeyword, mode: "insensitive" },
+              certTemplateId: { not: null },
+            },
+            include: { certTemplate: true },
+          });
+          if (targetChallenge?.certTemplate) {
+            activeTemplate = targetChallenge.certTemplate;
+          }
+        }
+      }
+
+      if (!activeTemplate) {
+        activeTemplate =
+          (await prisma.certTemplate.findFirst({ where: { isDefault: true } })) ||
+          (await prisma.certTemplate.findFirst()) ||
+          null;
+      }
+
+      const teamName = cert.challengeId ? teamMap.get(cert.challengeId) : undefined;
+
+      return {
+        cert,
+        activeTemplate,
+        teamName,
+      };
+    })
+  );
 
   return (
     <div className="min-h-screen bg-[#0e1418] text-[#dee3e9] font-sans">
@@ -116,17 +168,7 @@ export default async function ChallengeUserCertificationPage() {
 
         {/* Certificates List */}
         <div className="space-y-12">
-          {certificates.map((cert) => {
-            const displayName =
-              cert.recipientFullName ||
-              [cert.recipientPrefix, cert.recipientFirstName, cert.recipientLastName]
-                .filter(Boolean)
-                .join(" ") ||
-              session.user?.name ||
-              userEmail;
-
-            const teamName = cert.challengeId ? teamMap.get(cert.challengeId) : undefined;
-            const activeTemplate = cert.challenge?.certTemplate || cert.event?.certTemplate || defaultTemplate;
+          {certsWithTemplates.map(({ cert, activeTemplate, teamName }) => {
 
             return (
               <div
