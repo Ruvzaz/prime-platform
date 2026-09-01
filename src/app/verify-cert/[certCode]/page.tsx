@@ -71,10 +71,48 @@ export default async function VerifyCertPage({
     cert.event?.title ||
     "Thailand Cyber Top Talent 2026";
 
+  // Smart Template Resolution Engine for Verify Page
+  let activeTemplate = cert.event?.certTemplate || cert.challenge?.certTemplate;
+
+  const challengeKeyword = cert.eventTitle.includes("Open")
+    ? "Open"
+    : cert.eventTitle.includes("Senior")
+    ? "Senior"
+    : cert.eventTitle.includes("Junior")
+    ? "Junior"
+    : null;
+
+  // Fallback 1: Resolve Challenge by challengeKeyword if cert.challenge is missing
+  if (!activeTemplate && challengeKeyword) {
+    const matchedChallenge = await prisma.challenge.findFirst({
+      where: {
+        name: { contains: challengeKeyword, mode: "insensitive" },
+        certTemplateId: { not: null },
+      },
+      include: { certTemplate: true },
+    });
+    if (matchedChallenge?.certTemplate) {
+      activeTemplate = matchedChallenge.certTemplate;
+    }
+  }
+
+  // Fallback 2: Default or first available template in DB
+  if (!activeTemplate) {
+    activeTemplate =
+      (await prisma.certTemplate.findFirst({ where: { isDefault: true } })) ||
+      (await prisma.certTemplate.findFirst()) ||
+      null;
+  }
+
+  // Resolve teamName
   let teamName: string | undefined = undefined;
-  if (cert.challengeId && cert.userId) {
+  if (cert.userId) {
     const tm = await prisma.teamMember.findFirst({
-      where: { userId: cert.userId, challengeId: cert.challengeId, status: "APPROVED" },
+      where: {
+        userId: cert.userId,
+        status: "APPROVED",
+        ...(cert.challengeId ? { challengeId: cert.challengeId } : {}),
+      },
       include: { team: true },
     });
     if (tm?.team?.name) {
@@ -82,13 +120,8 @@ export default async function VerifyCertPage({
     }
   }
 
-  const activeTemplate = cert.event?.certTemplate || cert.challenge?.certTemplate;
-  const defaultTemplate = (!activeTemplate)
-    ? await prisma.certTemplate.findFirst({ where: { isDefault: true } }) 
-    : null;
-
-  const templateBg = activeTemplate?.backgroundImageUrl || defaultTemplate?.backgroundImageUrl;
-  const templateConfig = (activeTemplate?.layoutConfig || defaultTemplate?.layoutConfig) as any;
+  const templateBg = activeTemplate?.backgroundImageUrl;
+  const templateConfig = activeTemplate?.layoutConfig as any;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans selection:bg-indigo-500 selection:text-white relative overflow-x-hidden transition-colors duration-300">
