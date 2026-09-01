@@ -15,11 +15,22 @@ export default async function ChallengeUserCertificationPage() {
 
   const userEmail = session.user.email.toLowerCase().trim();
 
-  // Find user details & certificates issued to their email
+  // Find user details & certificates issued to their email or userId
   const certificates = await prisma.certificate.findMany({
     where: {
-      email: userEmail,
+      OR: [
+        { email: userEmail },
+        { userId: session.user.id },
+      ],
       status: "ACTIVE",
+    },
+    include: {
+      challenge: {
+        include: { certTemplate: true },
+      },
+      event: {
+        include: { certTemplate: true },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -29,7 +40,7 @@ export default async function ChallengeUserCertificationPage() {
     redirect("/challenge");
   }
 
-  // Fetch Default Template (for Challenge E-Certificates)
+  // Fetch Default Template (as fallback)
   const defaultTemplate = await prisma.certTemplate.findFirst({
     where: { isDefault: true },
   });
@@ -89,6 +100,7 @@ export default async function ChallengeUserCertificationPage() {
               userEmail;
 
             const teamName = cert.challengeId ? teamMap.get(cert.challengeId) : undefined;
+            const activeTemplate = cert.challenge?.certTemplate || cert.event?.certTemplate || defaultTemplate;
 
             return (
               <div
@@ -124,8 +136,8 @@ export default async function ChallengeUserCertificationPage() {
                     teamName: teamName,
                     eventTitle: cert.eventTitle,
                     issueDate: cert.issueDate,
-                    backgroundImageUrl: defaultTemplate?.backgroundImageUrl,
-                    layoutConfig: defaultTemplate?.layoutConfig as any,
+                    backgroundImageUrl: activeTemplate?.backgroundImageUrl,
+                    layoutConfig: activeTemplate?.layoutConfig as any,
                   }}
                   showDownloadBtn={true}
                 />
