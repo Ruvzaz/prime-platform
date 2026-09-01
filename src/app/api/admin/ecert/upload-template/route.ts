@@ -36,7 +36,9 @@ export async function POST(req: Request) {
     const ext = allowedExts.includes(rawExt) ? rawExt : "png";
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "templates");
+
+    // Security: Store uploaded files in private_uploads directory (OUTSIDE public folder)
+    const uploadDir = path.join(process.cwd(), "private_uploads", "templates");
 
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
@@ -47,10 +49,11 @@ export async function POST(req: Request) {
 
     fs.writeFileSync(filePath, buffer);
 
-    const publicUrl = `/uploads/templates/${filename}`;
+    // Return protected API route URL instead of direct static path
+    const protectedUrl = `/api/ecert/template-image?file=${filename}`;
     return NextResponse.json({
       success: true,
-      url: publicUrl,
+      url: protectedUrl,
       filename,
       size: file.size,
     });
