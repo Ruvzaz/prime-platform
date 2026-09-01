@@ -6,6 +6,8 @@ import Link from "next/link";
 import { ECertCanvas } from "@/components/ecert/ECertCanvas";
 import { ChallengeNavbar } from "@/components/layout/ChallengeNavbar";
 
+import { resolveUserForCert } from "@/lib/certificate";
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -16,26 +18,7 @@ export default async function ChallengeUserCertificationPage() {
     redirect("/auth/login?callbackUrl=/certification/challenge");
   }
 
-  const rawUserId = session.user.id;
-  const rawEmail = session.user.email?.toLowerCase().trim();
-  const rawName = session.user.name?.trim();
-
-  const dbUser = await prisma.user.findFirst({
-    where: {
-      OR: [
-        ...(rawUserId ? [{ id: rawUserId }] : []),
-        ...(rawEmail ? [{ email: { equals: rawEmail, mode: "insensitive" as const } }] : []),
-        ...(rawName ? [{ name: { equals: rawName, mode: "insensitive" as const } }] : []),
-      ],
-    },
-    select: { id: true, name: true, email: true, username: true },
-  });
-
-  const resolvedUserId = dbUser?.id || rawUserId;
-  const userEmail = (dbUser?.email || rawEmail)?.toLowerCase().trim();
-  const userName = (dbUser?.name || rawName)?.trim();
-  const username = dbUser?.username?.trim();
-  const cleanUsername = userEmail && userEmail.includes("@") ? userEmail.split("@")[0] : userEmail;
+  const { resolvedUserId, userEmail, userName, certWhereClause } = await resolveUserForCert(session.user);
 
   // Fetch user's approved team memberships to display team name
   const userTeams = resolvedUserId
@@ -52,16 +35,7 @@ export default async function ChallengeUserCertificationPage() {
 
   // Find user details & certificates issued to their email, userId, or recipient name
   const certificates = await prisma.certificate.findMany({
-    where: {
-      OR: [
-        ...(resolvedUserId ? [{ userId: resolvedUserId }] : []),
-        ...(userEmail ? [{ email: { equals: userEmail, mode: "insensitive" as const } }] : []),
-        ...(cleanUsername ? [{ email: { contains: cleanUsername, mode: "insensitive" as const } }] : []),
-        ...(username ? [{ email: { contains: username, mode: "insensitive" as const } }] : []),
-        ...(userName ? [{ recipientFullName: { equals: userName, mode: "insensitive" as const } }] : []),
-      ],
-      status: "ACTIVE",
-    },
+    where: certWhereClause,
     include: {
       challenge: {
         include: { certTemplate: true },
