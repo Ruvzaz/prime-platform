@@ -247,11 +247,14 @@ model Challenge {
   isActive    Boolean @default(true)
   imageUrl    String?
 
+  certTemplateId String?
+  certTemplate   CertTemplate? @relation(fields: [certTemplateId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  teams       Team[]
-  teamMembers TeamMember[]
+  teams        Team[]
+  teamMembers  TeamMember[]
   certificates Certificate[]
 }
 
@@ -367,6 +370,7 @@ model CertTemplate {
   layoutConfig       Json
   isDefault          Boolean  @default(false)
   events             Event[]
+  challenges         Challenge[]
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }

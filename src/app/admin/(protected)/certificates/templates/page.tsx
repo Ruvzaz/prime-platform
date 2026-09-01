@@ -23,6 +23,16 @@ export default async function CertTemplatesPage() {
     },
   });
 
+  const challenges = await prisma.challenge.findMany({
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      certTemplateId: true,
+    },
+  });
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -36,7 +46,7 @@ export default async function CertTemplatesPage() {
             จัดการแม่แบบใบประกาศ & ลากวางตำแหน่ง (Templates)
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400">
-            อัปโหลดภาพแม่แบบ JPG/PNG กำหนดว่า Event ไหนใช้แม่แบบใด และลากวางตำแหน่งข้อความบนภาพใบประกาศ
+            อัปโหลดภาพแม่แบบ JPG/PNG กำหนดว่า Event หรือ Challenge ไหนใช้แม่แบบใด และลากวางตำแหน่งข้อความบนภาพใบประกาศ
           </p>
         </div>
 
@@ -48,16 +58,16 @@ export default async function CertTemplatesPage() {
         </Link>
       </div>
 
-      {/* SECTION 1: EVENT TO TEMPLATE ASSIGNMENT TABLE */}
+      {/* SECTION 1: EVENT AND CHALLENGE TO TEMPLATE ASSIGNMENT TABLE */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Settings className="w-5 h-5 text-indigo-600" />
-            กำหนดแม่แบบและเปิด/ปิดใบประกาศประจำกิจกรรม (Event Certificate Settings)
+            กำหนดแม่แบบประจำกิจกรรมและประจำการแข่งขัน (Certificate Settings)
           </h2>
         </div>
 
-        <EventCertTemplateSelector events={events} templates={templates || []} />
+        <EventCertTemplateSelector events={events} challenges={challenges} templates={templates || []} />
       </div>
 
       {/* SECTION 2: CERTIFICATE TEMPLATES LIST GRID */}

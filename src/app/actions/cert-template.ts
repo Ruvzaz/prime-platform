@@ -145,3 +145,30 @@ export async function updateEventCertSettings(data: {
     return { success: false, error: "ไม่สามารถบันทึกการตั้งค่าใบประกาศของ Event ได้" };
   }
 }
+
+/**
+ * Assign a Certificate Template to a Challenge
+ */
+export async function updateChallengeCertTemplate(data: {
+  challengeId: string;
+  certTemplateId?: string | null;
+}) {
+  try {
+    const { challengeId, certTemplateId } = data;
+
+    const challenge = await prisma.challenge.update({
+      where: { id: challengeId },
+      data: {
+        certTemplateId: certTemplateId || null,
+      },
+    });
+
+    revalidatePath("/admin/certificates");
+    revalidatePath("/certification/challenge");
+
+    return { success: true, challenge };
+  } catch (error: any) {
+    console.error("Error updating challenge cert template:", error);
+    return { success: false, error: "ไม่สามารถบันทึกการตั้งค่าแม่แบบของ Challenge ได้" };
+  }
+}
