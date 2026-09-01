@@ -25,6 +25,10 @@ import { prisma } from "@/lib/prisma";
 import { unstable_noStore as noStore } from "next/cache";
 import { resolveUserForCert } from "@/lib/certificate";
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
+
 export async function ChallengeNavbar() {
   noStore();
   const session = await auth();
