@@ -86,14 +86,6 @@ export async function ChallengeNavbar() {
 
         {session?.user ? (
           <div className="flex items-center gap-2 sm:gap-4">
-            <Link
-              href="/certification/challenge"
-              className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-red-500/10 border border-red-500/40 text-red-400 hover:bg-red-500/20 hover:border-red-500 transition-all font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_12px_rgba(239,68,68,0.2)]"
-            >
-              <Award className="w-4 h-4 text-red-500 animate-pulse" />
-              <span>Certificates</span>
-            </Link>
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <div className="flex items-center gap-3 px-3 py-1.5 rounded bg-[#161c21] border border-[#3b494b] cursor-pointer hover:border-red-500/50 transition-colors">
