@@ -41,15 +41,16 @@ export async function ChallengeNavbar() {
     }
 
     const userEmail = (dbUser?.email || session.user.email)?.toLowerCase().trim();
-    if (userEmail) {
-      const certCount = await prisma.certificate.count({
-        where: {
-          email: userEmail,
-          status: "ACTIVE",
-        },
-      });
-      hasCertificates = certCount > 0;
-    }
+    const certCount = await prisma.certificate.count({
+      where: {
+        OR: [
+          ...(userEmail ? [{ email: userEmail }] : []),
+          { userId: session.user.id },
+        ],
+        status: "ACTIVE",
+      },
+    });
+    hasCertificates = certCount > 0;
 
     const membership = await prisma.teamMember.findFirst({
       where: { userId: session.user.id },

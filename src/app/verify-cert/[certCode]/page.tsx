@@ -22,7 +22,7 @@ export default async function VerifyCertPage({
         select: { name: true, email: true, title: true, firstName: true, lastName: true },
       },
       challenge: {
-        select: { name: true },
+        select: { name: true, certTemplate: true },
       },
       event: {
         select: { title: true, certTemplate: true },
@@ -82,12 +82,13 @@ export default async function VerifyCertPage({
     }
   }
 
-  const defaultTemplate = (!cert.event?.certTemplate) 
+  const activeTemplate = cert.event?.certTemplate || cert.challenge?.certTemplate;
+  const defaultTemplate = (!activeTemplate)
     ? await prisma.certTemplate.findFirst({ where: { isDefault: true } }) 
     : null;
 
-  const templateBg = cert.event?.certTemplate?.backgroundImageUrl || defaultTemplate?.backgroundImageUrl;
-  const templateConfig = (cert.event?.certTemplate?.layoutConfig || defaultTemplate?.layoutConfig) as any;
+  const templateBg = activeTemplate?.backgroundImageUrl || defaultTemplate?.backgroundImageUrl;
+  const templateConfig = (activeTemplate?.layoutConfig || defaultTemplate?.layoutConfig) as any;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans selection:bg-indigo-500 selection:text-white relative overflow-x-hidden transition-colors duration-300">
