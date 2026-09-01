@@ -369,10 +369,15 @@ export function LiveBoardSettingsForm({ eventId, eventSlug, initialData, availab
                                 <div className="text-xs font-bold text-slate-900">{ev.title}</div>
                                 <div className="text-[10px] font-mono text-slate-400">/{ev.slug}</div>
                               </div>
-                              <Switch
-                                checked={isLinked}
-                                className="pointer-events-none"
-                              />
+                              <div
+                                className={`w-6 h-6 rounded-lg flex items-center justify-center border transition-all shrink-0 ${
+                                  isLinked
+                                    ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
+                                    : "border-slate-300 bg-white"
+                                }`}
+                              >
+                                {isLinked && <CheckCircle2 className="w-4 h-4 text-white" />}
+                              </div>
                             </div>
                           );
                         })}
