@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
 import { jsPDF } from 'jspdf';
-import { Download, FileText, Loader2 } from 'lucide-react';
+import { Download, FileText, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CertLayoutConfig } from '@/types/cert-template';
 
@@ -36,6 +36,7 @@ export function ECertCanvas({
 }: ECertCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isRendering, setIsRendering] = useState<boolean>(true);
+  const [isImageMissing, setIsImageMissing] = useState<boolean>(false);
 
   const extractDayNumber = (dateStr?: string): string => {
     if (!dateStr) return '31';
@@ -70,52 +71,52 @@ export function ECertCanvas({
       const layout = certData.layoutConfig;
       const customBg = certData.backgroundImageUrl;
 
-      // Try loading custom or default template image
-      const templateImg = new Image();
-      templateImg.src = customBg || '/api/ecert/template';
+      // Try loading custom background image ONLY (No AW_01 fallback)
+      const tryLoadImage = (src?: string | null): Promise<HTMLImageElement | null> => {
+        return new Promise((resolve) => {
+          if (!src) return resolve(null);
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = src;
+        });
+      };
 
-      const hasTemplate = await new Promise<boolean>((resolve) => {
-        templateImg.onload = () => resolve(true);
-        templateImg.onerror = () => resolve(false);
-      });
+      const activeImg = await tryLoadImage(customBg);
+      const hasTemplate = !!activeImg;
 
       if (!isMounted) return;
 
-      if (hasTemplate) {
+      if (activeImg) {
         // Draw image background base
-        ctx.drawImage(templateImg, 0, 0, width, height);
+        ctx.drawImage(activeImg, 0, 0, width, height);
+        setIsImageMissing(false);
       } else {
-        // Fallback High-Res Certificate Template Canvas Design
-        ctx.fillStyle = '#ffffff';
+        setIsImageMissing(true);
+        // Dark Cyber NCSA Theme Base (No White Background Ever!)
+        ctx.fillStyle = '#0e1418';
         ctx.fillRect(0, 0, width, height);
 
-        // Outer Border Frame
-        ctx.strokeStyle = '#0f172a';
-        ctx.lineWidth = 16;
-        ctx.strokeRect(40, 40, width - 80, height - 80);
-
-        ctx.strokeStyle = '#d97706';
-        ctx.lineWidth = 6;
+        // Cyber Grid Lines Accent
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.15)';
+        ctx.lineWidth = 2;
         ctx.strokeRect(60, 60, width - 120, height - 120);
 
-        // Inner Decorative Header Accent
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(100, 100, width - 200, 6);
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 8;
+        ctx.strokeRect(80, 80, width - 160, height - 160);
 
-        // Header Text
-        ctx.font = "bold 42px 'Courier New', monospace";
-        ctx.fillStyle = '#d97706';
+        // Notice Header
+        ctx.font = "bold 44px 'Courier New', monospace";
+        ctx.fillStyle = '#ef4444';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('NATIONAL CYBER SECURITY AGENCY', 1000, 220);
-
-        ctx.font = "bold 60px 'Prompt', 'Sarabun', sans-serif";
-        ctx.fillStyle = '#0f172a';
-        ctx.fillText('ใบประกาศนียบัตร (CERTIFICATE OF ACHIEVEMENT)', 1000, 310);
+        ctx.fillText('NCSA OFFICIAL E-CERTIFICATE', 1000, 300);
 
         ctx.font = "32px 'Prompt', 'Sarabun', sans-serif";
-        ctx.fillStyle = '#475569';
-        ctx.fillText('ขอมอบใบประกาศนียบัตรนี้เพื่อแสดงว่า', 1000, 460);
+        ctx.fillStyle = '#849495';
+        ctx.fillText('ไม่พบรูปภาพแม่แบบใบประกาศที่กำหนดไว้ในระบบ', 1000, 400);
       }
 
       // RENDER WITH CUSTOM DYNAMIC LAYOUT CONFIG (IF PRESENT)
@@ -294,8 +295,17 @@ export function ECertCanvas({
   };
 
   return (
-    <div className={`flex flex-col items-center space-y-6 ${className}`}>
-      <div className="relative w-full max-w-4xl shadow-2xl rounded-2xl overflow-hidden border-2 border-slate-900/10 bg-slate-950/5 dark:bg-zinc-900">
+    <div className={`flex flex-col items-center space-y-4 ${className}`}>
+      {isImageMissing && (
+        <div className="w-full max-w-4xl p-4 bg-amber-500/10 border border-amber-500/40 rounded-2xl text-amber-300 font-mono text-xs text-center flex items-center justify-center gap-2 shadow-lg animate-pulse">
+          <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
+          <span>
+            ⚠️ ไม่พบรูปภาพแม่แบบใบประกาศที่ตั้งค่าไว้ในระบบ (กรุณาเลือก/อัปโหลดภาพแม่แบบในหน้าจัดการแอดมิน)
+          </span>
+        </div>
+      )}
+
+      <div className="relative w-full max-w-4xl shadow-2xl rounded-2xl overflow-hidden border-2 border-slate-800 bg-[#0e1418]">
         {isRendering && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-900/40 backdrop-blur-sm text-white">
             <Loader2 className="w-10 h-10 animate-spin text-amber-400 mb-2" />
@@ -307,7 +317,7 @@ export function ECertCanvas({
 
         <canvas
           ref={canvasRef}
-          className="w-full h-auto block bg-white"
+          className="w-full h-auto block bg-[#0e1418]"
           style={{ aspectRatio: '2000 / 1414' }}
         />
       </div>
