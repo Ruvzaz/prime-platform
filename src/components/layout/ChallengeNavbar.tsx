@@ -79,6 +79,14 @@ export async function ChallengeNavbar() {
 
         {session?.user ? (
           <div className="flex items-center gap-2 sm:gap-4">
+            <Link
+              href="/certification/challenge"
+              className="flex items-center gap-2 px-3 py-2 rounded bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/70 transition-all font-mono text-xs font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(239,68,68,0.15)]"
+            >
+              <Award className="w-4 h-4 text-red-500" />
+              <span>Certificates</span>
+            </Link>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <div className="flex items-center gap-3 px-3 py-1.5 rounded bg-[#161c21] border border-[#3b494b] cursor-pointer hover:border-red-500/50 transition-colors">
@@ -105,7 +113,7 @@ export async function ChallengeNavbar() {
                 className="w-56 bg-[#161c21] border-[#3b494b] text-[#dee3e9]"
               >
                 <DropdownMenuLabel className="font-mono text-xs text-[#849495] uppercase tracking-widest">
-                  Neural Link v2.0
+                  Neural Link
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-[#3b494b]" />
                 <DropdownMenuItem
@@ -123,7 +131,7 @@ export async function ChallengeNavbar() {
                 >
                   <Link href="/challenge/profile">
                     <UserCog className="w-4 h-4 mr-2" />
-                    <span>My Profile v2</span>
+                    <span>My Profile</span>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -132,7 +140,7 @@ export async function ChallengeNavbar() {
                 >
                   <Link href="/certification/challenge">
                     <Award className="w-4 h-4 mr-2" />
-                    <span>MY CERTIFICATES (PROD)</span>
+                    <span>My Certificates</span>
                   </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
