@@ -27,6 +27,7 @@ export async function updateLiveConfig(eventId: string, data: {
   maskNames?: boolean;
   bubbleColor?: string | null;
   bubbleOpacity?: number | null;
+  linkedEventIds?: string[];
 }) {
   const session = await auth();
   if (!session || session.user?.role !== "ADMIN") {

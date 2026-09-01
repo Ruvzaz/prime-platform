@@ -31,12 +31,26 @@ export default async function LiveSettingsPage({
     notFound();
   }
 
+  const allEvents = await prisma.event.findMany({
+    where: {
+      id: { not: event.id },
+    },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      startDate: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
   return (
     <div className="p-4 md:p-8">
       <LiveBoardSettingsForm 
         eventId={event.id}
         eventSlug={event.slug}
         initialData={event.liveConfig}
+        availableEvents={allEvents}
       />
     </div>
   );
