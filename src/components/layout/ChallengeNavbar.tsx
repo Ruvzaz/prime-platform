@@ -22,8 +22,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { participantLogout } from "@/app/actions/challenge-auth";
 import { prisma } from "@/lib/prisma";
+import { unstable_noStore as noStore } from "next/cache";
 
 export async function ChallengeNavbar() {
+  noStore();
   const session = await auth();
 
   let myTeamLink = "/challenge";

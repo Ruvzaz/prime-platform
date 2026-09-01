@@ -6,6 +6,9 @@ import Link from "next/link";
 import { ECertCanvas } from "@/components/ecert/ECertCanvas";
 import { ChallengeNavbar } from "@/components/layout/ChallengeNavbar";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function ChallengeUserCertificationPage() {
   const session = await auth();
 
