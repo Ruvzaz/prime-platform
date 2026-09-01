@@ -33,32 +33,46 @@ export async function ChallengeNavbar() {
 
   let hasCertificates = false;
 
-  if (session?.user?.id) {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { name: true, email: true, username: true }
-    });
-    if (dbUser?.name) {
-      displayName = dbUser.name;
-    }
+  if (session?.user) {
+    const rawUserId = session.user.id;
+    const rawEmail = session.user.email?.toLowerCase().trim();
+    const rawName = session.user.name?.trim();
 
-    const membership = await prisma.teamMember.findFirst({
-      where: { userId: session.user.id },
-      include: { challenge: true },
+    const dbUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          ...(rawUserId ? [{ id: rawUserId }] : []),
+          ...(rawEmail ? [{ email: { equals: rawEmail, mode: "insensitive" as const } }] : []),
+          ...(rawName ? [{ name: { equals: rawName, mode: "insensitive" as const } }] : []),
+        ],
+      },
+      select: { id: true, name: true, email: true, username: true }
     });
-    if (membership?.challenge) {
-      myTeamLink = `/challenge/${membership.challenge.slug}`;
-    }
 
-    const userEmail = (dbUser?.email || session.user.email)?.toLowerCase().trim();
-    const userName = (dbUser?.name || session?.user?.name)?.trim();
+    const resolvedUserId = dbUser?.id || rawUserId;
+    const userEmail = (dbUser?.email || rawEmail)?.toLowerCase().trim();
+    const userName = (dbUser?.name || rawName)?.trim();
     const username = dbUser?.username?.trim();
     const cleanUsername = userEmail && userEmail.includes("@") ? userEmail.split("@")[0] : userEmail;
+
+    if (userName) {
+      displayName = userName;
+    }
+
+    if (resolvedUserId) {
+      const membership = await prisma.teamMember.findFirst({
+        where: { userId: resolvedUserId },
+        include: { challenge: true },
+      });
+      if (membership?.challenge) {
+        myTeamLink = `/challenge/${membership.challenge.slug}`;
+      }
+    }
 
     const certCount = await prisma.certificate.count({
       where: {
         OR: [
-          { userId: session.user.id },
+          ...(resolvedUserId ? [{ userId: resolvedUserId }] : []),
           ...(userEmail ? [{ email: { equals: userEmail, mode: "insensitive" as const } }] : []),
           ...(cleanUsername ? [{ email: { contains: cleanUsername, mode: "insensitive" as const } }] : []),
           ...(username ? [{ email: { contains: username, mode: "insensitive" as const } }] : []),

@@ -12,37 +12,49 @@ export const revalidate = 0;
 export default async function ChallengeUserCertificationPage() {
   const session = await auth();
 
-  if (!session?.user?.email || !session?.user?.id) {
+  if (!session?.user) {
     redirect("/auth/login?callbackUrl=/certification/challenge");
   }
 
-  const dbUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { name: true, email: true, username: true },
+  const rawUserId = session.user.id;
+  const rawEmail = session.user.email?.toLowerCase().trim();
+  const rawName = session.user.name?.trim();
+
+  const dbUser = await prisma.user.findFirst({
+    where: {
+      OR: [
+        ...(rawUserId ? [{ id: rawUserId }] : []),
+        ...(rawEmail ? [{ email: { equals: rawEmail, mode: "insensitive" as const } }] : []),
+        ...(rawName ? [{ name: { equals: rawName, mode: "insensitive" as const } }] : []),
+      ],
+    },
+    select: { id: true, name: true, email: true, username: true },
   });
 
-  const userEmail = (dbUser?.email || session.user.email)?.toLowerCase().trim();
-  const userName = (dbUser?.name || session.user.name)?.trim();
+  const resolvedUserId = dbUser?.id || rawUserId;
+  const userEmail = (dbUser?.email || rawEmail)?.toLowerCase().trim();
+  const userName = (dbUser?.name || rawName)?.trim();
   const username = dbUser?.username?.trim();
   const cleanUsername = userEmail && userEmail.includes("@") ? userEmail.split("@")[0] : userEmail;
 
-  // Fetch user's approved team memberships to display team name and match challenge certificates
-  const userTeams = await prisma.teamMember.findMany({
-    where: {
-      userId: session.user.id,
-      status: "APPROVED",
-    },
-    include: { team: true },
-  });
+  // Fetch user's approved team memberships to display team name
+  const userTeams = resolvedUserId
+    ? await prisma.teamMember.findMany({
+        where: {
+          userId: resolvedUserId,
+          status: "APPROVED",
+        },
+        include: { team: true },
+      })
+    : [];
 
-  const userChallengeIds = userTeams.map((tm) => tm.challengeId).filter(Boolean);
   const teamMap = new Map(userTeams.map((tm) => [tm.challengeId, tm.team.name]));
 
-  // Find user details & certificates issued to their email, userId, recipient name, or challengeId
+  // Find user details & certificates issued to their email, userId, or recipient name
   const certificates = await prisma.certificate.findMany({
     where: {
       OR: [
-        { userId: session.user.id },
+        ...(resolvedUserId ? [{ userId: resolvedUserId }] : []),
         ...(userEmail ? [{ email: { equals: userEmail, mode: "insensitive" as const } }] : []),
         ...(cleanUsername ? [{ email: { contains: cleanUsername, mode: "insensitive" as const } }] : []),
         ...(username ? [{ email: { contains: username, mode: "insensitive" as const } }] : []),
@@ -172,7 +184,7 @@ export default async function ChallengeUserCertificationPage() {
                     recipientPrefix: cert.recipientPrefix || "",
                     recipientFirstName: cert.recipientFirstName || "",
                     recipientLastName: cert.recipientLastName || "",
-                    recipientFullName: displayName,
+                    recipientFullName: userName || cert.recipientFullName,
                     teamName: teamName,
                     eventTitle: cert.eventTitle,
                     issueDate: cert.issueDate,
