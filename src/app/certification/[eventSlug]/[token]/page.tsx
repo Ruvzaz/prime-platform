@@ -64,6 +64,29 @@ export default async function EventCertTokenPage({
     }
   });
 
+  if (!tokenRecord) {
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col items-center justify-center p-6 text-center">
+        <div className="bg-white border border-slate-200 p-8 sm:p-10 rounded-3xl max-w-md shadow-xl space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center mx-auto text-rose-600 font-bold">
+            <Award className="w-8 h-8 text-rose-600" />
+          </div>
+          <h1 className="text-xl font-black text-slate-900">
+            ไม่พบรหัส Token "{cleanToken}"
+          </h1>
+          <p className="text-xs text-slate-600 leading-relaxed font-medium">
+            รหัส Token นี้ไม่มีอยู่ในระบบ หรือไม่ได้ลงทะเบียนไว้สำหรับกิจกรรม <strong className="text-slate-900">{event.title}</strong>
+          </p>
+          <Link href={`/certification/${event.slug}`}>
+            <Button className="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl h-11">
+              <ArrowLeft className="w-4 h-4 mr-2" /> ลองกรอกรหัส Token ใหม่
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   // 3. Find existing Certificate if claimed
   let certificate = null;
   if (tokenRecord?.isUsed && tokenRecord.certCode) {
