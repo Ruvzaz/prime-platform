@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Award, KeyRound, ArrowLeft, ArrowRight } from "lucide-react";
+import { Award, ArrowLeft, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { toast } from "sonner";
+import { verifyEventCertToken } from "@/app/actions/event-cert-token";
 
 interface EventTokenInputClientProps {
   eventSlug: string;
@@ -20,16 +20,38 @@ export function EventTokenInputClient({
   eventTitle
 }: EventTokenInputClientProps) {
   const [tokenInput, setTokenInput] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     const cleanToken = tokenInput.trim().toUpperCase();
     if (!cleanToken || cleanToken.length < 5) {
-      toast.error("กรุณาระบุรหัส Token 6 หลักให้ถูกต้อง");
+      const err = "กรุณาระบุรหัส Token 6 หลักให้ถูกต้อง";
+      setErrorMessage(err);
+      toast.error(err);
       return;
     }
-    router.push(`/certification/${eventSlug}/${cleanToken}`);
+
+    setIsVerifying(true);
+    try {
+      const res = await verifyEventCertToken(eventSlug, cleanToken);
+      if (res.success) {
+        router.push(`/certification/${eventSlug}/${cleanToken}`);
+      } else {
+        const errStr = res.error || "รหัส Token ไม่ถูกต้อง";
+        setErrorMessage(errStr);
+        toast.error(errStr);
+        setIsVerifying(false);
+      }
+    } catch {
+      const errStr = "เกิดข้อผิดพลาดในการตรวจสอบ Token";
+      setErrorMessage(errStr);
+      toast.error(errStr);
+      setIsVerifying(false);
+    }
   };
 
   return (
@@ -98,19 +120,42 @@ export function EventTokenInputClient({
                   maxLength={10}
                   placeholder="เช่น 7K9X2B"
                   value={tokenInput}
-                  onChange={(e) => setTokenInput(e.target.value.toUpperCase())}
-                  className="h-11 bg-slate-50 border-slate-300 text-slate-900 font-mono text-base font-bold tracking-widest pl-10 uppercase rounded-xl focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 shadow-sm"
+                  onChange={(e) => {
+                    setTokenInput(e.target.value.toUpperCase());
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  className={`h-11 bg-slate-50 text-slate-900 font-mono text-base font-bold tracking-widest pl-10 uppercase rounded-xl shadow-sm transition-all ${
+                    errorMessage 
+                      ? "border-rose-400 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20 bg-rose-50/30" 
+                      : "border-slate-300 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20"
+                  }`}
                 />
               </div>
+
+              {errorMessage && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold animate-in fade-in slide-in-from-top-1">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
             </div>
 
             <Button
               type="submit"
-              disabled={!tokenInput.trim()}
+              disabled={!tokenInput.trim() || isVerifying}
               className="w-full h-12 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-black text-sm rounded-xl shadow-lg shadow-indigo-500/25 transition-all active:scale-[0.99]"
             >
-              <span>ดำเนินการต่อ</span>
-              <ArrowRight className="w-4 h-4 ml-2" />
+              {isVerifying ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <span>กำลังตรวจสอบ...</span>
+                </>
+              ) : (
+                <>
+                  <span>ดำเนินการต่อ</span>
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
             </Button>
           </form>
         </div>

@@ -261,3 +261,49 @@ export async function claimEventCertToken(eventSlug: string, tokenInput: string,
     return { success: false, error: "เกิดข้อผิดพลาดในการออกใบประกาศนียบัตร" };
   }
 }
+
+/**
+ * Verify Event Token Action: Check if a token is valid before navigating to claim page
+ */
+export async function verifyEventCertToken(eventSlug: string, tokenInput: string) {
+  const cleanToken = tokenInput.trim().toUpperCase();
+  if (!cleanToken || cleanToken.length < 5) {
+    return { success: false, error: "กรุณาระบุรหัส Token 6 หลักให้ถูกต้อง" };
+  }
+
+  try {
+    const event = await prisma.event.findFirst({
+      where: {
+        OR: [
+          { slug: eventSlug },
+          { id: eventSlug }
+        ]
+      }
+    });
+
+    if (!event) {
+      return { success: false, error: "ไม่พบข้อมูลกิจกรรมนี้" };
+    }
+
+    const tokenRecord = await prisma.eventCertToken.findFirst({
+      where: {
+        token: cleanToken,
+        eventId: event.id
+      }
+    });
+
+    if (!tokenRecord) {
+      return { success: false, error: `ไม่พบรหัส Token "${cleanToken}" สำหรับกิจกรรมนี้` };
+    }
+
+    return {
+      success: true,
+      token: cleanToken,
+      isUsed: tokenRecord.isUsed,
+      claimedName: tokenRecord.claimedName,
+    };
+  } catch (error: any) {
+    return { success: false, error: "เกิดข้อผิดพลาดในการตรวจสอบ Token" };
+  }
+}
+
