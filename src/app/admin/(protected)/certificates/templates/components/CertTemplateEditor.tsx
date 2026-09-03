@@ -316,7 +316,7 @@ export function CertTemplateEditor({ initialTemplate }: CertTemplateEditorProps)
                 <span className="whitespace-nowrap">
                   {(() => {
                     const extractDay = (str: string) => {
-                      const match = str.match(/\d+/);
+                      const match = /\d+/.exec(str);
                       return match ? match[0] : str;
                     };
                     const mode = layout.dateFormatMode || "FULL_WITH_PREFIX";
