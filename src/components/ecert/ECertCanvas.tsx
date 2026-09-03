@@ -28,6 +28,45 @@ interface ECertCanvasProps {
   className?: string;
 }
 
+function loadImagePlain(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+function loadImageWithCors(src: string): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    if (src.startsWith('http://') || src.startsWith('https://')) {
+      try {
+        if (typeof window !== 'undefined' && new URL(src).origin !== window.location.origin) {
+          img.crossOrigin = 'anonymous';
+        }
+      } catch {
+        img.crossOrigin = 'anonymous';
+      }
+    }
+    img.onload = () => resolve(img);
+    img.onerror = async () => {
+      if (img.crossOrigin) {
+        const plainImg = await loadImagePlain(src);
+        resolve(plainImg);
+      } else {
+        resolve(null);
+      }
+    };
+    img.src = src;
+  });
+}
+
+async function tryLoadCustomBgImage(src?: string | null): Promise<HTMLImageElement | null> {
+  if (!src) return null;
+  return await loadImageWithCors(src);
+}
+
 export function ECertCanvas({
   certData,
   showDownloadBtn = true,
@@ -40,7 +79,7 @@ export function ECertCanvas({
 
   const extractDayNumber = (dateStr?: string): string => {
     if (!dateStr) return '31';
-    const match = dateStr.match(/\d+/);
+    const match = /\d+/.exec(dateStr);
     return match ? match[0] : '31';
   };
 
@@ -48,14 +87,15 @@ export function ECertCanvas({
   const fn = (certData.recipientFirstName || '').trim();
   const ln = (certData.recipientLastName || '').trim();
 
-  const displayName = (p || fn || ln)
-    ? `${p}${fn}${ln ? ' ' + ln : ''}`.trim()
-    : (certData.recipientFullName || '').trim();
+  let displayName = certData.recipientFullName.trim();
+  if (fn || ln) {
+    displayName = `${p ? p + ' ' : ''}${fn} ${ln}`.trim();
+  }
 
   useEffect(() => {
     let isMounted = true;
 
-    async function drawCertificate() {
+    const renderCertificate = async () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
@@ -71,43 +111,7 @@ export function ECertCanvas({
       const layout = certData.layoutConfig;
       const customBg = certData.backgroundImageUrl;
 
-      // Try loading custom background image safely with CORS retry fallback
-      const tryLoadImage = (src?: string | null): Promise<HTMLImageElement | null> => {
-        return new Promise((resolve) => {
-          if (!src) return resolve(null);
-
-          const loadWithOrigin = (useCors: boolean) => {
-            const img = new Image();
-            if (useCors && (src.startsWith('http://') || src.startsWith('https://'))) {
-              try {
-                if (typeof window !== 'undefined' && new URL(src).origin !== window.location.origin) {
-                  img.crossOrigin = 'anonymous';
-                }
-              } catch {
-                img.crossOrigin = 'anonymous';
-              }
-            }
-
-            img.onload = () => resolve(img);
-            img.onerror = () => {
-              // If CORS load failed, retry without crossOrigin attribute
-              if (useCors && img.crossOrigin) {
-                const plainImg = new Image();
-                plainImg.onload = () => resolve(plainImg);
-                plainImg.onerror = () => resolve(null);
-                plainImg.src = src;
-              } else {
-                resolve(null);
-              }
-            };
-            img.src = src;
-          };
-
-          loadWithOrigin(true);
-        });
-      };
-
-      const activeImg = await tryLoadImage(customBg);
+      const activeImg = await tryLoadCustomBgImage(customBg);
       const hasTemplate = !!activeImg;
 
       if (!isMounted) return;
@@ -188,7 +192,7 @@ export function ECertCanvas({
           ctx.fillStyle = layout.dateColor || '#475569';
 
           const mode = layout.dateFormatMode || 'FULL_WITH_PREFIX';
-          let dateStr = certData.issueDate;
+          let dateStr: string;
 
           if (mode === 'DAY_NUMBER_ONLY') {
             dateStr = extractDayNumber(certData.issueDate);
@@ -198,7 +202,7 @@ export function ECertCanvas({
             dateStr = `${layout.dateCustomPrefix || ''}${certData.issueDate}`;
           } else {
             // FULL_WITH_PREFIX
-            const prefix = layout.dateCustomPrefix !== undefined ? layout.dateCustomPrefix : 'ให้ไว้ ณ วันที่ ';
+            const prefix = layout.dateCustomPrefix ?? 'ให้ไว้ ณ วันที่ ';
             dateStr = `${prefix}${certData.issueDate}`;
           }
 
@@ -301,7 +305,7 @@ export function ECertCanvas({
       if (onRendered) onRendered();
     }
 
-    drawCertificate();
+    renderCertificate();
 
     return () => {
       isMounted = false;
