@@ -11,27 +11,37 @@ export const dynamic = "force-dynamic";
 export default async function CertTemplatesPage() {
   const { templates } = await getCertTemplates();
   
-  // Fetch active events to allow assigning template per event
-  const events = await prisma.event.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      title: true,
-      slug: true,
-      hasCertificate: true,
-      certTemplateId: true,
-    },
-  });
-
-  const challenges = await prisma.challenge.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-      certTemplateId: true,
-    },
-  });
+  const [events, challenges, campaigns] = await Promise.all([
+    prisma.event.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        hasCertificate: true,
+        certTemplateId: true,
+      },
+    }),
+    prisma.challenge.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        certTemplateId: true,
+      },
+    }),
+    prisma.certCampaign.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        isActive: true,
+        certTemplateId: true,
+      },
+    }),
+  ]);
 
   return (
     <div className="space-y-8">
@@ -46,7 +56,7 @@ export default async function CertTemplatesPage() {
             จัดการแม่แบบใบประกาศ & ลากวางตำแหน่ง (Templates)
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400">
-            อัปโหลดภาพแม่แบบ JPG/PNG กำหนดว่า Event หรือ Challenge ไหนใช้แม่แบบใด และลากวางตำแหน่งข้อความบนภาพใบประกาศ
+            อัปโหลดภาพแม่แบบ JPG/PNG กำหนดว่า Event, Challenge หรือ Campaign ไหนใช้แม่แบบใด และลากวางตำแหน่งข้อความบนภาพใบประกาศ
           </p>
         </div>
 
@@ -58,16 +68,21 @@ export default async function CertTemplatesPage() {
         </Link>
       </div>
 
-      {/* SECTION 1: EVENT AND CHALLENGE TO TEMPLATE ASSIGNMENT TABLE */}
+      {/* SECTION 1: EVENT, CHALLENGE, AND CAMPAIGN TO TEMPLATE ASSIGNMENT TABLE */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Settings className="w-5 h-5 text-indigo-600" />
-            กำหนดแม่แบบประจำกิจกรรมและประจำการแข่งขัน (Certificate Settings)
+            กำหนดแม่แบบประจำกิจกรรม ประจำการแข่งขัน และแคมเปญ (Certificate Settings)
           </h2>
         </div>
 
-        <EventCertTemplateSelector events={events} challenges={challenges} templates={templates || []} />
+        <EventCertTemplateSelector
+          events={events}
+          challenges={challenges}
+          campaigns={campaigns}
+          templates={templates || []}
+        />
       </div>
 
       {/* SECTION 2: CERTIFICATE TEMPLATES LIST GRID */}

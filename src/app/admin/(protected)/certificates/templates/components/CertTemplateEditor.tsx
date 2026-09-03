@@ -24,6 +24,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
 interface CertTemplateEditorProps {
@@ -43,6 +50,7 @@ export function CertTemplateEditor({ initialTemplate }: CertTemplateEditorProps)
   const [isDefault, setIsDefault] = useState(initialTemplate?.isDefault || false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [sampleDateText, setSampleDateText] = useState("31 สิงหาคม 2569");
 
   const [layout, setLayout] = useState<CertLayoutConfig>(
     initialTemplate?.layoutConfig
@@ -251,10 +259,10 @@ export function CertTemplateEditor({ initialTemplate }: CertTemplateEditorProps)
                     : "border-indigo-400/50 bg-white/40 dark:bg-black/40 z-20"
                 }`}
               >
-                <span className="whitespace-nowrap font-serif">นายสมชาย ใจดี (ตัวอย่างชื่อ)</span>
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600 text-white font-mono text-[9px] px-1.5 py-0.5 rounded shadow">
+                <span className="absolute -top-2 -translate-y-full left-1/2 -translate-x-1/2 pointer-events-none whitespace-nowrap bg-indigo-600 text-white font-mono text-[9px] px-1.5 py-0.5 rounded shadow z-40">
                   ชื่อ-นามสกุล
                 </span>
+                <span className="whitespace-nowrap font-serif">นายสมชาย ใจดี (ตัวอย่างชื่อ)</span>
               </div>
             )}
 
@@ -277,10 +285,10 @@ export function CertTemplateEditor({ initialTemplate }: CertTemplateEditorProps)
                     : "border-purple-400/50 bg-white/40 dark:bg-black/40 z-20"
                 }`}
               >
-                <span className="whitespace-nowrap font-sans truncate block max-w-full">CyberDefender X (ตัวอย่างชื่อทีม)</span>
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 text-white font-mono text-[9px] px-1.5 py-0.5 rounded shadow">
+                <span className="absolute -top-2 -translate-y-full left-1/2 -translate-x-1/2 pointer-events-none whitespace-nowrap bg-purple-600 text-white font-mono text-[9px] px-1.5 py-0.5 rounded shadow z-40">
                   ชื่อทีม
                 </span>
+                <span className="whitespace-nowrap font-sans truncate block max-w-full">CyberDefender X (ตัวอย่างชื่อทีม)</span>
               </div>
             )}
 
@@ -302,9 +310,22 @@ export function CertTemplateEditor({ initialTemplate }: CertTemplateEditorProps)
                     : "border-amber-400/50 bg-white/40 dark:bg-black/40 z-20"
                 }`}
               >
-                <span className="whitespace-nowrap">ให้ไว้ ณ วันที่ 31 สิงหาคม 2569</span>
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-600 text-white font-mono text-[9px] px-1.5 py-0.5 rounded shadow">
+                <span className="absolute -top-2 -translate-y-full left-1/2 -translate-x-1/2 pointer-events-none whitespace-nowrap bg-amber-600 text-white font-mono text-[9px] px-1.5 py-0.5 rounded shadow z-40">
                   วันที่ออก
+                </span>
+                <span className="whitespace-nowrap">
+                  {(() => {
+                    const extractDay = (str: string) => {
+                      const match = str.match(/\d+/);
+                      return match ? match[0] : str;
+                    };
+                    const mode = layout.dateFormatMode || "FULL_WITH_PREFIX";
+                    if (mode === "DAY_NUMBER_ONLY") return extractDay(sampleDateText);
+                    if (mode === "DATE_ONLY") return sampleDateText;
+                    if (mode === "CUSTOM_PREFIX") return `${layout.dateCustomPrefix || ""}${sampleDateText}`;
+                    const prefix = layout.dateCustomPrefix !== undefined ? layout.dateCustomPrefix : "ให้ไว้ ณ วันที่ ";
+                    return `${prefix}${sampleDateText}`;
+                  })()}
                 </span>
               </div>
             )}
@@ -326,10 +347,10 @@ export function CertTemplateEditor({ initialTemplate }: CertTemplateEditorProps)
                     : "border-emerald-400/50 z-20"
                 }`}
               >
-                <QrCode className="w-full h-full text-slate-900" />
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white font-mono text-[9px] px-1.5 py-0.5 rounded shadow whitespace-nowrap">
+                <span className="absolute -top-2 -translate-y-full left-1/2 -translate-x-1/2 pointer-events-none whitespace-nowrap bg-emerald-600 text-white font-mono text-[9px] px-1.5 py-0.5 rounded shadow z-40">
                   QR Code
                 </span>
+                <QrCode className="w-full h-full text-slate-900" />
               </div>
             )}
 
@@ -662,6 +683,64 @@ export function CertTemplateEditor({ initialTemplate }: CertTemplateEditorProps)
                         />
                       </div>
                     </div>
+                  </div>
+
+                  <div className="space-y-2 text-xs font-mono pt-2 border-t border-slate-100 dark:border-zinc-800">
+                    <Label className="text-[10px] uppercase font-bold text-slate-700 dark:text-zinc-300">
+                      รูปแบบการแสดงผลวันที่ (Date Format)
+                    </Label>
+                    <Select
+                      value={layout.dateFormatMode || "FULL_WITH_PREFIX"}
+                      onValueChange={(val: any) =>
+                        setLayout((p) => ({ ...p, dateFormatMode: val }))
+                      }
+                    >
+                      <SelectTrigger className="h-8 text-xs font-semibold bg-slate-50 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 rounded-lg">
+                        <SelectValue placeholder="เลือกรูปแบบวันที่" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 text-xs">
+                        <SelectItem value="FULL_WITH_PREFIX">
+                          แสดงครบ + คำนำหน้า ("ให้ไว้ ณ วันที่ 31 สิงหาคม 2569")
+                        </SelectItem>
+                        <SelectItem value="DATE_ONLY">
+                          แสดงเฉพาะ วัน เดือน ปี ("31 สิงหาคม 2569")
+                        </SelectItem>
+                        <SelectItem value="DAY_NUMBER_ONLY">
+                          แสดงเฉพาะตัวเลขวันที่ ("31") — สำหรับภาพที่มีเดือน/ปีพิมพ์แล้ว
+                        </SelectItem>
+                        <SelectItem value="CUSTOM_PREFIX">
+                          กำหนดคำนำหน้าเอง (Custom Prefix)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {(layout.dateFormatMode === "CUSTOM_PREFIX" || layout.dateFormatMode === "FULL_WITH_PREFIX") && (
+                    <div className="space-y-1 text-xs font-mono">
+                      <Label className="text-[10px] uppercase font-bold text-slate-700 dark:text-zinc-300">
+                        คำนำหน้าวันที่ (Prefix)
+                      </Label>
+                      <Input
+                        type="text"
+                        placeholder="เช่น ให้ไว้ ณ วันที่ หรือ ณ วันที่"
+                        value={layout.dateCustomPrefix !== undefined ? layout.dateCustomPrefix : "ให้ไว้ ณ วันที่ "}
+                        onChange={(e) => setLayout((p) => ({ ...p, dateCustomPrefix: e.target.value }))}
+                        className="h-8 text-xs font-mono"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-1 text-xs font-mono pt-1">
+                    <Label className="text-[10px] uppercase font-bold text-slate-700 dark:text-zinc-300">
+                      ข้อความวันที่ทดสอบตัวอย่าง (Sample Date Preview)
+                    </Label>
+                    <Input
+                      type="text"
+                      placeholder="เช่น 31 สิงหาคม 2569 หรือ 15 กันยายน 2569"
+                      value={sampleDateText}
+                      onChange={(e) => setSampleDateText(e.target.value)}
+                      className="h-8 text-xs font-mono"
+                    />
                   </div>
                 </div>
               )}
