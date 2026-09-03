@@ -326,7 +326,33 @@ export default async function ChallengeLandingPage() {
         </section>
       )}
 
-      {/* Temporarily hidden sections: แจ้งรายละเอียด, ขั้นตอนการสมัครการแข่งขัน, รายละเอียดการแข่งขัน */}
+      {/* Info Images Section (List1.png & List2.png in 1 Row) */}
+      <section className="relative z-10 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="flex items-center gap-4 mb-8 border-b border-red-500/20 pb-4">
+          <Megaphone className="w-6 h-6 text-red-500" />
+          <h2 className="text-2xl font-bold uppercase tracking-widest text-[#dee3e9]">
+            รายละเอียดกิจกรรมและการแข่งขัน
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="relative w-full overflow-hidden rounded-2xl border border-[#3b494b] bg-[#161c21] shadow-[0_0_20px_rgba(0,0,0,0.4)] group hover:border-red-500/50 transition-all duration-300">
+            <img
+              src="/List1.png"
+              alt="รายละเอียด 1"
+              className="w-full h-auto object-contain rounded-2xl"
+            />
+          </div>
+          <div className="relative w-full overflow-hidden rounded-2xl border border-[#3b494b] bg-[#161c21] shadow-[0_0_20px_rgba(0,0,0,0.4)] group hover:border-red-500/50 transition-all duration-300">
+            <img
+              src="/List2.png"
+              alt="รายละเอียด 2"
+              className="w-full h-auto object-contain rounded-2xl"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* 
       <section className="relative z-10 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="flex items-center gap-4 mb-12 border-b border-amber-500/20 pb-4">
