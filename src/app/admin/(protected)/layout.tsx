@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { logout } from "@/app/actions/auth"
 import { auth } from "@/auth"
-import { LayoutDashboard, Calendar, Users, LogOut, QrCode, Table, Search, Bell, Settings, ActivitySquare, Shield, UserCog, Mail, Award } from "lucide-react"
+import { LayoutDashboard, Calendar, Users, LogOut, QrCode, Table, Search, Bell, Settings, ActivitySquare, Shield, UserCog, Mail, Award, Layers } from "lucide-react"
 import { Button } from "@/components/ui/button"
 export const dynamic = "force-dynamic";
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -174,11 +174,27 @@ function AppSidebar({ userName, userRole }: { userName?: string | null; userRole
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup className="group-data-[collapsible=icon]:pt-0">
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">Campaign & Certificates</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-1">
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="E-Certificates" className="h-11 px-4">
                   <Link href="/admin/certificates" prefetch={true}>
                     <Award className="h-5 w-5 text-amber-500" />
                     <span className="font-medium">E-Certificates</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Cert Campaigns (No Event)" className="h-11 px-4">
+                  <Link href="/admin/certificates/campaigns" prefetch={true}>
+                    <Layers className="h-5 w-5 text-purple-500" />
+                    <span className="font-medium">Cert Campaigns</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

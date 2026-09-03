@@ -56,6 +56,35 @@ export async function createCertCampaign(input: CreateCampaignInput) {
 }
 
 /**
+ * Update Cert Campaign Settings (Template & Active Toggle)
+ */
+export async function updateCampaignCertSettings({
+  campaignId,
+  isActive,
+  certTemplateId,
+}: {
+  campaignId: string;
+  isActive: boolean;
+  certTemplateId: string | null;
+}) {
+  try {
+    await prisma.certCampaign.update({
+      where: { id: campaignId },
+      data: {
+        isActive,
+        certTemplateId: certTemplateId || null,
+      },
+    });
+    revalidatePath("/admin/certificates/templates");
+    revalidatePath("/admin/certificates/campaigns");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Update Campaign Cert Settings Error:", error);
+    return { success: false, error: "เกิดข้อผิดพลาดในการบันทึก" };
+  }
+}
+
+/**
  * Get all Cert Campaigns for Admin Table
  */
 export async function getCertCampaigns() {
@@ -118,15 +147,26 @@ export async function lookupCertByInput(campaignSlug: string, queryInput: string
       return { success: false, error: "ไม่พบแคมเปญใบประกาศนี้ หรือแคมเปญถูกปิดใช้งาน" };
     }
 
-    // 2. Find Certificate by email OR recipientFullName
+    // 1.5 Template resolution (fallback to default/latest template if campaign has no template explicitly assigned)
+    let template = campaign.certTemplate;
+    if (!template) {
+      template = await prisma.certTemplate.findFirst({
+        where: { isDefault: true },
+      });
+      if (!template) {
+        template = await prisma.certTemplate.findFirst({
+          orderBy: { createdAt: "desc" },
+        });
+      }
+    }
+
+    // 2. Find Certificate by EXACT email OR EXACT recipientFullName
     const certificate = await prisma.certificate.findFirst({
       where: {
         campaignId: campaign.id,
         OR: [
           { email: { equals: cleanQuery, mode: 'insensitive' } },
-          { recipientFullName: { contains: cleanQuery, mode: 'insensitive' } },
-          { recipientFirstName: { contains: cleanQuery, mode: 'insensitive' } },
-          { recipientLastName: { contains: cleanQuery, mode: 'insensitive' } }
+          { recipientFullName: { equals: cleanQuery, mode: 'insensitive' } }
         ]
       }
     });
@@ -134,7 +174,7 @@ export async function lookupCertByInput(campaignSlug: string, queryInput: string
     if (!certificate) {
       return { 
         success: false, 
-        error: `ไม่พบรายชื่อในระบบสำหรับ "${cleanQuery}" กรุณาตรวจสอบการสะกดชื่อหรืออีเมลอีกครั้ง` 
+        error: `ไม่พบรายชื่อในระบบสำหรับ "${cleanQuery}" กรุณาระบุชื่อ-นามสกุลจริง หรืออีเมลให้ครบถ้วนถูกต้อง` 
       };
     }
 
@@ -162,9 +202,9 @@ export async function lookupCertByInput(campaignSlug: string, queryInput: string
         issueDate: certificate.issueDate || campaign.issueDate,
         status: certificate.status,
       },
-      template: campaign.certTemplate ? {
-        backgroundImageUrl: campaign.certTemplate.backgroundImageUrl,
-        layoutConfig: campaign.certTemplate.layoutConfig,
+      template: template ? {
+        backgroundImageUrl: template.backgroundImageUrl,
+        layoutConfig: template.layoutConfig,
       } : null,
       otherCertsCount,
     };

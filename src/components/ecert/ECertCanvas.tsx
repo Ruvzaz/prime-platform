@@ -71,17 +71,39 @@ export function ECertCanvas({
       const layout = certData.layoutConfig;
       const customBg = certData.backgroundImageUrl;
 
-      // Try loading custom background image safely
+      // Try loading custom background image safely with CORS retry fallback
       const tryLoadImage = (src?: string | null): Promise<HTMLImageElement | null> => {
         return new Promise((resolve) => {
           if (!src) return resolve(null);
-          const img = new Image();
-          if (src.startsWith('http://') || src.startsWith('https://')) {
-            img.crossOrigin = 'anonymous';
-          }
-          img.onload = () => resolve(img);
-          img.onerror = () => resolve(null);
-          img.src = src;
+
+          const loadWithOrigin = (useCors: boolean) => {
+            const img = new Image();
+            if (useCors && (src.startsWith('http://') || src.startsWith('https://'))) {
+              try {
+                if (typeof window !== 'undefined' && new URL(src).origin !== window.location.origin) {
+                  img.crossOrigin = 'anonymous';
+                }
+              } catch {
+                img.crossOrigin = 'anonymous';
+              }
+            }
+
+            img.onload = () => resolve(img);
+            img.onerror = () => {
+              // If CORS load failed, retry without crossOrigin attribute
+              if (useCors && img.crossOrigin) {
+                const plainImg = new Image();
+                plainImg.onload = () => resolve(plainImg);
+                plainImg.onerror = () => resolve(null);
+                plainImg.src = src;
+              } else {
+                resolve(null);
+              }
+            };
+            img.src = src;
+          };
+
+          loadWithOrigin(true);
         });
       };
 
@@ -164,7 +186,23 @@ export function ECertCanvas({
           ctx.textAlign = (layout.dateAlign as CanvasTextAlign) || 'center';
           ctx.textBaseline = 'middle';
           ctx.fillStyle = layout.dateColor || '#475569';
-          ctx.fillText(`ให้ไว้ ณ วันที่ ${certData.issueDate}`, x, y);
+
+          const mode = layout.dateFormatMode || 'FULL_WITH_PREFIX';
+          let dateStr = certData.issueDate;
+
+          if (mode === 'DAY_NUMBER_ONLY') {
+            dateStr = extractDayNumber(certData.issueDate);
+          } else if (mode === 'DATE_ONLY') {
+            dateStr = certData.issueDate;
+          } else if (mode === 'CUSTOM_PREFIX') {
+            dateStr = `${layout.dateCustomPrefix || ''}${certData.issueDate}`;
+          } else {
+            // FULL_WITH_PREFIX
+            const prefix = layout.dateCustomPrefix !== undefined ? layout.dateCustomPrefix : 'ให้ไว้ ณ วันที่ ';
+            dateStr = `${prefix}${certData.issueDate}`;
+          }
+
+          ctx.fillText(dateStr, x, y);
         }
 
         // 3. QR Code Verification

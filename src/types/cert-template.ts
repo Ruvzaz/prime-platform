@@ -21,6 +21,8 @@ export interface CertLayoutConfig {
   dateFontSize: number;
   dateColor: string;
   dateAlign: "left" | "center" | "right";
+  dateFormatMode?: "FULL_WITH_PREFIX" | "DATE_ONLY" | "DAY_NUMBER_ONLY" | "CUSTOM_PREFIX";
+  dateCustomPrefix?: string;
 
   showQr: boolean;
   qrX: number;
@@ -58,6 +60,8 @@ export const DEFAULT_LAYOUT_CONFIG: CertLayoutConfig = {
   dateFontSize: 24,
   dateColor: "#475569",
   dateAlign: "center",
+  dateFormatMode: "FULL_WITH_PREFIX",
+  dateCustomPrefix: "ให้ไว้ ณ วันที่ ",
 
   showQr: true,
   qrX: 82,
