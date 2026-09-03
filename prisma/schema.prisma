@@ -335,6 +335,9 @@ model Certificate {
   eventId            String?
   event              Event?     @relation(fields: [eventId], references: [id], onDelete: SetNull)
 
+  campaignId         String?
+  campaign           CertCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
   userId             String?
   user               User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
 
@@ -372,8 +375,28 @@ model CertTemplate {
   isDefault          Boolean  @default(false)
   events             Event[]
   challenges         Challenge[]
+  campaigns          CertCampaign[]
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+}
+
+model CertCampaign {
+  id                 String   @id @default(cuid())
+  title              String
+  slug               String   @unique
+  description        String?
+  issueDate          String
+  isActive           Boolean  @default(true)
+
+  certTemplateId     String?
+  certTemplate       CertTemplate? @relation(fields: [certTemplateId], references: [id], onDelete: SetNull)
+
+  certificates       Certificate[]
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([slug])
 }
 
 

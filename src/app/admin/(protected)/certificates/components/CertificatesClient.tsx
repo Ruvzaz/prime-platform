@@ -17,6 +17,7 @@ import {
   Loader2,
   ExternalLink,
   LayoutTemplate,
+  Layers,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -260,8 +261,15 @@ export function CertificatesClient({
             <span>ซิงก์อัปเดตแม่แบบทั้งหมด (Sync All)</span>
           </Button>
 
-          <Link href="/admin/certificates/templates">
+          <Link href="/admin/certificates/campaigns">
             <Button variant="outline" className="gap-2 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 font-bold">
+              <Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              แคมเปญแจกใบประกาศ (No Event)
+            </Button>
+          </Link>
+
+          <Link href="/admin/certificates/templates">
+            <Button variant="outline" className="gap-2 border-slate-200 text-slate-700 hover:bg-slate-50 font-bold">
               <LayoutTemplate className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               จัดการแม่แบบ & ลากวางพิกัด (Templates Editor)
             </Button>
