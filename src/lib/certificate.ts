@@ -49,3 +49,77 @@ export async function resolveUserForCert(sessionUser: {
     certWhereClause,
   };
 }
+
+/**
+ * Strip common Thai and English title prefixes from a name string
+ */
+export function stripTitlePrefix(name: string): string {
+  let cleaned = name.trim().replace(/\s+/g, " ");
+  if (!cleaned) return "";
+
+  // Prefixes sorted by length descending to match longest prefix first
+  const prefixes = [
+    "ว่าที่ร้อยตรีหญิง",
+    "ว่าที่ ร.ต. หญิง",
+    "ว่าที่ ร.ต.หญิง",
+    "ว่าที่ร้อยตรี",
+    "ว่าที่ ร.ต.",
+    "Assoc. Prof.",
+    "Asst. Prof.",
+    "นายแพทย์",
+    "แพทย์หญิง",
+    "นายเเพทย์",
+    "เเพทย์หญิง",
+    "พล.ต.ต.",
+    "พล.ต.อ.",
+    "ผศ.ดร.",
+    "รศ.ดร.",
+    "ศ.ดร.",
+    "นางสาว",
+    "พล.ต.",
+    "พล.ท.",
+    "พล.อ.",
+    "Prof.",
+    "Miss",
+    "Prof",
+    "น.ส.",
+    "ด.ช.",
+    "ด.ญ.",
+    "นพ.",
+    "พญ.",
+    "ผศ.",
+    "รศ.",
+    "ดร.",
+    "พ.อ.",
+    "พ.ท.",
+    "พ.ต.",
+    "ร.อ.",
+    "ร.ท.",
+    "ร.ต.",
+    "นาย",
+    "นาง",
+    "คุณ",
+    "นส.",
+    "ดร",
+    "Mr.",
+    "Mrs.",
+    "Ms.",
+    "Dr.",
+    "Mr",
+    "Mrs",
+    "Ms",
+    "Dr"
+  ];
+
+  const lowerCleaned = cleaned.toLowerCase();
+  for (const prefix of prefixes) {
+    const lowerPrefix = prefix.toLowerCase();
+    if (lowerCleaned.startsWith(lowerPrefix)) {
+      cleaned = cleaned.slice(prefix.length).trim();
+      break;
+    }
+  }
+
+  return cleaned;
+}
+
