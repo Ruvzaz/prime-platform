@@ -10,6 +10,7 @@ interface CheckInEntry {
   referenceCode: string
   name: string
   scannedAt: string
+  eventTitle?: string
 }
 
 interface EventInfo {
@@ -74,7 +75,6 @@ const Spotlight = memo(({ latest, maskNames, themeColor = '#4f46e5' }: { latest:
       >
          <div className="relative w-full max-w-[320px] md:max-w-[400px] lg:max-w-[460px] xl:max-w-[500px] aspect-square flex flex-col items-center justify-center shrink-0">
             {/* The Floating Bubble Background */}
-            {/* The Floating Bubble Background */}
             <div className="absolute inset-0 pointer-events-none animate-aura-breathe">
                <div className="absolute inset-0 animate-aura-spin">
                   {/* Base Glow */}
@@ -118,6 +118,12 @@ const Spotlight = memo(({ latest, maskNames, themeColor = '#4f46e5' }: { latest:
                <h2 className="text-2xl lg:text-[32px] xl:text-[36px] font-medium text-white leading-snug tracking-tight drop-shadow-md w-full max-w-[95%] truncate">
                   {maskName(latest.name, maskNames ?? false)}
                </h2>
+
+               {latest.eventTitle && (
+                  <span className="text-xs lg:text-sm text-white/80 font-medium tracking-wide drop-shadow mt-1 truncate max-w-[90%]">
+                     {latest.eventTitle}
+                  </span>
+               )}
                
                <div className="mt-6 lg:mt-8 px-6 py-2 rounded-full bg-white/20 backdrop-blur-md border border-white/40 text-white font-mono text-sm lg:text-base font-bold tracking-widest drop-shadow-sm">
                   {latest.referenceCode}
@@ -185,19 +191,31 @@ const FeedList = memo(({ items, highlightId, themeColor, layoutMode, maskNames }
                    </div>
                    
                    {isFullscreen ? (
-                     <div className="flex-1 flex items-center gap-12 min-w-0">
+                     <div className="flex-1 flex items-center gap-8 min-w-0">
                         <span className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-400 shrink-0 tabular-nums">
                             {ci.referenceCode}
                         </span>
-                        <h4 className="text-2xl font-black text-slate-900 truncate uppercase tracking-tight">
-                            {maskedName}
-                        </h4>
+                        <div className="flex flex-col min-w-0 justify-center">
+                          <h4 className="text-xl sm:text-2xl font-black text-slate-900 truncate uppercase tracking-tight leading-tight">
+                              {maskedName}
+                          </h4>
+                          {ci.eventTitle && (
+                            <span className="text-xs sm:text-sm font-semibold text-slate-500/90 truncate mt-1">
+                              {ci.eventTitle}
+                            </span>
+                          )}
+                        </div>
                      </div>
                    ) : (
                      <div className="flex-1 min-w-0">
                         <h4 className="text-xl font-black tracking-tight text-slate-900 dark:text-white truncate">
                             {maskedName}
                         </h4>
+                        {ci.eventTitle && (
+                          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                            {ci.eventTitle}
+                          </p>
+                        )}
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mt-1">
                             {ci.referenceCode}
                         </p>
