@@ -124,6 +124,79 @@ export async function deleteCertCampaign(id: string) {
 }
 
 /**
+ * Strip common Thai and English title prefixes from a name string
+ */
+export function stripTitlePrefix(name: string): string {
+  let cleaned = name.trim().replace(/\s+/g, " ");
+  if (!cleaned) return "";
+
+  // Prefixes sorted by length descending to match longest prefix first
+  const prefixes = [
+    "ว่าที่ร้อยตรีหญิง",
+    "ว่าที่ ร.ต. หญิง",
+    "ว่าที่ ร.ต.หญิง",
+    "ว่าที่ร้อยตรี",
+    "ว่าที่ ร.ต.",
+    "Assoc. Prof.",
+    "Asst. Prof.",
+    "นายแพทย์",
+    "แพทย์หญิง",
+    "นายเเพทย์",
+    "เเพทย์หญิง",
+    "พล.ต.ต.",
+    "พล.ต.อ.",
+    "ผศ.ดร.",
+    "รศ.ดร.",
+    "ศ.ดร.",
+    "นางสาว",
+    "พล.ต.",
+    "พล.ท.",
+    "พล.อ.",
+    "Prof.",
+    "Miss",
+    "Prof",
+    "น.ส.",
+    "ด.ช.",
+    "ด.ญ.",
+    "นพ.",
+    "พญ.",
+    "ผศ.",
+    "รศ.",
+    "ดร.",
+    "พ.อ.",
+    "พ.ท.",
+    "พ.ต.",
+    "ร.อ.",
+    "ร.ท.",
+    "ร.ต.",
+    "นาย",
+    "นาง",
+    "คุณ",
+    "นส.",
+    "ดร",
+    "Mr.",
+    "Mrs.",
+    "Ms.",
+    "Dr.",
+    "Mr",
+    "Mrs",
+    "Ms",
+    "Dr"
+  ];
+
+  const lowerCleaned = cleaned.toLowerCase();
+  for (const prefix of prefixes) {
+    const lowerPrefix = prefix.toLowerCase();
+    if (lowerCleaned.startsWith(lowerPrefix)) {
+      cleaned = cleaned.slice(prefix.length).trim();
+      break;
+    }
+  }
+
+  return cleaned;
+}
+
+/**
  * Public Lookup Action: Search recipient by Name or Email within a Campaign Slug
  */
 export async function lookupCertByInput(campaignSlug: string, queryInput: string) {
@@ -161,7 +234,7 @@ export async function lookupCertByInput(campaignSlug: string, queryInput: string
     }
 
     // 2. Find Certificate by EXACT email OR EXACT recipientFullName
-    const certificate = await prisma.certificate.findFirst({
+    let certificate = await prisma.certificate.findFirst({
       where: {
         campaignId: campaign.id,
         OR: [
@@ -170,6 +243,33 @@ export async function lookupCertByInput(campaignSlug: string, queryInput: string
         ]
       }
     });
+
+    // 2.5 Fallback: Smart Title-Prefix Matching if exact DB match yielded nothing
+    if (!certificate && !cleanQuery.includes("@")) {
+      const normalizedQuery = cleanQuery.replace(/\s+/g, " ");
+      const strippedQuery = stripTitlePrefix(normalizedQuery).toLowerCase();
+
+      if (strippedQuery) {
+        const words = strippedQuery.split(" ").filter(Boolean);
+        if (words.length > 0) {
+          // Fetch candidate certificates that contain key words from the stripped query
+          const candidates = await prisma.certificate.findMany({
+            where: {
+              campaignId: campaign.id,
+              OR: words.map((word) => ({
+                recipientFullName: { contains: word, mode: "insensitive" }
+              }))
+            }
+          });
+
+          certificate = candidates.find((cert) => {
+            const certNormalized = cert.recipientFullName.replace(/\s+/g, " ");
+            const certStripped = stripTitlePrefix(certNormalized).toLowerCase();
+            return certStripped === strippedQuery;
+          }) || null;
+        }
+      }
+    }
 
     if (!certificate) {
       return { 
