@@ -501,3 +501,103 @@ export async function deleteRegistrations(registrationIds: string[]) {
     return { message: "Failed to delete registrations" };
   }
 }
+
+export async function getDuplicateRegistrationsGrouped(eventId?: string) {
+  const session = await auth();
+  if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    return { success: false, groups: [], totalDuplicatesCount: 0 };
+  }
+
+  try {
+    const where: any = {};
+    if (eventId && eventId !== "all") {
+      where.eventId = eventId;
+    }
+
+    const registrations = await prisma.registration.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        referenceCode: true,
+        status: true,
+        createdAt: true,
+        formData: true,
+        checkIns: {
+          select: { id: true, scannedAt: true, sessionTitle: true }
+        },
+        event: {
+          select: {
+            id: true,
+            title: true,
+            formFields: {
+              orderBy: { order: 'asc' },
+              select: { id: true, label: true, type: true }
+            }
+          }
+        }
+      }
+    });
+
+    const map = new Map<string, {
+      key: string;
+      email: string;
+      name: string;
+      registrations: Array<{
+        id: string;
+        referenceCode: string;
+        status: string;
+        createdAt: Date;
+        eventTitle: string;
+        hasCheckIn: boolean;
+        checkInsCount: number;
+        checkInSessions: string[];
+      }>;
+    }>();
+
+    for (const reg of registrations) {
+      const { name, email } = extractAttendeeInfo(
+        reg.formData as Record<string, unknown>,
+        reg.event.formFields
+      );
+
+      const groupKey = (email || name || "").toLowerCase().trim();
+      if (!groupKey) continue;
+
+      if (!map.has(groupKey)) {
+        map.set(groupKey, {
+          key: groupKey,
+          email: email || "ไม่ระบุอีเมล",
+          name: name || "ไม่ระบุชื่อ",
+          registrations: []
+        });
+      }
+
+      const item = map.get(groupKey)!;
+      item.registrations.push({
+        id: reg.id,
+        referenceCode: reg.referenceCode,
+        status: reg.status,
+        createdAt: reg.createdAt,
+        eventTitle: reg.event.title,
+        hasCheckIn: reg.checkIns.length > 0,
+        checkInsCount: reg.checkIns.length,
+        checkInSessions: reg.checkIns.map((c) => c.sessionTitle || "Checked In").filter(Boolean),
+      });
+    }
+
+    const duplicateGroups = Array.from(map.values()).filter(
+      (group) => group.registrations.length > 1
+    );
+
+    return {
+      success: true,
+      groups: duplicateGroups,
+      totalDuplicatesCount: duplicateGroups.reduce((acc, g) => acc + g.registrations.length, 0),
+    };
+  } catch (error: any) {
+    console.error("Failed to fetch duplicate registrations:", error);
+    return { success: false, groups: [], totalDuplicatesCount: 0, error: "เกิดข้อผิดพลาดในการตรวจสอบรายการซ้ำ" };
+  }
+}
+
