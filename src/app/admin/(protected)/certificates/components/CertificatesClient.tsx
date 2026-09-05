@@ -115,6 +115,16 @@ export function CertificatesClient({
   const [createEventId, setCreateEventId] = useState('');
   const [createIssueDate, setCreateIssueDate] = useState('31 สิงหาคม 2569');
   const [createLoading, setCreateLoading] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+
+  const filteredUsers = users.filter((u) => {
+    if (!userSearchQuery) return true;
+    const q = userSearchQuery.toLowerCase().trim();
+    const name = (u.name || u.username || '').toLowerCase();
+    const email = (u.email || '').toLowerCase();
+    return name.includes(q) || email.includes(q);
+  });
 
   // Filter logic
   const filteredCertificates = certificates.filter((cert) => {
@@ -362,32 +372,125 @@ export function CertificatesClient({
                 )}
 
                 {users.length > 0 && (
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Select Target User (เลือกผู้ใช้ในระบบเพื่อระบุบัญชีอัตโนมัติ)
-                    </label>
-                    <Select
-                      value={createUserId}
-                      onValueChange={(val) => {
-                        setCreateUserId(val);
-                        const selected = users.find((u) => u.id === val);
-                        if (selected) {
-                          if (selected.email) setCreateEmail(selected.email);
-                          if (selected.name || selected.username) setCreateName(selected.name || selected.username);
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="h-10">
-                        <SelectValue placeholder="-- เลือกระบุผู้ใช้ที่มีในระบบ (หรือพิมพ์เองด้านล่าง) --" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {users.map((u) => (
-                          <SelectItem key={u.id} value={u.id}>
-                            {u.name || u.username} ({u.email || "No Email"})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="space-y-2 relative">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Select Target User (เลือกผู้ใช้ในระบบเพื่อระบุบัญชีอัตโนมัติ)
+                      </label>
+                      {createUserId && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCreateUserId('');
+                            setUserSearchQuery('');
+                            setCreateEmail('');
+                            setCreateName('');
+                          }}
+                          className="text-[10px] text-rose-500 hover:underline font-mono font-bold"
+                        >
+                          [ล้างการเลือก]
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground pointer-events-none" />
+                      <Input
+                        type="text"
+                        placeholder="พิมพ์ค้นหาด้วย ชื่อ-นามสกุล, Username หรือ อีเมล..."
+                        value={userSearchQuery}
+                        onChange={(e) => {
+                          setUserSearchQuery(e.target.value);
+                          setIsUserDropdownOpen(true);
+                          if (createUserId) setCreateUserId('');
+                        }}
+                        onFocus={() => setIsUserDropdownOpen(true)}
+                        className="pl-9 pr-8 h-10 text-xs font-semibold bg-background"
+                      />
+                      {userSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserSearchQuery('');
+                            setCreateUserId('');
+                            setIsUserDropdownOpen(true);
+                          }}
+                          className="absolute right-2.5 top-2.5 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Selected Indicator */}
+                    {createUserId && (
+                      <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-medium flex items-center justify-between animate-in fade-in">
+                        <div className="flex items-center gap-1.5 truncate">
+                          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
+                          <span className="truncate">
+                            ระบุแล้ว: <strong>{createName}</strong> ({createEmail})
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Filtered Users Dropdown Panel */}
+                    {isUserDropdownOpen && (
+                      <>
+                        <button
+                          type="button"
+                          aria-label="Close user selector dropdown"
+                          className="fixed inset-0 z-30 bg-transparent border-0 p-0 cursor-default"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                        />
+
+                        <div className="absolute left-0 right-0 top-full mt-1 z-40 bg-popover text-popover-foreground border border-border rounded-xl shadow-2xl max-h-60 overflow-y-auto divide-y divide-border">
+                          {filteredUsers.length === 0 ? (
+                            <div className="p-3 text-xs text-center text-muted-foreground font-mono">
+                              ไม่พบรายชื่อผู้ใช้ที่ตรงกับ "{userSearchQuery}"
+                            </div>
+                          ) : (
+                            filteredUsers.slice(0, 50).map((u) => {
+                              const isSelected = u.id === createUserId;
+                              const displayName = u.name || u.username || "Un-named User";
+                              const displayEmail = u.email || "No Email";
+
+                              return (
+                                <button
+                                  key={u.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setCreateUserId(u.id);
+                                    if (u.email) setCreateEmail(u.email);
+                                    if (u.name || u.username) setCreateName(u.name || u.username);
+                                    setUserSearchQuery(`${displayName} (${displayEmail})`);
+                                    setIsUserDropdownOpen(false);
+                                  }}
+                                  className={`w-full text-left p-2.5 text-xs transition-colors flex items-center justify-between hover:bg-accent ${
+                                    isSelected ? "bg-indigo-500/15 font-bold" : ""
+                                  }`}
+                                >
+                                  <div className="truncate pr-2">
+                                    <span className="font-semibold text-foreground">{displayName}</span>
+                                    <span className="text-muted-foreground font-mono text-[11px] ml-2">
+                                      ({displayEmail})
+                                    </span>
+                                  </div>
+                                  {isSelected && (
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                                  )}
+                                </button>
+                              );
+                            })
+                          )}
+                          {filteredUsers.length > 50 && (
+                            <div className="p-2 text-[10px] text-center text-muted-foreground font-mono bg-muted/30">
+                              แสดง 50 รายการแรกจาก {filteredUsers.length} คน (พิมพ์ค้นหาเพิ่มเติมเพื่อระบุเจาะจง)
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
 
