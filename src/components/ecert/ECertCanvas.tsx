@@ -92,6 +92,45 @@ export function ECertCanvas({
     displayName = `${p ? p + ' ' : ''}${fn} ${ln}`.trim();
   }
 
+  /**
+   * Universal Cross-Platform Text Drawer (Fixes iOS Safari Font Metric & Alignment Bugs)
+   */
+  const drawAlignedText = (
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    targetX: number,
+    targetY: number,
+    align: CanvasTextAlign = 'center',
+    maxWidth?: number
+  ) => {
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    let renderText = text;
+    if (maxWidth && maxWidth > 0) {
+      if (ctx.measureText(renderText).width > maxWidth) {
+        let truncated = renderText;
+        while (truncated.length > 0 && ctx.measureText(truncated + '...').width > maxWidth) {
+          truncated = truncated.slice(0, -1);
+        }
+        renderText = truncated ? truncated + '...' : renderText;
+      }
+    }
+
+    const textWidth = ctx.measureText(renderText).width;
+    let finalX = targetX;
+
+    if (align === 'center') {
+      finalX = Math.round(targetX - textWidth / 2);
+    } else if (align === 'right') {
+      finalX = Math.round(targetX - textWidth);
+    } else {
+      finalX = Math.round(targetX);
+    }
+
+    ctx.fillText(renderText, finalX, Math.round(targetY));
+  };
+
   useEffect(() => {
     let isMounted = true;
 
@@ -102,31 +141,40 @@ export function ECertCanvas({
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
+      // 1. Fixed Internal Canvas Resolution (2000 x 1414 px)
       const width = 2000;
       const height = 1414;
 
       canvas.width = width;
       canvas.height = height;
 
+      // 2. Preload Font Readiness before measuring font metrics
+      if (typeof document !== 'undefined' && document.fonts) {
+        try {
+          await document.fonts.ready;
+        } catch (e) {
+          console.warn('Font preloading notice:', e);
+        }
+      }
+
       const layout = certData.layoutConfig;
       const customBg = certData.backgroundImageUrl;
 
+      // 3. Preload Background Image
       const activeImg = await tryLoadCustomBgImage(customBg);
       const hasTemplate = !!activeImg;
 
       if (!isMounted) return;
 
       if (activeImg) {
-        // Draw image background base
         ctx.drawImage(activeImg, 0, 0, width, height);
         setIsImageMissing(false);
       } else {
         setIsImageMissing(true);
-        // Dark Cyber NCSA Theme Base (No White Background Ever!)
+        // Dark Cyber NCSA Theme Base
         ctx.fillStyle = '#0e1418';
         ctx.fillRect(0, 0, width, height);
 
-        // Cyber Grid Lines Accent
         ctx.strokeStyle = 'rgba(239, 68, 68, 0.15)';
         ctx.lineWidth = 2;
         ctx.strokeRect(60, 60, width - 120, height - 120);
@@ -135,60 +183,41 @@ export function ECertCanvas({
         ctx.lineWidth = 8;
         ctx.strokeRect(80, 80, width - 160, height - 160);
 
-        // Notice Header
         ctx.font = "bold 44px 'Courier New', monospace";
         ctx.fillStyle = '#ef4444';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('NCSA OFFICIAL E-CERTIFICATE', 1000, 300);
+        drawAlignedText(ctx, 'NCSA OFFICIAL E-CERTIFICATE', 1000, 300, 'center');
 
         ctx.font = "32px 'Prompt', 'Sarabun', sans-serif";
         ctx.fillStyle = '#849495';
-        ctx.fillText('ไม่พบรูปภาพแม่แบบใบประกาศที่กำหนดไว้ในระบบ', 1000, 400);
+        drawAlignedText(ctx, 'ไม่พบรูปภาพแม่แบบใบประกาศที่กำหนดไว้ในระบบ', 1000, 400, 'center');
       }
 
-      // RENDER WITH CUSTOM DYNAMIC LAYOUT CONFIG (IF PRESENT)
+      // 4. RENDER DYNAMIC LAYOUT
       if (layout) {
-        // 1. Recipient Name
+        // 4.1. Recipient Name
         if (layout.showName !== false) {
           const x = (layout.nameX / 100) * width;
           const y = (layout.nameY / 100) * height;
           ctx.font = `bold ${layout.nameFontSize || 56}px 'Prompt', 'Sarabun', sans-serif`;
-          ctx.textAlign = (layout.nameAlign as CanvasTextAlign) || 'center';
-          ctx.textBaseline = 'middle';
           ctx.fillStyle = layout.nameColor || '#0f172a';
-          ctx.fillText(displayName, x, y);
+          drawAlignedText(ctx, displayName, x, y, (layout.nameAlign as CanvasTextAlign) || 'center');
         }
 
-        // 1.5. Team Name (for CTF Challenge with Max Width Ellipsis Truncation)
+        // 4.2. Team Name (CTF Challenge)
         if (layout.showTeam && certData.teamName) {
           const x = ((layout.teamX ?? 50) / 100) * width;
           const y = ((layout.teamY ?? 58) / 100) * height;
           const maxW = ((layout.teamMaxWidth || 650) / 2000) * width;
           ctx.font = `bold ${layout.teamFontSize || 32}px 'Prompt', 'Sarabun', sans-serif`;
-          ctx.textAlign = (layout.teamAlign as CanvasTextAlign) || 'center';
-          ctx.textBaseline = 'middle';
           ctx.fillStyle = layout.teamColor || '#2563eb';
-
-          let renderText = certData.teamName;
-          if (ctx.measureText(renderText).width > maxW) {
-            let truncated = renderText;
-            while (truncated.length > 0 && ctx.measureText(truncated + '...').width > maxW) {
-              truncated = truncated.slice(0, -1);
-            }
-            renderText = truncated ? truncated + '...' : renderText;
-          }
-
-          ctx.fillText(renderText, x, y);
+          drawAlignedText(ctx, certData.teamName, x, y, (layout.teamAlign as CanvasTextAlign) || 'center', maxW);
         }
 
-        // 2. Issue Date
+        // 4.3. Issue Date
         if (layout.showDate && certData.issueDate) {
           const x = (layout.dateX / 100) * width;
           const y = (layout.dateY / 100) * height;
           ctx.font = `${layout.dateFontSize || 28}px 'Prompt', 'Sarabun', sans-serif`;
-          ctx.textAlign = (layout.dateAlign as CanvasTextAlign) || 'center';
-          ctx.textBaseline = 'middle';
           ctx.fillStyle = layout.dateColor || '#475569';
 
           const mode = layout.dateFormatMode || 'FULL_WITH_PREFIX';
@@ -201,104 +230,85 @@ export function ECertCanvas({
           } else if (mode === 'CUSTOM_PREFIX') {
             dateStr = `${layout.dateCustomPrefix || ''}${certData.issueDate}`;
           } else {
-            // FULL_WITH_PREFIX
             const prefix = layout.dateCustomPrefix ?? 'ให้ไว้ ณ วันที่ ';
             dateStr = `${prefix}${certData.issueDate}`;
           }
 
-          ctx.fillText(dateStr, x, y);
+          drawAlignedText(ctx, dateStr, x, y, (layout.dateAlign as CanvasTextAlign) || 'center');
         }
 
-        // 3. QR Code Verification
+        // 4.4. QR Code Verification (Rendered via Off-Screen Canvas for Precision)
         if (layout.showQr !== false) {
           const qrSize = layout.qrSize || 140;
-          const x = (layout.qrX / 100) * width - qrSize / 2;
-          const y = (layout.qrY / 100) * height - qrSize / 2;
+          const x = Math.round((layout.qrX / 100) * width - qrSize / 2);
+          const y = Math.round((layout.qrY / 100) * height - qrSize / 2);
           const verifyUrl = certData.verifyLink || `${window.location.origin}/verify-cert/${certData.certCode}`;
 
           try {
-            const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
+            const qrCanvas = document.createElement('canvas');
+            await QRCode.toCanvas(qrCanvas, verifyUrl, {
               margin: 1,
               width: qrSize,
               color: { dark: '#0f172a', light: '#ffffff' },
             });
-
-            const qrImg = new Image();
-            qrImg.src = qrDataUrl;
-            await new Promise((res) => { qrImg.onload = res; });
-            ctx.drawImage(qrImg, x, y, qrSize, qrSize);
+            ctx.drawImage(qrCanvas, x, y, qrSize, qrSize);
           } catch (e) {
             console.error('QR rendering error:', e);
           }
         }
 
-        // 4. Certificate Code
+        // 4.5. Certificate Code
         if (layout.showCode !== false) {
           const x = (layout.codeX / 100) * width;
           const y = (layout.codeY / 100) * height;
           ctx.font = `${layout.codeFontSize || 20}px 'Courier New', monospace`;
-          ctx.textAlign = (layout.codeAlign as CanvasTextAlign) || 'center';
-          ctx.textBaseline = 'middle';
           ctx.fillStyle = layout.codeColor || '#64748b';
-          ctx.fillText(`Code: ${certData.certCode}`, x, y);
+          drawAlignedText(ctx, `Code: ${certData.certCode}`, x, y, (layout.codeAlign as CanvasTextAlign) || 'center');
         }
       } else {
         // FALLBACK STANDARD LAYOUT RENDERING
         const nameY = 640;
         ctx.font = "bold 65px 'Prompt', 'Sarabun', sans-serif";
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
         ctx.fillStyle = '#0f172a';
-        const nameWidth = ctx.measureText(displayName).width;
-        const nameX = Math.round(1000 - nameWidth / 2);
-        ctx.fillText(displayName, nameX, nameY);
+        drawAlignedText(ctx, displayName, 1000, nameY, 'center');
 
         if (!hasTemplate) {
           const eventY = 780;
           ctx.font = "bold 36px 'Prompt', 'Sarabun', sans-serif";
           ctx.fillStyle = '#2563eb';
           const eventText = certData.eventTitle || 'Thailand Cyber Top Talent 2026';
-          const eventWidth = ctx.measureText(eventText).width;
-          ctx.fillText(eventText, Math.round(1000 - eventWidth / 2), eventY);
+          drawAlignedText(ctx, eventText, 1000, eventY, 'center');
         }
 
         const dayNumber = extractDayNumber(certData.issueDate);
         const dayY = 1006;
         ctx.font = "bold 32px 'Prompt', 'Sarabun', sans-serif";
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
         ctx.fillStyle = '#0f172a';
-        const dayWidth = ctx.measureText(dayNumber).width;
-        const dayX = Math.round(945 - dayWidth / 2);
-        ctx.fillText(dayNumber, dayX, dayY);
+        drawAlignedText(ctx, dayNumber, 945, dayY, 'center');
 
         if (!hasTemplate && certData.issueDate) {
           ctx.font = "28px 'Prompt', 'Sarabun', sans-serif";
           ctx.fillStyle = '#475569';
           const dateText = `ให้ไว้ ณ วันที่ ${certData.issueDate}`;
-          ctx.fillText(dateText, Math.round(1000 - ctx.measureText(dateText).width / 2), 1140);
+          drawAlignedText(ctx, dateText, 1000, 1140, 'center');
         }
 
         const verifyUrl = certData.verifyLink || `${window.location.origin}/verify-cert/${certData.certCode}`;
         try {
-          const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
+          const qrCanvas = document.createElement('canvas');
+          await QRCode.toCanvas(qrCanvas, verifyUrl, {
             margin: 1,
             width: 165,
             color: { dark: '#0f172a', light: '#ffffff' },
           });
-
-          const qrImg = new Image();
-          qrImg.src = qrDataUrl;
-          await new Promise((res) => { qrImg.onload = res; });
-          ctx.drawImage(qrImg, 1680, 1110, 165, 165);
+          ctx.drawImage(qrCanvas, 1680, 1110, 165, 165);
         } catch (e) {
           console.error('QR rendering error:', e);
         }
 
         ctx.font = "16px 'Courier New', monospace";
         ctx.fillStyle = '#64748b';
-        ctx.textAlign = 'center';
-        ctx.fillText(`Code: ${certData.certCode}`, 1762, 1290);
+        drawAlignedText(ctx, `Code: ${certData.certCode}`, 1762, 1290, 'center');
       }
 
       setIsRendering(false);
