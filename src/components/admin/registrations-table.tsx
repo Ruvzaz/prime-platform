@@ -45,6 +45,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { RegistrationEditSheet } from "@/components/admin/registration-edit-sheet"
+import { EventDuplicateModal } from "@/components/admin/event-duplicate-modal"
 import { extractAttendeeInfo, getStandardFieldIds } from "@/lib/attendee-utils"
 import { deleteRegistrations } from "@/app/actions/registration"
 
@@ -470,6 +471,8 @@ export function RegistrationsTable({ initialData, metadata, events }: Registrati
                 <div className="hidden sm:flex items-center justify-center text-sm font-bold bg-white dark:bg-slate-800 px-5 h-11 rounded-xl border border-border/50 shadow-sm">
                     Total: <span className="text-primary ml-1.5">{metadata.total.toLocaleString()}</span>
                 </div>
+
+                <EventDuplicateModal currentEventId={currentEventId} onRefresh={() => router.refresh()} />
 
                 <Button variant="outline" className="rounded-xl h-11 px-6 border-border/60 hover:bg-slate-50 shadow-sm" onClick={exportExcel} disabled={isExporting}>
                     <Download className={`mr-2 h-4 w-4 ${isExporting ? 'animate-bounce' : ''}`} />
