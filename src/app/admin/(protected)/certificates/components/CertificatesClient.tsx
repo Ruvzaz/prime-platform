@@ -437,8 +437,10 @@ export function CertificatesClient({
                     {/* Filtered Users Dropdown Panel */}
                     {isUserDropdownOpen && (
                       <>
-                        <div
-                          className="fixed inset-0 z-30"
+                        <button
+                          type="button"
+                          aria-label="Close user selector dropdown"
+                          className="fixed inset-0 z-30 bg-transparent border-0 p-0 cursor-default"
                           onClick={() => setIsUserDropdownOpen(false)}
                         />
 
