@@ -200,7 +200,7 @@ export default async function ChallengeUserCertificationPage() {
                     recipientPrefix: cert.recipientPrefix || "",
                     recipientFirstName: cert.recipientFirstName || "",
                     recipientLastName: cert.recipientLastName || "",
-                    recipientFullName: userName || cert.recipientFullName,
+                    recipientFullName: cert.recipientFullName || userName || "",
                     teamName: teamName,
                     eventTitle: cert.eventTitle,
                     issueDate: cert.issueDate,
